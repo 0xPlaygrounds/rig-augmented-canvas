@@ -1,40 +1,47 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Handle, Position } from 'reactflow';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { Handle, Position, useReactFlow, NodeProps } from 'reactflow';
 import { Trash2, Edit, X, Check, Maximize2 } from 'lucide-react';
 import { useCanvasStore } from '../store/canvasStore';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import NoteToolbar from './NoteToolbar';
-import ResizeHandle from './ResizeHandle';
+import ResizeHandle, { ResizeHandlePosition } from './ResizeHandle';
 import FocusMode from './FocusMode';
 import { applyMarkdownFormat } from '../utils/markdownUtils';
 
-interface NoteNodeProps {
-  id: string;
-  data: {
-    content: string;
-    color?: string;
-    width?: number;
-    height?: number;
-  };
-  selected: boolean;
+interface NoteNodeData {
+  content: string;
+  color?: string;
+  width?: number;
+  height?: number;
 }
 
-const NoteNode: React.FC<NoteNodeProps> = ({ id, data, selected }) => {
+type NoteNodeProps = NodeProps<NoteNodeData>;
+
+const NoteNode: React.FC<NoteNodeProps> = ({ id, data, selected, xPos, yPos }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [isFocusMode, setIsFocusMode] = useState(false);
   const [content, setContent] = useState(data.content);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const updateNode = useCanvasStore((state) => state.updateNode);
-  const removeNode = useCanvasStore((state) => state.removeNode);
+  const reactFlowInstance = useReactFlow();
   
-  // Default dimensions
+  const { updateNode, removeNode } = useCanvasStore(state => ({
+    updateNode: state.updateNode,
+    removeNode: state.removeNode
+  }));
+  
+  // Dimensions configuration
   const defaultWidth = 250;
   const defaultHeight = 150;
-  const minWidth = 200;
+  const minWidth = 150;
   const minHeight = 100;
-  const maxWidth = 500;
-  const maxHeight = 400;
+  const maxWidth = 800;
+  const maxHeight = 600;
+
+  // Update local content when data changes (e.g., when loading from persistence)
+  useEffect(() => {
+    setContent(data.content);
+  }, [data.content]);
 
   useEffect(() => {
     if (isEditing && textareaRef.current) {
@@ -43,29 +50,36 @@ const NoteNode: React.FC<NoteNodeProps> = ({ id, data, selected }) => {
     }
   }, [isEditing]);
 
-  const handleEdit = () => {
+  const handleEdit = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
     setIsEditing(true);
-  };
+  }, []);
 
-  const handleSave = () => {
-    updateNode(id, { data: { ...data, content } });
+  const handleSave = useCallback(() => {
+    updateNode(id, { 
+      data: { 
+        ...data, 
+        content 
+      } 
+    });
     setIsEditing(false);
-  };
+  }, [id, data, content, updateNode]);
 
-  const handleCancel = () => {
+  const handleCancel = useCallback(() => {
     setContent(data.content);
     setIsEditing(false);
-  };
+  }, [data.content]);
 
-  const handleDelete = () => {
+  const handleDelete = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
     removeNode(id);
-  };
+  }, [id, removeNode]);
 
-  const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+  const handleContentChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setContent(e.target.value);
-  };
+  }, []);
 
-  const handleFormatClick = (format: string) => {
+  const handleFormatClick = useCallback((format: string) => {
     if (textareaRef.current) {
       const textarea = textareaRef.current;
       const { selectionStart, selectionEnd } = textarea;
@@ -85,9 +99,9 @@ const NoteNode: React.FC<NoteNodeProps> = ({ id, data, selected }) => {
         textarea.setSelectionRange(cursorPosition, cursorPosition);
       }, 0);
     }
-  };
+  }, [content]);
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     // Handle keyboard shortcuts
     if (e.ctrlKey || e.metaKey) {
       switch (e.key) {
@@ -112,44 +126,105 @@ const NoteNode: React.FC<NoteNodeProps> = ({ id, data, selected }) => {
       e.preventDefault();
       handleCancel();
     }
-  };
+  }, [handleFormatClick, handleSave, handleCancel]);
 
-  const handleResize = (deltaWidth: number, deltaHeight: number) => {
+  const handleResize = useCallback((deltaWidth: number, deltaHeight: number, position: ResizeHandlePosition) => {
     const currentWidth = data.width || defaultWidth;
     const currentHeight = data.height || defaultHeight;
     
-    // Calculate new dimensions
-    const newWidth = Math.max(minWidth, Math.min(maxWidth, currentWidth + deltaWidth));
-    const newHeight = Math.max(minHeight, Math.min(maxHeight, currentHeight + deltaHeight));
+    let newWidth = currentWidth;
+    let newHeight = currentHeight;
+    let newPosition = { x: xPos, y: yPos };
     
-    // Update node data with new dimensions
-    updateNode(id, {
+    // Calculate new dimensions and any position offsets needed
+    switch (position) {
+      case 'bottom-right':
+        // Simple addition for bottom-right resizing
+        newWidth = Math.max(minWidth, Math.min(maxWidth, currentWidth + deltaWidth));
+        newHeight = Math.max(minHeight, Math.min(maxHeight, currentHeight + deltaHeight));
+        break;
+        
+      case 'bottom-left':
+        // Adjust width and position from left side
+        newWidth = Math.max(minWidth, Math.min(maxWidth, currentWidth - deltaWidth));
+        newHeight = Math.max(minHeight, Math.min(maxHeight, currentHeight + deltaHeight));
+        newPosition.x = xPos + (currentWidth - newWidth);
+        break;
+        
+      case 'top-right':
+        // Adjust height and position from top side
+        newWidth = Math.max(minWidth, Math.min(maxWidth, currentWidth + deltaWidth));
+        newHeight = Math.max(minHeight, Math.min(maxHeight, currentHeight - deltaHeight));
+        newPosition.y = yPos + (currentHeight - newHeight);
+        break;
+        
+      case 'top-left':
+        // Adjust both width and height from top-left
+        newWidth = Math.max(minWidth, Math.min(maxWidth, currentWidth - deltaWidth));
+        newHeight = Math.max(minHeight, Math.min(maxHeight, currentHeight - deltaHeight));
+        newPosition.x = xPos + (currentWidth - newWidth);
+        newPosition.y = yPos + (currentHeight - newHeight);
+        break;
+    }
+    
+    // Update node data
+    const nodeUpdate: any = {
       data: {
         ...data,
         width: newWidth,
         height: newHeight
       }
-    });
-  };
+    };
+    
+    // Check if position has changed
+    if (newPosition.x !== xPos || newPosition.y !== yPos) {
+      // Update both node data and position
+      reactFlowInstance.setNodes(nodes => 
+        nodes.map(node => {
+          if (node.id === id) {
+            return {
+              ...node,
+              position: newPosition,
+              data: {
+                ...node.data,
+                width: newWidth,
+                height: newHeight
+              }
+            };
+          }
+          return node;
+        })
+      );
+    } else {
+      // Only update node data
+      updateNode(id, nodeUpdate);
+    }
+  }, [data, defaultWidth, defaultHeight, id, updateNode, xPos, yPos, reactFlowInstance]);
   
-  const handleFocusModeToggle = (e: React.MouseEvent) => {
+  const handleFocusModeToggle = useCallback((e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent event bubbling
-    console.log('Focus mode toggled');
     setIsFocusMode(true);
-  };
+  }, []);
   
-  const handleFocusModeSave = (newContent: string) => {
+  const handleFocusModeSave = useCallback((newContent: string) => {
     setContent(newContent);
     updateNode(id, { data: { ...data, content: newContent } });
-  };
+  }, [data, id, updateNode]);
   
-  const handleFocusModeClose = () => {
+  const handleFocusModeClose = useCallback(() => {
     setIsFocusMode(false);
-  };
+  }, []);
 
   const backgroundColor = data.color || '#ffffff';
   const width = data.width || defaultWidth;
   const height = data.height || defaultHeight;
+
+  // Prevent the parent node from handling drag events when resizing
+  const onClickCapture = useCallback((e: React.MouseEvent) => {
+    if ((e.target as HTMLElement).classList.contains('resize-handle')) {
+      e.stopPropagation();
+    }
+  }, []);
 
   return (
     <div
@@ -161,6 +236,7 @@ const NoteNode: React.FC<NoteNodeProps> = ({ id, data, selected }) => {
         width: `${width}px`,
         height: `${height}px`
       }}
+      onClickCapture={onClickCapture}
     >
       <Handle type="target" position={Position.Top} className="w-3 h-3" />
       <Handle type="source" position={Position.Bottom} className="w-3 h-3" />
@@ -174,11 +250,26 @@ const NoteNode: React.FC<NoteNodeProps> = ({ id, data, selected }) => {
         />
       )}
       
-      {/* Resize handle - only show when not editing and not in focus mode */}
+      {/* Resize handles - only show when not editing and not in focus mode */}
       {!isEditing && !isFocusMode && (
-        <div className="absolute bottom-0 right-0 z-20">
-          <ResizeHandle onResize={handleResize} />
-        </div>
+        <>
+          <ResizeHandle 
+            position="bottom-right" 
+            onResize={(deltaWidth, deltaHeight) => handleResize(deltaWidth, deltaHeight, 'bottom-right')} 
+          />
+          <ResizeHandle 
+            position="bottom-left" 
+            onResize={(deltaWidth, deltaHeight) => handleResize(deltaWidth, deltaHeight, 'bottom-left')} 
+          />
+          <ResizeHandle 
+            position="top-right" 
+            onResize={(deltaWidth, deltaHeight) => handleResize(deltaWidth, deltaHeight, 'top-right')} 
+          />
+          <ResizeHandle 
+            position="top-left" 
+            onResize={(deltaWidth, deltaHeight) => handleResize(deltaWidth, deltaHeight, 'top-left')} 
+          />
+        </>
       )}
       
       {isEditing ? (

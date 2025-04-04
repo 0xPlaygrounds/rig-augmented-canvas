@@ -1,7 +1,7 @@
-import React, { useRef, useEffect } from 'react';
-import { X, Check, Save, Info, Trash2, Download } from 'lucide-react';
-import NoteToolbar from './NoteToolbar';
+import React, { useRef, useEffect, useState } from 'react';
+import { X, Check, Bold, Italic, List, ListOrdered, Heading1, Heading2, Quote, Code, Link } from 'lucide-react';
 import { applyMarkdownFormat } from '../utils/markdownUtils';
+import ReactDOM from 'react-dom';
 
 interface FocusModeProps {
   content: string;
@@ -9,22 +9,46 @@ interface FocusModeProps {
   onClose: () => void;
 }
 
+/**
+ * A completely isolated focus mode editor that renders directly to document.body
+ * to avoid any interaction with ReactFlow or other components
+ */
 const FocusMode: React.FC<FocusModeProps> = ({ content, onSave, onClose }) => {
-  const [editedContent, setEditedContent] = React.useState(content);
+  const [editedContent, setEditedContent] = useState(content);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [portalContainer] = useState(() => document.createElement('div'));
 
+  // Setup the portal container when component mounts
   useEffect(() => {
-    console.log('FocusMode component mounted');
+    // Set up portal container styles
+    portalContainer.style.position = 'fixed';
+    portalContainer.style.top = '0';
+    portalContainer.style.left = '0';
+    portalContainer.style.width = '100vw';
+    portalContainer.style.height = '100vh';
+    portalContainer.style.zIndex = '10000'; // Higher than any other z-index
+    portalContainer.style.pointerEvents = 'auto';
+    
+    // Add the portal to body
+    document.body.appendChild(portalContainer);
+    
+    // Prevent scrolling on the main document
+    const originalStyle = window.getComputedStyle(document.body).overflow;
+    document.body.style.overflow = 'hidden';
+    
     // Focus the textarea when the component mounts
     if (textareaRef.current) {
-      textareaRef.current.focus();
-      // Place cursor at the end of the content
-      const length = textareaRef.current.value.length;
-      textareaRef.current.setSelectionRange(length, length);
+      setTimeout(() => {
+        if (textareaRef.current) {
+          textareaRef.current.focus();
+          const length = textareaRef.current.value.length;
+          textareaRef.current.setSelectionRange(length, length);
+        }
+      }, 0);
     }
 
-    // Add escape key handler
-    const handleEscape = (e: KeyboardEvent) => {
+    // Set up escape key handler
+    const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         onClose();
       } else if ((e.ctrlKey || e.metaKey) && e.key === 's') {
@@ -33,11 +57,15 @@ const FocusMode: React.FC<FocusModeProps> = ({ content, onSave, onClose }) => {
       }
     };
 
-    document.addEventListener('keydown', handleEscape);
+    document.addEventListener('keydown', handleKeyDown);
+
+    // Cleanup
     return () => {
-      document.removeEventListener('keydown', handleEscape);
+      document.body.removeChild(portalContainer);
+      document.body.style.overflow = originalStyle;
+      document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [onClose]);
+  }, []);
 
   const handleSave = () => {
     onSave(editedContent);
@@ -64,117 +92,228 @@ const FocusMode: React.FC<FocusModeProps> = ({ content, onSave, onClose }) => {
       
       // Set cursor position after state update
       setTimeout(() => {
-        textarea.focus();
-        textarea.setSelectionRange(cursorPosition, cursorPosition);
+        if (textarea) {
+          textarea.focus();
+          textarea.setSelectionRange(cursorPosition, cursorPosition);
+        }
       }, 0);
     }
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    // Handle keyboard shortcuts
-    if (e.ctrlKey || e.metaKey) {
-      switch (e.key) {
-        case 'b':
-          e.preventDefault();
-          handleFormatClick('**');
-          break;
-        case 'i':
-          e.preventDefault();
-          handleFormatClick('*');
-          break;
-        case 's':
-          e.preventDefault();
-          handleSave();
-          break;
-        case 'Enter':
-          e.preventDefault();
-          handleSave();
-          break;
-      }
-    }
-  };
-
-  console.log('Rendering FocusMode component');
-  
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      {/* Blurred background overlay */}
-      <div className="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-md"></div>
-      
+  // The actual modal content
+  const modalContent = (
+    <div 
+      className="focus-mode-overlay"
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        background: 'rgba(0, 0, 0, 0.8)',
+        backdropFilter: 'blur(10px)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 10000,
+        width: '100vw',
+        height: '100vh',
+      }}
+      onClick={onClose} // Close when clicking the backdrop
+    >
       {/* Modal container */}
-      <div className="relative w-4/5 h-4/5 max-w-5xl bg-white rounded-lg shadow-2xl flex flex-col overflow-hidden">
+      <div 
+        style={{
+          width: '90%',
+          maxWidth: '900px',
+          height: '80%',
+          background: 'white',
+          borderRadius: '8px',
+          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
+          position: 'relative'
+        }}
+        onClick={(e) => e.stopPropagation()} // Prevent click from reaching the backdrop
+      >
         {/* Header */}
-        <header className="bg-gray-800 text-white p-3 flex justify-between items-center">
-          <h1 className="text-xl font-medium">Rig Augmented Canvas</h1>
-          <div className="flex space-x-2">
-            <button
-              onClick={onClose}
-              className="p-1 text-gray-300 hover:text-white rounded-full hover:bg-gray-700"
-              title="Close"
-            >
-              <X size={20} />
-            </button>
-          </div>
-        </header>
-
-        {/* Toolbar */}
-        <div className="border-b border-gray-200 p-3 flex justify-between bg-gray-50">
-          <div className="flex items-center">
-            <button className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-200 rounded">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect x="4" y="4" width="16" height="16" rx="2" stroke="currentColor" strokeWidth="2" />
-                <path d="M8 8H16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                <path d="M8 12H16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                <path d="M8 16H12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-              </svg>
-            </button>
-          </div>
-          <div className="flex items-center space-x-2">
-            <button 
-              onClick={handleSave}
-              className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-100 rounded" 
-              title="Save (Ctrl+S)"
-            >
-              <Save size={20} />
-            </button>
-            <button className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-200 rounded" title="Export">
-              <Download size={20} />
-            </button>
-            <button className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-200 rounded" title="Info">
-              <Info size={20} />
-            </button>
-          </div>
+        <div 
+          style={{
+            borderBottom: '1px solid #e5e7eb',
+            padding: '16px',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            background: '#f9fafb'
+          }}
+        >
+          <h2 style={{ margin: 0, fontSize: '18px', fontWeight: 500 }}>Edit Note</h2>
+          <button
+            onClick={onClose}
+            style={{
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              padding: '6px',
+              borderRadius: '4px'
+            }}
+            title="Close (Esc)"
+          >
+            <X size={20} color="#6b7280" />
+          </button>
         </div>
 
-        {/* Content */}
-        <div className="flex-grow overflow-auto bg-white p-4">
+        {/* Format toolbar */}
+        <div
+          style={{
+            display: 'flex',
+            gap: '4px',
+            padding: '8px 16px',
+            borderBottom: '1px solid #e5e7eb',
+            background: '#f3f4f6',
+            overflowX: 'auto'
+          }}
+        >
+          <FormatButton onClick={() => handleFormatClick('**')} title="Bold">
+            <Bold size={16} />
+          </FormatButton>
+          <FormatButton onClick={() => handleFormatClick('*')} title="Italic">
+            <Italic size={16} />
+          </FormatButton>
+          <FormatButton onClick={() => handleFormatClick('# ')} title="Heading 1">
+            <Heading1 size={16} />
+          </FormatButton>
+          <FormatButton onClick={() => handleFormatClick('## ')} title="Heading 2">
+            <Heading2 size={16} />
+          </FormatButton>
+          <FormatButton onClick={() => handleFormatClick('- ')} title="Bullet List">
+            <List size={16} />
+          </FormatButton>
+          <FormatButton onClick={() => handleFormatClick('1. ')} title="Numbered List">
+            <ListOrdered size={16} />
+          </FormatButton>
+          <FormatButton onClick={() => handleFormatClick('> ')} title="Quote">
+            <Quote size={16} />
+          </FormatButton>
+          <FormatButton onClick={() => handleFormatClick('`')} title="Code">
+            <Code size={16} />
+          </FormatButton>
+          <FormatButton onClick={() => handleFormatClick('[](url)')} title="Link">
+            <Link size={16} />
+          </FormatButton>
+        </div>
+
+        {/* Content area */}
+        <div
+          style={{
+            flex: 1,
+            padding: '20px',
+            overflowY: 'auto', // Enable vertical scrolling
+            background: '#fff'
+          }}
+        >
           <textarea
             ref={textareaRef}
             value={editedContent}
             onChange={handleContentChange}
-            onKeyDown={handleKeyDown}
-            className="w-full h-full p-6 resize-none focus:outline-none text-lg leading-relaxed border-0"
+            style={{
+              width: '100%',
+              height: '100%',
+              padding: '16px',
+              border: '1px solid #e5e7eb',
+              borderRadius: '4px',
+              fontSize: '16px',
+              lineHeight: 1.6,
+              fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+              resize: 'none',
+              outline: 'none',
+              boxSizing: 'border-box'
+            }}
             placeholder="Write your note here..."
-            style={{ maxWidth: '900px', margin: '0 auto', minHeight: '300px' }}
           />
         </div>
 
         {/* Footer */}
-        <footer className="border-t border-gray-200 p-3 flex justify-between text-sm text-gray-500 bg-gray-50">
+        <div
+          style={{
+            borderTop: '1px solid #e5e7eb',
+            padding: '12px 16px',
+            display: 'flex',
+            justifyContent: 'space-between',
+            background: '#f9fafb',
+            fontSize: '14px',
+            color: '#6b7280'
+          }}
+        >
           <div>Markdown supported</div>
-          <div>Press Ctrl+S to save</div>
-        </footer>
+          <div>Press Ctrl+S to save • Esc to cancel</div>
+        </div>
 
-        {/* Save button (fixed position) */}
+        {/* Save button */}
         <button
           onClick={handleSave}
-          className="absolute bottom-8 right-8 bg-blue-500 hover:bg-blue-600 text-white p-4 rounded-full shadow-xl"
+          style={{
+            position: 'absolute',
+            bottom: '20px',
+            right: '20px',
+            width: '56px',
+            height: '56px',
+            borderRadius: '28px',
+            background: '#3b82f6',
+            border: 'none',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+            cursor: 'pointer'
+          }}
           title="Save (Ctrl+S)"
         >
-          <Check size={28} />
+          <Check size={24} color="white" />
         </button>
       </div>
     </div>
+  );
+
+  // Use a portal to render the content to the body
+  return ReactDOM.createPortal(modalContent, portalContainer);
+};
+
+// Helper component for formatting buttons
+const FormatButton: React.FC<{
+  onClick: () => void;
+  title: string;
+  children: React.ReactNode;
+}> = ({ onClick, title, children }) => {
+  return (
+    <button
+      onClick={(e) => {
+        e.stopPropagation();
+        onClick();
+      }}
+      style={{
+        background: 'none',
+        border: 'none',
+        cursor: 'pointer',
+        padding: '6px',
+        borderRadius: '4px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        color: '#4b5563',
+        transition: 'background-color 0.2s',
+      }}
+      onMouseOver={(e) => {
+        (e.currentTarget as HTMLElement).style.backgroundColor = '#e5e7eb';
+      }}
+      onMouseOut={(e) => {
+        (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent';
+      }}
+      title={title}
+    >
+      {children}
+    </button>
   );
 };
 
