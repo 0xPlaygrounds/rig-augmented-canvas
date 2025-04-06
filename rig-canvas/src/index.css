@@ -4,3 +4,15 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Global styles */
+body.resizing * {
+  cursor: inherit !important;
+  user-select: none !important;
+}
+
+/* Ensure resize handles are visible and have a good hit area */
+.resize-handle {
+  z-index: 20;
+  touch-action: none;
+}

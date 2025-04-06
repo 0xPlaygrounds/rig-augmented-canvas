@@ -1,7 +1,8 @@
 import React from 'react';
-import { Plus, Trash2, Link, Unlink, Edit } from 'lucide-react';
+import { Plus, Trash2, Link, Unlink, Edit, ArrowRight, ArrowLeft, ArrowLeftRight } from 'lucide-react';
 import { useCanvasStore } from '../store/canvasStore';
-import { useReactFlow } from 'reactflow';
+import { useReactFlow, MarkerType } from '@xyflow/react';
+import { Edge as EdgeType } from '../types';
 
 interface ContextMenuProps {
   x: number;
@@ -18,14 +19,14 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
   edgeId,
   onClose,
 }) => {
-  const { removeNode, removeEdge } = useCanvasStore();
-  const { project, addNodes } = useReactFlow();
+  const { removeNode, removeEdge, updateEdge, edges } = useCanvasStore();
+  const reactFlowInstance = useReactFlow();
 
   const { addNode } = useCanvasStore();
 
   const handleAddNote = () => {
     const id = `note-${Date.now()}`;
-    const position = project({ x, y });
+    const position = reactFlowInstance.screenToFlowPosition({ x, y });
     
     const newNode = {
       id,
@@ -44,6 +45,7 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
     onClose();
   };
 
+
   const handleDeleteNode = () => {
     if (nodeId) {
       removeNode(nodeId);
@@ -58,6 +60,42 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
     onClose();
   };
 
+  const handleChangeEdgeDirection = (direction: 'forward' | 'backward' | 'bidirectional') => {
+    console.log(`Changing edge ${edgeId} direction to ${direction}`);
+    if (edgeId) {
+      // Find the current edge
+      const edge = edges.find(e => e.id === edgeId);
+      console.log("Current edge:", edge);
+      if (edge) {
+        // Get the current style or use default
+        const currentStyle = edge.style || { stroke: '#555', strokeWidth: 2 };
+        
+        // Create the updated edge object
+        const updatedEdge = { 
+          ...edge,
+          // Keep the current style (including selected state)
+          style: currentStyle,
+          data: {
+            ...(edge.data || {}),
+            direction
+          }
+        };
+        console.log("Updated edge:", updatedEdge);
+        
+        // Update the edge in the store
+        updateEdge(edgeId, updatedEdge);
+        
+        // Log the edges after update
+        setTimeout(() => {
+          console.log("Edges after update:", useCanvasStore.getState().edges);
+        }, 100);
+      }
+    }
+    onClose();
+  };
+
+  console.log('Rendering ContextMenu at:', { x, y, nodeId, edgeId });
+  
   return (
     <div
       className="absolute bg-white rounded-md shadow-lg border border-gray-200 py-1 z-50"
@@ -92,15 +130,44 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
         )}
 
         {edgeId && (
-          <li>
-            <button
-              className="w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center gap-2"
-              onClick={handleDeleteEdge}
-            >
-              <Unlink size={16} />
-              <span>Delete Connection</span>
-            </button>
-          </li>
+          <>
+            <li>
+              <button
+                className="w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center gap-2"
+                onClick={() => handleChangeEdgeDirection('forward')}
+              >
+                <ArrowRight size={16} />
+                <span>Forward Direction</span>
+              </button>
+            </li>
+            <li>
+              <button
+                className="w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center gap-2"
+                onClick={() => handleChangeEdgeDirection('backward')}
+              >
+                <ArrowLeft size={16} />
+                <span>Backward Direction</span>
+              </button>
+            </li>
+            <li>
+              <button
+                className="w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center gap-2"
+                onClick={() => handleChangeEdgeDirection('bidirectional')}
+              >
+                <ArrowLeftRight size={16} />
+                <span>Bidirectional</span>
+              </button>
+            </li>
+            <li>
+              <button
+                className="w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center gap-2"
+                onClick={handleDeleteEdge}
+              >
+                <Unlink size={16} />
+                <span>Delete Connection</span>
+              </button>
+            </li>
+          </>
         )}
       </ul>
     </div>

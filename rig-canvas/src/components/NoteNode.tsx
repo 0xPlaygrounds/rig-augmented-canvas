@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Handle, Position, useReactFlow, NodeProps } from 'reactflow';
+import { Handle, Position, useReactFlow, NodeProps, NodeResizer } from '@xyflow/react';
 import { Trash2, Edit, X, Check, Maximize2 } from 'lucide-react';
 import { useCanvasStore } from '../store/canvasStore';
 import ReactMarkdown from 'react-markdown';
@@ -9,19 +9,25 @@ import ResizeHandle, { ResizeHandlePosition } from './ResizeHandle';
 import FocusMode from './FocusMode';
 import { applyMarkdownFormat } from '../utils/markdownUtils';
 
+// Define the data structure for our note nodes
 interface NoteNodeData {
-  content: string;
+  content?: string;
   color?: string;
   width?: number;
   height?: number;
+  [key: string]: unknown;
 }
 
-type NoteNodeProps = NodeProps<NoteNodeData>;
-
-const NoteNode: React.FC<NoteNodeProps> = ({ id, data, selected, xPos, yPos }) => {
+// Use any for now to avoid type issues
+const NoteNode: React.FC<NodeProps> = ({ id, data, selected, positionAbsoluteX, positionAbsoluteY }) => {
+  // Use positionAbsoluteX and positionAbsoluteY instead of xPos and yPos
+  const xPos = positionAbsoluteX;
+  const yPos = positionAbsoluteY;
   const [isEditing, setIsEditing] = useState(false);
   const [isFocusMode, setIsFocusMode] = useState(false);
-  const [content, setContent] = useState(data.content);
+  // Cast data to NoteNodeData to access properties safely
+  const nodeData = data as NoteNodeData;
+  const [content, setContent] = useState(nodeData.content || '');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const reactFlowInstance = useReactFlow();
   
@@ -40,8 +46,9 @@ const NoteNode: React.FC<NoteNodeProps> = ({ id, data, selected, xPos, yPos }) =
 
   // Update local content when data changes (e.g., when loading from persistence)
   useEffect(() => {
-    setContent(data.content);
-  }, [data.content]);
+    const typedData = data as NoteNodeData;
+    setContent(typedData.content || '');
+  }, [data]);
 
   useEffect(() => {
     if (isEditing && textareaRef.current) {
@@ -56,19 +63,22 @@ const NoteNode: React.FC<NoteNodeProps> = ({ id, data, selected, xPos, yPos }) =
   }, []);
 
   const handleSave = useCallback(() => {
+    const typedData = data as NoteNodeData;
     updateNode(id, { 
+      position: { x: xPos, y: yPos },
       data: { 
-        ...data, 
+        ...typedData, 
         content 
       } 
     });
     setIsEditing(false);
-  }, [id, data, content, updateNode]);
+  }, [id, data, content, updateNode, xPos, yPos]);
 
   const handleCancel = useCallback(() => {
-    setContent(data.content);
+    const typedData = data as NoteNodeData;
+    setContent(typedData.content || '');
     setIsEditing(false);
-  }, [data.content]);
+  }, [data]);
 
   const handleDelete = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
@@ -129,8 +139,12 @@ const NoteNode: React.FC<NoteNodeProps> = ({ id, data, selected, xPos, yPos }) =
   }, [handleFormatClick, handleSave, handleCancel]);
 
   const handleResize = useCallback((deltaWidth: number, deltaHeight: number, position: ResizeHandlePosition) => {
-    const currentWidth = data.width || defaultWidth;
-    const currentHeight = data.height || defaultHeight;
+    console.log(`Resizing node ${id} with deltas: width=${deltaWidth}, height=${deltaHeight}, position=${position}`);
+    
+    // Cast data to NoteNodeData and use type assertions for width and height
+    const typedData = data as NoteNodeData;
+    const currentWidth = (typedData.width as number) || defaultWidth;
+    const currentHeight = (typedData.height as number) || defaultHeight;
     
     let newWidth = currentWidth;
     let newHeight = currentHeight;
@@ -167,18 +181,10 @@ const NoteNode: React.FC<NoteNodeProps> = ({ id, data, selected, xPos, yPos }) =
         break;
     }
     
-    // Update node data
-    const nodeUpdate: any = {
-      data: {
-        ...data,
-        width: newWidth,
-        height: newHeight
-      }
-    };
+    console.log(`New dimensions: width=${newWidth}, height=${newHeight}, position=`, newPosition);
     
-    // Check if position has changed
-    if (newPosition.x !== xPos || newPosition.y !== yPos) {
-      // Update both node data and position
+    try {
+      // Force a direct update to the ReactFlow nodes
       reactFlowInstance.setNodes(nodes => 
         nodes.map(node => {
           if (node.id === id) {
@@ -195,9 +201,21 @@ const NoteNode: React.FC<NoteNodeProps> = ({ id, data, selected, xPos, yPos }) =
           return node;
         })
       );
-    } else {
-      // Only update node data
-      updateNode(id, nodeUpdate);
+      
+      // Also update the store to ensure persistence
+      // Make sure to include the position in the update to ensure it's persisted
+      updateNode(id, {
+        position: newPosition,
+        data: {
+          ...typedData,
+          width: newWidth,
+          height: newHeight
+        }
+      });
+      
+      console.log('Node updated successfully');
+    } catch (error) {
+      console.error('Error updating node:', error);
     }
   }, [data, defaultWidth, defaultHeight, id, updateNode, xPos, yPos, reactFlowInstance]);
   
@@ -206,22 +224,50 @@ const NoteNode: React.FC<NoteNodeProps> = ({ id, data, selected, xPos, yPos }) =
     setIsFocusMode(true);
   }, []);
   
+  // Handler for double-click to enter focus mode
+  const handleDoubleClick = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent event bubbling
+    if (!isEditing) { // Only enter focus mode if not already editing
+      setIsFocusMode(true);
+    }
+  }, [isEditing]);
+  
   const handleFocusModeSave = useCallback((newContent: string) => {
     setContent(newContent);
-    updateNode(id, { data: { ...data, content: newContent } });
-  }, [data, id, updateNode]);
+    const typedData = data as NoteNodeData;
+    updateNode(id, { 
+      position: { x: xPos, y: yPos },
+      data: { ...typedData, content: newContent } 
+    });
+  }, [data, id, updateNode, xPos, yPos]);
   
   const handleFocusModeClose = useCallback(() => {
     setIsFocusMode(false);
   }, []);
 
-  const backgroundColor = data.color || '#ffffff';
-  const width = data.width || defaultWidth;
-  const height = data.height || defaultHeight;
+  // Cast data to NoteNodeData and use type assertions for properties
+  const typedData = data as NoteNodeData;
+  const backgroundColor = typedData.color || '#ffffff';
+  const width = (typedData.width as number) || defaultWidth;
+  const height = (typedData.height as number) || defaultHeight;
 
   // Prevent the parent node from handling drag events when resizing
   const onClickCapture = useCallback((e: React.MouseEvent) => {
-    if ((e.target as HTMLElement).classList.contains('resize-handle')) {
+    // Check if the click is on a resize handle
+    if (e.target instanceof Element && 
+        (e.target.classList.contains('resize-handle') || 
+         e.target.closest('.resize-handle'))) {
+      // Stop propagation to prevent the node from being dragged
+      e.stopPropagation();
+      e.preventDefault();
+    }
+  }, []);
+  
+  // Also prevent mousedown events on resize handles from triggering node drag
+  const onMouseDownCapture = useCallback((e: React.MouseEvent) => {
+    if (e.target instanceof Element && 
+        (e.target.classList.contains('resize-handle') || 
+         e.target.closest('.resize-handle'))) {
       e.stopPropagation();
     }
   }, []);
@@ -237,9 +283,45 @@ const NoteNode: React.FC<NoteNodeProps> = ({ id, data, selected, xPos, yPos }) =
         height: `${height}px`
       }}
       onClickCapture={onClickCapture}
+      onMouseDownCapture={onMouseDownCapture}
+      onDoubleClick={handleDoubleClick}
     >
-      <Handle type="target" position={Position.Top} className="w-3 h-3" />
-      <Handle type="source" position={Position.Bottom} className="w-3 h-3" />
+      <Handle 
+        type="target" 
+        position={Position.Top} 
+        id="top-target" 
+        className="w-1.5 h-1.5 rounded-full border border-gray-300 bg-white shadow-sm opacity-50 hover:opacity-100 hover:scale-125 transition-all" 
+      />
+      <Handle 
+        type="source" 
+        position={Position.Bottom} 
+        id="bottom-source" 
+        className="w-1.5 h-1.5 rounded-full border border-gray-300 bg-white shadow-sm opacity-50 hover:opacity-100 hover:scale-125 transition-all" 
+      />
+      <Handle 
+        type="source" 
+        position={Position.Left} 
+        id="left-source" 
+        className="w-1.5 h-1.5 rounded-full border border-gray-300 bg-white shadow-sm opacity-50 hover:opacity-100 hover:scale-125 transition-all" 
+      />
+      <Handle 
+        type="target" 
+        position={Position.Left} 
+        id="left-target" 
+        className="w-1.5 h-1.5 rounded-full border border-gray-300 bg-white shadow-sm opacity-50 hover:opacity-100 hover:scale-125 transition-all" 
+      />
+      <Handle 
+        type="source" 
+        position={Position.Right} 
+        id="right-source" 
+        className="w-1.5 h-1.5 rounded-full border border-gray-300 bg-white shadow-sm opacity-50 hover:opacity-100 hover:scale-125 transition-all" 
+      />
+      <Handle 
+        type="target" 
+        position={Position.Right} 
+        id="right-target" 
+        className="w-1.5 h-1.5 rounded-full border border-gray-300 bg-white shadow-sm opacity-50 hover:opacity-100 hover:scale-125 transition-all" 
+      />
       
       {/* Render focus mode if active */}
       {isFocusMode && (
@@ -250,26 +332,26 @@ const NoteNode: React.FC<NoteNodeProps> = ({ id, data, selected, xPos, yPos }) =
         />
       )}
       
-      {/* Resize handles - only show when not editing and not in focus mode */}
+      {/* Use ReactFlow's built-in NodeResizer component */}
       {!isEditing && !isFocusMode && (
-        <>
-          <ResizeHandle 
-            position="bottom-right" 
-            onResize={(deltaWidth, deltaHeight) => handleResize(deltaWidth, deltaHeight, 'bottom-right')} 
-          />
-          <ResizeHandle 
-            position="bottom-left" 
-            onResize={(deltaWidth, deltaHeight) => handleResize(deltaWidth, deltaHeight, 'bottom-left')} 
-          />
-          <ResizeHandle 
-            position="top-right" 
-            onResize={(deltaWidth, deltaHeight) => handleResize(deltaWidth, deltaHeight, 'top-right')} 
-          />
-          <ResizeHandle 
-            position="top-left" 
-            onResize={(deltaWidth, deltaHeight) => handleResize(deltaWidth, deltaHeight, 'top-left')} 
-          />
-        </>
+        <NodeResizer
+          minWidth={minWidth}
+          minHeight={minHeight}
+          maxWidth={maxWidth}
+          maxHeight={maxHeight}
+          isVisible={selected}
+          onResize={(event, { width, height }) => {
+            const typedData = data as NoteNodeData;
+            updateNode(id, {
+              position: { x: xPos, y: yPos },
+              data: {
+                ...typedData,
+                width,
+                height
+              }
+            });
+          }}
+        />
       )}
       
       {isEditing ? (
@@ -318,6 +400,60 @@ const NoteNode: React.FC<NoteNodeProps> = ({ id, data, selected, xPos, yPos }) =
             )}
           </div>
           <div className="flex justify-end mt-2 space-x-2">
+            <button
+              onClick={() => {
+                console.log("Increasing size");
+                // Increase size by 50px in width and height
+                const typedData = data as NoteNodeData;
+                const currentWidth = (typedData.width as number) || defaultWidth;
+                const currentHeight = (typedData.height as number) || defaultHeight;
+                const newWidth = Math.min(maxWidth, currentWidth + 50);
+                const newHeight = Math.min(maxHeight, currentHeight + 50);
+                
+                // Update node data - make sure to include the position
+                updateNode(id, {
+                  position: { x: xPos, y: yPos },
+                  data: {
+                    ...typedData,
+                    width: newWidth,
+                    height: newHeight
+                  }
+                });
+                
+                console.log(`Resized to: ${newWidth}x${newHeight}`);
+              }}
+              className="p-1 text-green-500 hover:text-green-700"
+              title="Increase Size"
+            >
+              <span style={{ fontWeight: 'bold', fontSize: '16px' }}>+</span>
+            </button>
+            <button
+              onClick={() => {
+                console.log("Decreasing size");
+                // Decrease size by 50px in width and height
+                const typedData = data as NoteNodeData;
+                const currentWidth = (typedData.width as number) || defaultWidth;
+                const currentHeight = (typedData.height as number) || defaultHeight;
+                const newWidth = Math.max(minWidth, currentWidth - 50);
+                const newHeight = Math.max(minHeight, currentHeight - 50);
+                
+                // Update node data - make sure to include the position
+                updateNode(id, {
+                  position: { x: xPos, y: yPos },
+                  data: {
+                    ...typedData,
+                    width: newWidth,
+                    height: newHeight
+                  }
+                });
+                
+                console.log(`Resized to: ${newWidth}x${newHeight}`);
+              }}
+              className="p-1 text-red-500 hover:text-red-700"
+              title="Decrease Size"
+            >
+              <span style={{ fontWeight: 'bold', fontSize: '16px' }}>-</span>
+            </button>
             <button
               onClick={handleFocusModeToggle}
               className="p-1 text-blue-500 hover:text-blue-700"
