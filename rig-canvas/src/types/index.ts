@@ -7,6 +7,7 @@ export interface NoteData {
   color?: string;
   width?: number;
   height?: number;
+  fileId?: string; // Reference to a file in the file system
   [key: string]: unknown;
 }
 
@@ -30,6 +31,9 @@ export type Edge = ReactFlowEdge & {
 export interface CanvasData {
   nodes: Node[];
   edges: Edge[];
+  id: string;
+  name: string;
+  lastModified: number;
 }
 
 export interface ContextMenuPosition {
@@ -37,4 +41,29 @@ export interface ContextMenuPosition {
   y: number;
   nodeId?: string;
   edgeId?: string;
+}
+
+// File system types
+export type FileType = 'note' | 'image' | 'audio' | 'canvas' | 'pdf' | 'markdown';
+
+export interface FileData {
+  id: string;
+  name: string;
+  type: FileType;
+  content?: string;
+  url?: string; // For image and audio files
+  lastModified: number;
+  size?: number;
+}
+
+export interface FolderData {
+  id: string;
+  name: string;
+  files: FileData[];
+  folders: FolderData[];
+  lastModified: number;
+}
+
+export interface FileSystemData {
+  rootFolder: FolderData;
 }

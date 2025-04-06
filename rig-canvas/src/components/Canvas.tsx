@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useMemo, useState } from 'react';
+import React, { useCallback, useRef, useMemo, useState, useEffect } from 'react';
 import {
   ReactFlow,
   Background,
@@ -25,10 +25,26 @@ import { useCanvasStore } from '../store/canvasStore';
 import NoteNode from './NoteNode';
 import ContextMenu from './ContextMenu';
 import { Plus } from 'lucide-react';
-import { Node, NoteData } from '../types';
+import { Node, NoteData, FileData } from '../types';
+import { useFileSystem } from '../hooks/useFileSystem';
 
-const Canvas: React.FC = () => {
-  const { nodes, edges, addEdge, setContextMenu, contextMenu, updateNode, updateEdge } = useCanvasStore();
+interface CanvasProps {
+  onFileDrop?: (file: FileData) => void;
+}
+
+const Canvas: React.FC<CanvasProps> = ({ onFileDrop }) => {
+  const canvasStore = useCanvasStore();
+  const { 
+    nodes, 
+    edges, 
+    addEdge, 
+    setContextMenu, 
+    contextMenu, 
+    updateNode, 
+    updateEdge, 
+    addNode 
+  } = canvasStore;
+  
   const [selectedEdgeId, setSelectedEdgeId] = useState<string | null>(null);
   // Keep track of previous selected edge to reset its style
   const prevSelectedEdgeIdRef = useRef<string | null>(null);
@@ -36,6 +52,50 @@ const Canvas: React.FC = () => {
   const [reactFlowEdges, setEdges, onEdgesChange] = useEdgesState(edges);
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const reactFlowInstance = useReactFlow();
+  const { getFile } = useFileSystem();
+  
+  // Handle file drop from the sidebar
+  const handleFileDrop = useCallback(async (file: FileData) => {
+    if (!reactFlowInstance) return;
+    
+    // Create a position for the new node
+    const position = reactFlowInstance.screenToFlowPosition({
+      x: window.innerWidth / 2,
+      y: window.innerHeight / 2,
+    });
+    
+    const id = `file-node-${Date.now()}`;
+    let nodeData: NoteData = {
+      fileId: file.id,
+      width: 250,
+      height: 150
+    };
+    
+    // Set content based on file type
+    if (file.type === 'note') {
+      nodeData.content = file.content || '';
+    } else if (file.type === 'image') {
+      nodeData.content = `![${file.name}](${file.url})`;
+    } else if (file.type === 'audio') {
+      nodeData.content = `<audio controls src="${file.url}"></audio>`;
+    }
+    
+    const newNode: Node = {
+      id,
+      type: 'note',
+      position,
+      data: nodeData
+    };
+    
+    addNode(newNode);
+  }, [reactFlowInstance, addNode]);
+  
+  // Call the onFileDrop callback when a file is dropped
+  useEffect(() => {
+    if (onFileDrop) {
+      onFileDrop = handleFileDrop;
+    }
+  }, [onFileDrop, handleFileDrop]);
 
   // Define custom node types with useMemo to prevent recreation on each render
   const nodeTypes = useMemo<NodeTypes>(() => ({
@@ -115,7 +175,7 @@ const Canvas: React.FC = () => {
   }, [setContextMenu, edges, updateEdge]);
 
   const onNodeContextMenu = useCallback(
-    (event: React.MouseEvent, node: { id: string }) => {
+    (event: React.MouseEvent, node: ReactFlowNode) => {
       // Prevent default context menu
       event.preventDefault();
       
@@ -132,7 +192,7 @@ const Canvas: React.FC = () => {
 
   // Handle edge click to select it
   const onEdgeClick = useCallback(
-    (event: React.MouseEvent, edge: { id: string }) => {
+    (event: React.MouseEvent, edge: Edge) => {
       event.stopPropagation();
       
       // Reset style of previously selected edge
@@ -161,7 +221,7 @@ const Canvas: React.FC = () => {
   );
 
   const onEdgeContextMenu = useCallback(
-    (event: React.MouseEvent, edge: { id: string }) => {
+    (event: React.MouseEvent, edge: Edge) => {
       // Prevent default context menu
       event.preventDefault();
       
@@ -201,11 +261,14 @@ const Canvas: React.FC = () => {
   );
 
   const onPaneContextMenu = useCallback(
-    (event: React.MouseEvent) => {
+    (event: React.MouseEvent<Element, MouseEvent> | MouseEvent) => {
       // Prevent default context menu
       event.preventDefault();
       
-      const { clientX, clientY } = event;
+      // Handle both React.MouseEvent and MouseEvent
+      const clientX = 'clientX' in event ? event.clientX : 0;
+      const clientY = 'clientY' in event ? event.clientY : 0;
+      
       // Calculate position relative to the wrapper
       const boundingRect = reactFlowWrapper.current?.getBoundingClientRect();
       const x = clientX - (boundingRect?.left || 0);
@@ -217,8 +280,6 @@ const Canvas: React.FC = () => {
     [setContextMenu]
   );
 
-  const { addNode } = useCanvasStore();
-  
   const handleAddNote = useCallback(() => {
     if (!reactFlowInstance) return;
     
@@ -263,7 +324,6 @@ const Canvas: React.FC = () => {
         nodesDraggable={true}
         nodesConnectable={true}
         elementsSelectable={true}
-        edgesUpdatable={true}
         edgesFocusable={true}
         fitView
         snapToGrid
@@ -306,10 +366,10 @@ const Canvas: React.FC = () => {
 };
 
 // Wrap with ReactFlowProvider to use hooks outside of ReactFlow
-const CanvasWithProvider: React.FC = () => {
+const CanvasWithProvider: React.FC<CanvasProps> = (props) => {
   return (
     <ReactFlowProvider>
-      <Canvas />
+      <Canvas {...props} />
     </ReactFlowProvider>
   );
 };
