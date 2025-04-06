@@ -127,7 +127,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onFileSelect, onFileDrop, onCanvasSel
   }
   
   return (
-    <div className="h-full flex flex-col bg-white border-r border-gray-200" style={{ width: `${sidebarWidth}px` }}>
+    <div className="h-full flex flex-col bg-white border-r border-gray-200 relative" style={{ width: `${sidebarWidth}px` }}>
       <div className="flex justify-between items-center p-2 border-b border-gray-200 bg-gray-50">
         <div className="font-semibold">Rig Canvas</div>
         <button
@@ -139,26 +139,33 @@ const Sidebar: React.FC<SidebarProps> = ({ onFileSelect, onFileDrop, onCanvasSel
         </button>
       </div>
       
-      <div className="absolute top-0 right-0 bottom-0 w-1 cursor-ew-resize" 
-           style={{ transform: 'translateX(50%)' }}
-           onMouseDown={(e) => {
-             e.preventDefault();
-             const startX = e.clientX;
-             const startWidth = sidebarWidth;
-             
-             const handleMouseMove = (moveEvent: MouseEvent) => {
-               const deltaX = moveEvent.clientX - startX;
-               handleResize(startWidth + deltaX);
-             };
-             
-             const handleMouseUp = () => {
-               document.removeEventListener('mousemove', handleMouseMove);
-               document.removeEventListener('mouseup', handleMouseUp);
-             };
-             
-             document.addEventListener('mousemove', handleMouseMove);
-             document.addEventListener('mouseup', handleMouseUp);
-           }}
+      {/* Resize handle - positioned exactly on the border */}
+      <div 
+        className="absolute top-0 right-0 bottom-0 w-2 cursor-ew-resize z-50 hover:bg-blue-400 transition-colors"
+        style={{ transform: 'translateX(1px)' }}
+        onMouseDown={(e) => {
+          e.preventDefault();
+          const startX = e.clientX;
+          const startWidth = sidebarWidth;
+          
+          // Add active resize class to body
+          document.body.classList.add('resizing');
+          
+          const handleMouseMove = (moveEvent: MouseEvent) => {
+            const deltaX = moveEvent.clientX - startX;
+            handleResize(startWidth + deltaX);
+          };
+          
+          const handleMouseUp = () => {
+            // Remove active resize class from body
+            document.body.classList.remove('resizing');
+            document.removeEventListener('mousemove', handleMouseMove);
+            document.removeEventListener('mouseup', handleMouseUp);
+          };
+          
+          document.addEventListener('mousemove', handleMouseMove);
+          document.addEventListener('mouseup', handleMouseUp);
+        }}
       />
       
       <div className="flex border-b border-gray-200">
@@ -231,7 +238,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onFileSelect, onFileDrop, onCanvasSel
               return (
                 <div
                   key={canvas.id}
-                  className={`flex items-center py-2 px-2 mb-1 rounded cursor-pointer ${
+                  className={`flex items-center py-2 px-2 mb-1 rounded cursor-pointer group ${
                     isActive ? 'bg-blue-100 border border-blue-300' : 'hover:bg-gray-100'
                   }`}
                   onClick={() => handleCanvasSelect(canvas.id)}
@@ -265,10 +272,10 @@ const Sidebar: React.FC<SidebarProps> = ({ onFileSelect, onFileDrop, onCanvasSel
                     <>
                       <span className="flex-grow truncate">{canvas.name}</span>
                       
-                      <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
                         <button
                           onClick={(e) => { e.stopPropagation(); handleEditCanvas(canvas); }}
-                          className="text-blue-500 hover:text-blue-700"
+                          className="p-1 rounded hover:bg-gray-200 text-gray-600"
                           title="Rename Canvas"
                         >
                           <Edit size={16} />
@@ -277,7 +284,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onFileSelect, onFileDrop, onCanvasSel
                         {!isActive && (
                           <button
                             onClick={(e) => { e.stopPropagation(); removeCanvas(canvas.id); }}
-                            className="text-red-500 hover:text-red-700"
+                            className="p-1 rounded hover:bg-gray-200 text-gray-600"
                             title="Delete Canvas"
                           >
                             <Trash2 size={16} />
