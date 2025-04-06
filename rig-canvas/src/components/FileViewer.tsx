@@ -14,15 +14,37 @@ interface FileViewerProps {
 const FileViewer: React.FC<FileViewerProps> = ({ file, onClose }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [content, setContent] = useState<string>('');
-  const { updateFileContent } = useFileSystem();
+  const { updateFileContent, getFile } = useFileSystem();
 
   useEffect(() => {
     if (file) {
-      setContent(file.content || '');
+      console.log('FileViewer received file:', file);
+      console.log('File ID:', file.id);
+      console.log('File content:', file.content);
+      
+      // Get the latest file content from the file system
+      const fetchLatestFile = async () => {
+        try {
+          const latestFile = await getFile(file.id);
+          console.log('Latest file from file system:', latestFile);
+          
+          if (latestFile) {
+            setContent(latestFile.content || '');
+          } else {
+            setContent(file.content || '');
+          }
+        } catch (error) {
+          console.error('Error fetching latest file:', error);
+          setContent(file.content || '');
+        }
+      };
+      
+      fetchLatestFile();
+      
       // Only allow editing for text and markdown files
       setIsEditing(file.type === 'note' || file.type === 'markdown');
     }
-  }, [file]);
+  }, [file, getFile]);
 
   const handleSave = async () => {
     if (file) {

@@ -32,7 +32,9 @@ function App() {
   // Handle file drop onto the canvas
   const handleFileDrop = useCallback((file: FileData) => {
     console.log('File dropped onto canvas:', file);
-    // The Canvas component will handle this
+    // This function is passed to both Sidebar and Canvas
+    // The actual handling is done in the Canvas component
+    setViewMode('canvas'); // Switch to canvas view when a file is dropped
   }, []);
   
   // Handle canvas selection

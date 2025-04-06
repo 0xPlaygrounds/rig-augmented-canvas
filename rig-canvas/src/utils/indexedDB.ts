@@ -191,24 +191,46 @@ export const createFile = async (
 
 // Update a file
 export const updateFile = async (fileId: string, updates: Partial<FileData>): Promise<FileData | null> => {
+  console.log('updateFile called with fileId:', fileId);
+  console.log('updates:', updates);
+  
   const fileSystem = await getFileSystem();
+  console.log('Current file system:', fileSystem);
+  
   let updatedFile: FileData | null = null;
+  let fileFound = false;
   
   // Helper function to find and update a file
   const findAndUpdateFile = (folder: FolderData): boolean => {
+    console.log('Searching in folder:', folder.name, 'with ID:', folder.id);
+    console.log('Folder contains files:', folder.files.map(f => ({ id: f.id, name: f.name })));
+    
     for (let i = 0; i < folder.files.length; i++) {
+      console.log('Checking file:', folder.files[i].id, folder.files[i].name);
+      
       if (folder.files[i].id === fileId) {
-        folder.files[i] = {
+        console.log('Found file to update:', folder.files[i]);
+        fileFound = true;
+        
+        // Create the updated file object
+        const updatedFileObj = {
           ...folder.files[i],
           ...updates,
           lastModified: Date.now()
         };
+        
+        console.log('Updated file object:', updatedFileObj);
+        
+        // Update the file in the folder
+        folder.files[i] = updatedFileObj;
         updatedFile = folder.files[i];
         folder.lastModified = Date.now();
+        
         return true;
       }
     }
     
+    // Recursively search in subfolders
     for (const subFolder of folder.folders) {
       if (findAndUpdateFile(subFolder)) {
         return true;
@@ -220,7 +242,12 @@ export const updateFile = async (fileId: string, updates: Partial<FileData>): Pr
   
   findAndUpdateFile(fileSystem.rootFolder);
   
+  if (!fileFound) {
+    console.error('File not found with ID:', fileId);
+  }
+  
   if (updatedFile) {
+    console.log('Saving updated file system with updated file:', updatedFile);
     await saveFileSystem(fileSystem);
     return updatedFile;
   }

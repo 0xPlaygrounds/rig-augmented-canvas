@@ -1,7 +1,7 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { useFileSystem } from '../hooks/useFileSystem';
 import { FolderData, FileData, FileType } from '../types';
-import { ChevronRight, ChevronDown, Folder, File, FileText, Music, Image, Plus, Trash2, Edit, Save, X, FileImage, FolderPlus, Upload } from 'lucide-react';
+import { ChevronRight, ChevronDown, Folder, File, FileText, Music, Image, Plus, Trash2, Edit, Save, X, FileImage, FolderPlus, Upload, FilePlus } from 'lucide-react';
 import { useCanvasStore } from '../store/canvasStore';
 
 interface FileExplorerProps {
@@ -33,13 +33,16 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
   const [newFolderParentId, setNewFolderParentId] = useState<string | null>(null);
   const [newFolderName, setNewFolderName] = useState('');
   
+  const [newNoteParentId, setNewNoteParentId] = useState<string | null>(null);
+  const [newNoteName, setNewNoteName] = useState('');
+  
   const [editingFile, setEditingFile] = useState<{ id: string, name: string } | null>(null);
   const [editingFolder, setEditingFolder] = useState<{ id: string, name: string } | null>(null);
   
   const [savingNote, setSavingNote] = useState(false);
   const [targetFolderId, setTargetFolderId] = useState<string | null>(null);
   
-  const draggedItem = useRef<{ type: 'file', data: FileData } | null>(null);
+  const draggedItem = useRef<{ type: 'file', data: FileData, sourceFolder?: string } | null>(null);
   
   // Toggle folder expansion
   const toggleFolder = (folderId: string) => {
@@ -74,6 +77,32 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
   const cancelNewFolder = () => {
     setNewFolderParentId(null);
     setNewFolderName('');
+  };
+  
+  // Start creating a new note
+  const handleNewNote = (parentId: string) => {
+    setNewNoteParentId(parentId);
+    setNewNoteName('');
+  };
+  
+  // Create the new note
+  const createNewNote = async () => {
+    if (newNoteParentId && newNoteName.trim()) {
+      await addFile(
+        newNoteParentId,
+        newNoteName.trim().endsWith('.md') ? newNoteName.trim() : `${newNoteName.trim()}.md`,
+        'markdown',
+        '# New Note\n\nStart writing here...'
+      );
+      setNewNoteParentId(null);
+      setNewNoteName('');
+    }
+  };
+  
+  // Cancel creating a new note
+  const cancelNewNote = () => {
+    setNewNoteParentId(null);
+    setNewNoteName('');
   };
   
   // Start editing a file name
@@ -122,8 +151,19 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
   };
   
   // Handle drag start
-  const handleDragStart = (file: FileData) => {
-    draggedItem.current = { type: 'file', data: file };
+  const handleDragStart = (e: React.DragEvent, file: FileData, sourceFolderId: string) => {
+    console.log('Dragging file:', file);
+    console.log('File ID:', file.id);
+    console.log('File content:', file.content);
+    
+    // Store the file data in the draggedItem ref for internal use
+    draggedItem.current = { type: 'file', data: file, sourceFolder: sourceFolderId };
+    
+    // Set the file data in the dataTransfer object for external drops (like on canvas)
+    const fileDataString = JSON.stringify(file);
+    console.log('Setting dataTransfer data:', fileDataString);
+    e.dataTransfer.setData('application/json', fileDataString);
+    e.dataTransfer.effectAllowed = 'copy';
   };
   
   // Handle drag over
@@ -137,6 +177,36 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
     
     if (draggedItem.current && onFileDrop) {
       onFileDrop(draggedItem.current.data);
+    }
+    
+    draggedItem.current = null;
+  };
+  
+  // Handle drop on folder
+  const handleDropOnFolder = async (e: React.DragEvent, targetFolderId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (draggedItem.current && draggedItem.current.sourceFolder && draggedItem.current.sourceFolder !== targetFolderId) {
+      const file = draggedItem.current.data;
+      
+      // Create a copy of the file in the target folder
+      await addFile(
+        targetFolderId,
+        file.name,
+        file.type,
+        file.content,
+        file.url
+      );
+      
+      // Remove the file from the source folder
+      await removeFile(file.id);
+      
+      // Expand the target folder
+      setExpandedFolders(prev => ({
+        ...prev,
+        [targetFolderId]: true
+      }));
     }
     
     draggedItem.current = null;
@@ -241,6 +311,8 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
         <div 
           className={`flex items-center py-1 px-2 hover:bg-gray-100 group ${level > 0 ? 'ml-4' : ''}`}
           onClick={() => toggleFolder(folder.id)}
+          onDragOver={handleDragOver}
+          onDrop={(e) => handleDropOnFolder(e, folder.id)}
         >
           <div className="mr-1">
             {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
@@ -283,6 +355,14 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
                 title="New Folder"
               >
                 <FolderPlus size={16} />
+              </button>
+              
+              <button
+                onClick={(e) => { e.stopPropagation(); handleNewNote(folder.id); }}
+                className="p-1 rounded hover:bg-gray-200 text-gray-600"
+                title="New Note"
+              >
+                <FilePlus size={16} />
               </button>
               
               <label className="p-1 rounded hover:bg-gray-200 text-gray-600 cursor-pointer" title="Upload File">
@@ -329,6 +409,32 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
         
         {isExpanded && (
           <div>
+            {newNoteParentId === folder.id && (
+              <div className="flex items-center py-1 px-2 ml-4">
+                <FileText size={16} className="text-blue-500 mr-2" />
+                <input
+                  type="text"
+                  value={newNoteName}
+                  onChange={(e) => setNewNoteName(e.target.value)}
+                  className="border border-gray-300 rounded px-1 py-0.5 text-sm flex-grow"
+                  placeholder="New Note.md"
+                  autoFocus
+                />
+                <button
+                  onClick={createNewNote}
+                  className="ml-1 text-green-500 hover:text-green-700"
+                >
+                  <Save size={14} />
+                </button>
+                <button
+                  onClick={cancelNewNote}
+                  className="ml-1 text-red-500 hover:text-red-700"
+                >
+                  <X size={14} />
+                </button>
+              </div>
+            )}
+            
             {newFolderParentId === folder.id && (
               <div className="flex items-center py-1 px-2 ml-4">
                 <Folder size={16} className="text-yellow-500 mr-2" />
@@ -364,7 +470,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
                   className="flex items-center py-1 px-2 ml-4 hover:bg-gray-100 cursor-pointer group"
                   onClick={() => handleFileClick(file)}
                   draggable
-                  onDragStart={() => handleDragStart(file)}
+                  onDragStart={(e) => handleDragStart(e, file, folder.id)}
                 >
                   {renderFileIcon(file.type)}
                   

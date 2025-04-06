@@ -67,9 +67,30 @@ export const useFileSystem = () => {
 
   // Update a file
   const updateFileContent = useCallback(async (fileId: string, updates: Partial<FileData>) => {
+    console.log('updateFileContent called with fileId:', fileId);
+    console.log('updates:', updates);
+    
     try {
+      // Get the current file to verify it exists
+      const currentFile = await getFileById(fileId);
+      console.log('Current file before update:', currentFile);
+      
+      if (!currentFile) {
+        console.error('File not found with ID:', fileId);
+        setError('File not found');
+        return null;
+      }
+      
       const updatedFile = await updateFile(fileId, updates);
+      console.log('Updated file result:', updatedFile);
+      
+      // Reload the file system to reflect changes
       await loadFileSystem();
+      
+      // Get the file again to verify it was updated
+      const verifyFile = await getFileById(fileId);
+      console.log('File after update:', verifyFile);
+      
       return updatedFile;
     } catch (err) {
       console.error('Failed to update file:', err);

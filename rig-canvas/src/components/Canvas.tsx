@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useMemo, useState, useEffect } from 'react';
+import React, { useCallback, useRef, useMemo, useState, useEffect, DragEvent } from 'react';
 import {
   ReactFlow,
   Background,
@@ -55,14 +55,28 @@ const Canvas: React.FC<CanvasProps> = ({ onFileDrop }) => {
   const { getFile } = useFileSystem();
   
   // Handle file drop from the sidebar
-  const handleFileDrop = useCallback(async (file: FileData) => {
+  const handleFileDrop = useCallback(async (file: FileData, dropPosition?: { x: number, y: number }) => {
     if (!reactFlowInstance) return;
     
+    console.log('handleFileDrop called with file:', file);
+    console.log('File ID:', file.id);
+    console.log('File content:', file.content);
+    
     // Create a position for the new node
-    const position = reactFlowInstance.screenToFlowPosition({
-      x: window.innerWidth / 2,
-      y: window.innerHeight / 2,
-    });
+    let position;
+    
+    if (dropPosition) {
+      // Use the drop position if provided
+      position = reactFlowInstance.screenToFlowPosition(dropPosition);
+    } else {
+      // Default to center of the viewport
+      position = reactFlowInstance.screenToFlowPosition({
+        x: window.innerWidth / 2,
+        y: window.innerHeight / 2,
+      });
+    }
+    
+    console.log('Node position:', position);
     
     const id = `file-node-${Date.now()}`;
     let nodeData: NoteData = {
@@ -71,14 +85,18 @@ const Canvas: React.FC<CanvasProps> = ({ onFileDrop }) => {
       height: 150
     };
     
+    console.log('Node data before setting content:', nodeData);
+    
     // Set content based on file type
-    if (file.type === 'note') {
+    if (file.type === 'note' || file.type === 'markdown') {
       nodeData.content = file.content || '';
     } else if (file.type === 'image') {
       nodeData.content = `![${file.name}](${file.url})`;
     } else if (file.type === 'audio') {
       nodeData.content = `<audio controls src="${file.url}"></audio>`;
     }
+    
+    console.log('Node data after setting content:', nodeData);
     
     const newNode: Node = {
       id,
@@ -87,15 +105,56 @@ const Canvas: React.FC<CanvasProps> = ({ onFileDrop }) => {
       data: nodeData
     };
     
+    console.log('Creating new node:', newNode);
+    
+    // Verify the file exists before creating the node
+    const existingFile = await getFile(file.id);
+    console.log('Verified file exists:', existingFile);
+    
     addNode(newNode);
-  }, [reactFlowInstance, addNode]);
+    
+    console.log('Node added to canvas');
+  }, [reactFlowInstance, addNode, getFile]);
   
-  // Call the onFileDrop callback when a file is dropped
-  useEffect(() => {
-    if (onFileDrop) {
-      onFileDrop = handleFileDrop;
+  // Handle direct drag and drop from file explorer to canvas
+  const onDragOver = useCallback((event: DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    event.dataTransfer.dropEffect = 'copy';
+  }, []);
+  
+  const onDrop = useCallback((event: DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    
+    console.log('Drop event on canvas');
+    
+    // Get the dragged file data from the dataTransfer
+    const fileData = event.dataTransfer.getData('application/json');
+    console.log('Received file data:', fileData);
+    
+    if (fileData) {
+      try {
+        const file = JSON.parse(fileData) as FileData;
+        console.log('Parsed file:', file);
+        console.log('File ID:', file.id);
+        console.log('File content:', file.content);
+        
+        // Get the drop position
+        const dropPosition = {
+          x: event.clientX,
+          y: event.clientY
+        };
+        
+        console.log('Drop position:', dropPosition);
+        
+        // Create a new node at the drop position
+        handleFileDrop(file, dropPosition);
+      } catch (error) {
+        console.error('Error parsing dragged file data:', error);
+      }
+    } else {
+      console.warn('No file data received in drop event');
     }
-  }, [onFileDrop, handleFileDrop]);
+  }, [handleFileDrop]);
 
   // Define custom node types with useMemo to prevent recreation on each render
   const nodeTypes = useMemo<NodeTypes>(() => ({
@@ -306,7 +365,12 @@ const Canvas: React.FC<CanvasProps> = ({ onFileDrop }) => {
   }, [reactFlowInstance, addNode]);
 
   return (
-    <div className="w-full h-full" ref={reactFlowWrapper}>
+    <div 
+      className="w-full h-full" 
+      ref={reactFlowWrapper}
+      onDragOver={onDragOver}
+      onDrop={onDrop}
+    >
       <ReactFlow
         nodes={reactFlowNodes}
         edges={reactFlowEdges}

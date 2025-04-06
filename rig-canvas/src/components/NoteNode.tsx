@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Handle, Position, useReactFlow, NodeProps, NodeResizer } from '@xyflow/react';
-import { Trash2, Edit, X, Check, Maximize2 } from 'lucide-react';
+import { Trash2, Edit, X, Check, Maximize2, Link } from 'lucide-react';
 import { useCanvasStore } from '../store/canvasStore';
+import { useFileSystem } from '../hooks/useFileSystem';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import NoteToolbar from './NoteToolbar';
@@ -15,6 +16,7 @@ interface NoteNodeData {
   color?: string;
   width?: number;
   height?: number;
+  fileId?: string;
   [key: string]: unknown;
 }
 
@@ -36,6 +38,9 @@ const NoteNode: React.FC<NodeProps> = ({ id, data, selected, positionAbsoluteX, 
     removeNode: state.removeNode
   }));
   
+  // Get the file system hook
+  const { updateFileContent, getFile } = useFileSystem();
+  
   // Dimensions configuration
   const defaultWidth = 250;
   const defaultHeight = 150;
@@ -44,11 +49,62 @@ const NoteNode: React.FC<NodeProps> = ({ id, data, selected, positionAbsoluteX, 
   const maxWidth = 800;
   const maxHeight = 600;
 
+  // Check if this node is linked to a file
+  const isLinkedToFile = Boolean(nodeData.fileId);
+
   // Update local content when data changes (e.g., when loading from persistence)
   useEffect(() => {
     const typedData = data as NoteNodeData;
     setContent(typedData.content || '');
   }, [data]);
+  
+  // Periodically check for updates to the linked file
+  useEffect(() => {
+    const typedData = data as NoteNodeData;
+    const fileId = typedData.fileId;
+    
+    if (!fileId) return; // Not linked to a file
+    
+    console.log('Setting up file update check for fileId:', fileId);
+    
+    // Function to check for file updates
+    const checkForFileUpdates = async () => {
+      try {
+        const file = await getFile(fileId);
+        
+        if (file && file.content !== content) {
+          console.log('File content changed, updating node content');
+          console.log('Old content:', content);
+          console.log('New content:', file.content);
+          
+          // Update the local content
+          setContent(file.content || '');
+          
+          // Update the node data
+          updateNode(id, {
+            position: { x: xPos, y: yPos },
+            data: {
+              ...typedData,
+              content: file.content
+            }
+          });
+        }
+      } catch (error) {
+        console.error('Error checking for file updates:', error);
+      }
+    };
+    
+    // Check for updates immediately
+    checkForFileUpdates();
+    
+    // Set up interval to check for updates every 2 seconds
+    const intervalId = setInterval(checkForFileUpdates, 2000);
+    
+    // Clean up interval on unmount
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, [id, data, content, xPos, yPos, updateNode, getFile]);
 
   useEffect(() => {
     if (isEditing && textareaRef.current) {
@@ -62,8 +118,13 @@ const NoteNode: React.FC<NodeProps> = ({ id, data, selected, positionAbsoluteX, 
     setIsEditing(true);
   }, []);
 
-  const handleSave = useCallback(() => {
+  const handleSave = useCallback(async () => {
     const typedData = data as NoteNodeData;
+    
+    console.log('Saving note with data:', typedData);
+    console.log('File ID:', typedData.fileId);
+    
+    // Update the node in the canvas
     updateNode(id, { 
       position: { x: xPos, y: yPos },
       data: { 
@@ -71,8 +132,33 @@ const NoteNode: React.FC<NodeProps> = ({ id, data, selected, positionAbsoluteX, 
         content 
       } 
     });
+    
+    // If this node is linked to a file, update the file content as well
+    if (typedData.fileId) {
+      try {
+        console.log('Updating file content for file ID:', typedData.fileId);
+        console.log('New content:', content);
+        
+        // Get the current file to verify it exists
+        const currentFile = await getFile(typedData.fileId);
+        console.log('Current file:', currentFile);
+        
+        if (currentFile) {
+          // Update the file content in the file system
+          const updatedFile = await updateFileContent(typedData.fileId, { content });
+          console.log('File update result:', updatedFile);
+        } else {
+          console.error('File not found with ID:', typedData.fileId);
+        }
+      } catch (error) {
+        console.error('Failed to update file content:', error);
+      }
+    } else {
+      console.log('Note is not linked to a file');
+    }
+    
     setIsEditing(false);
-  }, [id, data, content, updateNode, xPos, yPos]);
+  }, [id, data, content, updateNode, xPos, yPos, updateFileContent, getFile]);
 
   const handleCancel = useCallback(() => {
     const typedData = data as NoteNodeData;
@@ -232,14 +318,43 @@ const NoteNode: React.FC<NodeProps> = ({ id, data, selected, positionAbsoluteX, 
     }
   }, [isEditing]);
   
-  const handleFocusModeSave = useCallback((newContent: string) => {
+  const handleFocusModeSave = useCallback(async (newContent: string) => {
     setContent(newContent);
     const typedData = data as NoteNodeData;
+    
+    console.log('Saving note from focus mode with data:', typedData);
+    console.log('File ID:', typedData.fileId);
+    
+    // Update the node in the canvas
     updateNode(id, { 
       position: { x: xPos, y: yPos },
       data: { ...typedData, content: newContent } 
     });
-  }, [data, id, updateNode, xPos, yPos]);
+    
+    // If this node is linked to a file, update the file content as well
+    if (typedData.fileId) {
+      try {
+        console.log('Updating file content from focus mode for file ID:', typedData.fileId);
+        console.log('New content:', newContent);
+        
+        // Get the current file to verify it exists
+        const currentFile = await getFile(typedData.fileId);
+        console.log('Current file:', currentFile);
+        
+        if (currentFile) {
+          // Update the file content in the file system
+          const updatedFile = await updateFileContent(typedData.fileId, { content: newContent });
+          console.log('File update result from focus mode:', updatedFile);
+        } else {
+          console.error('File not found with ID:', typedData.fileId);
+        }
+      } catch (error) {
+        console.error('Failed to update file content from focus mode:', error);
+      }
+    } else {
+      console.log('Note is not linked to a file');
+    }
+  }, [data, id, updateNode, xPos, yPos, updateFileContent, getFile]);
   
   const handleFocusModeClose = useCallback(() => {
     setIsFocusMode(false);
@@ -271,6 +386,50 @@ const NoteNode: React.FC<NodeProps> = ({ id, data, selected, positionAbsoluteX, 
       e.stopPropagation();
     }
   }, []);
+
+  const handleIncreaseSize = useCallback(() => {
+    console.log("Increasing size");
+    // Increase size by 50px in width and height
+    const typedData = data as NoteNodeData;
+    const currentWidth = (typedData.width as number) || defaultWidth;
+    const currentHeight = (typedData.height as number) || defaultHeight;
+    const newWidth = Math.min(maxWidth, currentWidth + 50);
+    const newHeight = Math.min(maxHeight, currentHeight + 50);
+    
+    // Update node data - make sure to include the position
+    updateNode(id, {
+      position: { x: xPos, y: yPos },
+      data: {
+        ...typedData,
+        width: newWidth,
+        height: newHeight
+      }
+    });
+    
+    console.log(`Resized to: ${newWidth}x${newHeight}`);
+  }, [data, defaultWidth, defaultHeight, id, maxWidth, maxHeight, updateNode, xPos, yPos]);
+
+  const handleDecreaseSize = useCallback(() => {
+    console.log("Decreasing size");
+    // Decrease size by 50px in width and height
+    const typedData = data as NoteNodeData;
+    const currentWidth = (typedData.width as number) || defaultWidth;
+    const currentHeight = (typedData.height as number) || defaultHeight;
+    const newWidth = Math.max(minWidth, currentWidth - 50);
+    const newHeight = Math.max(minHeight, currentHeight - 50);
+    
+    // Update node data - make sure to include the position
+    updateNode(id, {
+      position: { x: xPos, y: yPos },
+      data: {
+        ...typedData,
+        width: newWidth,
+        height: newHeight
+      }
+    });
+    
+    console.log(`Resized to: ${newWidth}x${newHeight}`);
+  }, [data, defaultWidth, defaultHeight, id, minWidth, minHeight, updateNode, xPos, yPos]);
 
   return (
     <div
@@ -399,82 +558,52 @@ const NoteNode: React.FC<NodeProps> = ({ id, data, selected, positionAbsoluteX, 
               <span className="text-gray-400">Empty note</span>
             )}
           </div>
-          <div className="flex justify-end mt-2 space-x-2">
-            <button
-              onClick={() => {
-                console.log("Increasing size");
-                // Increase size by 50px in width and height
-                const typedData = data as NoteNodeData;
-                const currentWidth = (typedData.width as number) || defaultWidth;
-                const currentHeight = (typedData.height as number) || defaultHeight;
-                const newWidth = Math.min(maxWidth, currentWidth + 50);
-                const newHeight = Math.min(maxHeight, currentHeight + 50);
-                
-                // Update node data - make sure to include the position
-                updateNode(id, {
-                  position: { x: xPos, y: yPos },
-                  data: {
-                    ...typedData,
-                    width: newWidth,
-                    height: newHeight
-                  }
-                });
-                
-                console.log(`Resized to: ${newWidth}x${newHeight}`);
-              }}
-              className="p-1 text-green-500 hover:text-green-700"
-              title="Increase Size"
-            >
-              <span style={{ fontWeight: 'bold', fontSize: '16px' }}>+</span>
-            </button>
-            <button
-              onClick={() => {
-                console.log("Decreasing size");
-                // Decrease size by 50px in width and height
-                const typedData = data as NoteNodeData;
-                const currentWidth = (typedData.width as number) || defaultWidth;
-                const currentHeight = (typedData.height as number) || defaultHeight;
-                const newWidth = Math.max(minWidth, currentWidth - 50);
-                const newHeight = Math.max(minHeight, currentHeight - 50);
-                
-                // Update node data - make sure to include the position
-                updateNode(id, {
-                  position: { x: xPos, y: yPos },
-                  data: {
-                    ...typedData,
-                    width: newWidth,
-                    height: newHeight
-                  }
-                });
-                
-                console.log(`Resized to: ${newWidth}x${newHeight}`);
-              }}
-              className="p-1 text-red-500 hover:text-red-700"
-              title="Decrease Size"
-            >
-              <span style={{ fontWeight: 'bold', fontSize: '16px' }}>-</span>
-            </button>
-            <button
-              onClick={handleFocusModeToggle}
-              className="p-1 text-blue-500 hover:text-blue-700"
-              title="Focus Mode"
-            >
-              <Maximize2 size={16} />
-            </button>
-            <button
-              onClick={handleEdit}
-              className="p-1 text-gray-500 hover:text-gray-700"
-              title="Edit"
-            >
-              <Edit size={16} />
-            </button>
-            <button
-              onClick={handleDelete}
-              className="p-1 text-red-500 hover:text-red-700"
-              title="Delete"
-            >
-              <Trash2 size={16} />
-            </button>
+          <div className="flex justify-between mt-2">
+            <div className="flex items-center">
+              {isLinkedToFile && (
+                <span className="text-xs text-blue-500 flex items-center" title="Linked to file">
+                  <Link size={12} className="mr-1" />
+                  Linked
+                </span>
+              )}
+            </div>
+            <div className="flex space-x-2">
+              <button
+                onClick={handleIncreaseSize}
+                className="p-1 text-green-500 hover:text-green-700"
+                title="Increase Size"
+              >
+                <span style={{ fontWeight: 'bold', fontSize: '16px' }}>+</span>
+              </button>
+              <button
+                onClick={handleDecreaseSize}
+                className="p-1 text-red-500 hover:text-red-700"
+                title="Decrease Size"
+              >
+                <span style={{ fontWeight: 'bold', fontSize: '16px' }}>-</span>
+              </button>
+              <button
+                onClick={handleFocusModeToggle}
+                className="p-1 text-blue-500 hover:text-blue-700"
+                title="Focus Mode"
+              >
+                <Maximize2 size={16} />
+              </button>
+              <button
+                onClick={handleEdit}
+                className="p-1 text-gray-500 hover:text-gray-700"
+                title="Edit"
+              >
+                <Edit size={16} />
+              </button>
+              <button
+                onClick={handleDelete}
+                className="p-1 text-red-500 hover:text-red-700"
+                title="Delete"
+              >
+                <Trash2 size={16} />
+              </button>
+            </div>
           </div>
         </div>
       )}
