@@ -391,24 +391,56 @@ const Canvas: React.FC<CanvasProps> = ({ onFileDrop }) => {
         edgesFocusable={true}
         fitView
         snapToGrid
-        snapGrid={[20, 20]}
+        snapGrid={[40, 40]} // Match grid size from CSS variables
         defaultEdgeOptions={{ 
           type: 'default',
           animated: false,
-          style: { stroke: '#555', strokeWidth: 2 },
+          style: { stroke: 'var(--accent-primary)', strokeWidth: 2, strokeDasharray: '5 5' },
           data: {
             direction: 'forward' as const // Store direction in data with explicit type
           }
         }}
+        className="bg-bg-primary"
       >
-        <Background color="#aaa" gap={20} />
-        <Controls />
-        <MiniMap />
+        <Background color="var(--grid-color)" gap={40} size={1} />
+        <Controls 
+          className="bg-bg-secondary border border-border-primary rounded-md overflow-hidden text-white" 
+          style={{ 
+            backgroundColor: '#1f2937', 
+            color: 'white',
+            // Apply custom styles to the controls via CSS variables
+            ['--controls-button-background-color' as string]: '#1f2937',
+            ['--controls-button-color' as string]: 'white',
+            ['--controls-button-hover-background-color' as string]: '#374151',
+            ['--controls-button-hover-color' as string]: 'white',
+            ['--controls-button-border-color' as string]: '#374151',
+            ['--controls-button-border-width' as string]: '1px',
+            ['--controls-button-width' as string]: '24px',
+            ['--controls-button-height' as string]: '24px',
+            ['--controls-button-padding' as string]: '2px',
+            ['--controls-button-border-radius' as string]: '4px',
+            ['--controls-button-box-shadow' as string]: 'none',
+            // Ensure the SVG icons are visible in dark mode
+            ['--controls-button-svg-color' as string]: 'white',
+            ['--controls-button-svg-width' as string]: '14px',
+            ['--controls-button-svg-height' as string]: '14px',
+          } as React.CSSProperties}
+        />
+        <MiniMap 
+          className="bg-bg-secondary border border-border-primary rounded-md overflow-hidden"
+          nodeColor="#1f2937"
+          nodeBorderRadius={4}
+          maskColor="rgba(0, 0, 0, 0.2)"
+          style={{
+            backgroundColor: '#1f2937',
+            border: '1px solid #374151',
+          }}
+        />
         
-        <Panel position="top-right" className="bg-white p-2 rounded-md shadow-md">
+        <Panel position="top-right" className="bg-bg-secondary p-3 rounded-md shadow-md border border-border-primary">
           <button
             onClick={handleAddNote}
-            className="flex items-center gap-2 px-3 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+            className="flex items-center gap-2 px-3 py-2 bg-accent-primary text-white rounded-md hover:bg-accent-hover transition-colors"
           >
             <Plus size={16} />
             <span>Add Note</span>

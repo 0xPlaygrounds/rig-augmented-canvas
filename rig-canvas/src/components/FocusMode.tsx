@@ -127,9 +127,9 @@ const FocusMode: React.FC<FocusModeProps> = ({ content, onSave, onClose }) => {
           width: '90%',
           maxWidth: '900px',
           height: '80%',
-          background: 'white',
+          background: '#1f2937', // Dark mode background
           borderRadius: '8px',
-          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
+          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.5)',
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden',
@@ -140,15 +140,15 @@ const FocusMode: React.FC<FocusModeProps> = ({ content, onSave, onClose }) => {
         {/* Header */}
         <div 
           style={{
-            borderBottom: '1px solid #e5e7eb',
+            borderBottom: '1px solid #374151',
             padding: '16px',
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
-            background: '#f9fafb'
+            background: '#111827'
           }}
         >
-          <h2 style={{ margin: 0, fontSize: '18px', fontWeight: 500 }}>Edit Note</h2>
+          <h2 style={{ margin: 0, fontSize: '18px', fontWeight: 500, color: '#f3f4f6' }}>Edit Note</h2>
           <button
             onClick={onClose}
             style={{
@@ -160,7 +160,7 @@ const FocusMode: React.FC<FocusModeProps> = ({ content, onSave, onClose }) => {
             }}
             title="Close (Esc)"
           >
-            <X size={20} color="#6b7280" />
+            <X size={20} color="#d1d5db" />
           </button>
         </div>
 
@@ -170,8 +170,8 @@ const FocusMode: React.FC<FocusModeProps> = ({ content, onSave, onClose }) => {
             display: 'flex',
             gap: '4px',
             padding: '8px 16px',
-            borderBottom: '1px solid #e5e7eb',
-            background: '#f3f4f6',
+            borderBottom: '1px solid #374151',
+            background: '#1f2937',
             overflowX: 'auto'
           }}
         >
@@ -210,7 +210,7 @@ const FocusMode: React.FC<FocusModeProps> = ({ content, onSave, onClose }) => {
             flex: 1,
             padding: '20px',
             overflowY: 'auto', // Enable vertical scrolling
-            background: '#fff'
+            background: '#111827'
           }}
         >
           <textarea
@@ -221,14 +221,16 @@ const FocusMode: React.FC<FocusModeProps> = ({ content, onSave, onClose }) => {
               width: '100%',
               height: '100%',
               padding: '16px',
-              border: '1px solid #e5e7eb',
+              border: '1px solid #374151',
               borderRadius: '4px',
               fontSize: '16px',
               lineHeight: 1.6,
               fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
               resize: 'none',
               outline: 'none',
-              boxSizing: 'border-box'
+              boxSizing: 'border-box',
+              backgroundColor: '#1f2937',
+              color: '#f3f4f6'
             }}
             placeholder="Write your note here..."
           />
@@ -237,13 +239,13 @@ const FocusMode: React.FC<FocusModeProps> = ({ content, onSave, onClose }) => {
         {/* Footer */}
         <div
           style={{
-            borderTop: '1px solid #e5e7eb',
+            borderTop: '1px solid #374151',
             padding: '12px 16px',
             display: 'flex',
             justifyContent: 'space-between',
-            background: '#f9fafb',
+            background: '#111827',
             fontSize: '14px',
-            color: '#6b7280'
+            color: '#9ca3af'
           }}
         >
           <div>Markdown supported</div>
@@ -301,14 +303,16 @@ const FormatButton: React.FC<{
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        color: '#4b5563',
-        transition: 'background-color 0.2s',
+        color: '#d1d5db',
+        transition: 'all 0.2s ease',
       }}
       onMouseOver={(e) => {
-        (e.currentTarget as HTMLElement).style.backgroundColor = '#e5e7eb';
+        (e.currentTarget as HTMLElement).style.backgroundColor = '#374151';
+        (e.currentTarget as HTMLElement).style.color = '#f3f4f6';
       }}
       onMouseOut={(e) => {
         (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent';
+        (e.currentTarget as HTMLElement).style.color = '#d1d5db';
       }}
       title={title}
     >

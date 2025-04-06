@@ -1,11 +1,63 @@
 /* Import custom styles */
 @import './styles/markdown.css';
+@import './styles/controls.css';
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  /* Dark mode colors - default */
+  --bg-primary: #111827;
+  --bg-secondary: #1f2937;
+  --bg-tertiary: #374151;
+  --accent-primary: #3b82f6;
+  --accent-hover: #2563eb;
+  --text-primary: #f3f4f6;
+  --text-secondary: #d1d5db;
+  --text-tertiary: #9ca3af;
+  --border-primary: #374151;
+  --border-secondary: #4b5563;
+  --handle-color: #3b82f6;
+  --node-bg: #1f2937;
+  --node-border: #374151;
+  --node-border-selected: #3b82f6;
+  --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+  --grid-color: rgba(75, 85, 99, 0.1);
+  
+  /* Canvas grid config */
+  --grid-size: 40px;
+}
+
+.light-mode {
+  /* Light mode colors */
+  --bg-primary: #f9fafb;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #f3f4f6;
+  --accent-primary: #2563eb;
+  --accent-hover: #1d4ed8;
+  --text-primary: #111827;
+  --text-secondary: #374151;
+  --text-tertiary: #6b7280;
+  --border-primary: #e5e7eb;
+  --border-secondary: #d1d5db;
+  --handle-color: #3b82f6;
+  --node-bg: #ffffff;
+  --node-border: #e5e7eb;
+  --node-border-selected: #3b82f6;
+  --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  --grid-color: rgba(229, 231, 235, 0.6);
+}
+
 /* Global styles */
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  color: var(--text-primary);
+  background-color: var(--bg-primary);
+}
+
 body.resizing * {
   cursor: inherit !important;
   user-select: none !important;
@@ -15,4 +67,36 @@ body.resizing * {
 .resize-handle {
   z-index: 20;
   touch-action: none;
+}
+
+/* Transitions */
+.sidebar,
+.note,
+.handle,
+.connection,
+.tab,
+.file,
+.folder-header,
+.control-button {
+  transition: all 0.2s ease;
+}
+
+/* Connection Handles */
+.react-flow__handle {
+  width: 8px !important;
+  height: 8px !important;
+  background-color: var(--handle-color) !important;
+  border-radius: 50% !important;
+  opacity: 0.7 !important;
+  transition: all 0.2s ease !important;
+}
+
+.react-flow__handle:hover {
+  opacity: 1 !important;
+  transform: scale(1.5) !important;
+}
+
+/* Background grid */
+.react-flow__background {
+  background-size: var(--grid-size) var(--grid-size) !important;
 }

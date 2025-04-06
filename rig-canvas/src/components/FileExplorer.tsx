@@ -309,12 +309,12 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
     return (
       <div key={folder.id} className="select-none">
         <div 
-          className={`flex items-center py-1 px-2 hover:bg-gray-100 group ${level > 0 ? 'ml-4' : ''}`}
+          className={`flex items-center py-1 px-2 hover:bg-bg-tertiary group ${level > 0 ? 'ml-4' : ''}`}
           onClick={() => toggleFolder(folder.id)}
           onDragOver={handleDragOver}
           onDrop={(e) => handleDropOnFolder(e, folder.id)}
         >
-          <div className="mr-1">
+          <div className="mr-1 text-text-tertiary">
             {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
           </div>
           
@@ -467,7 +467,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
               return (
                 <div
                   key={file.id}
-                  className="flex items-center py-1 px-2 ml-4 hover:bg-gray-100 cursor-pointer group"
+                  className="flex items-center py-1 px-2 ml-4 hover:bg-bg-tertiary cursor-pointer group"
                   onClick={() => handleFileClick(file)}
                   draggable
                   onDragStart={(e) => handleDragStart(e, file, folder.id)}
@@ -482,12 +482,12 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
                           value={editingFile.name}
                           onChange={(e) => setEditingFile({ ...editingFile, name: e.target.value })}
                           onClick={(e) => e.stopPropagation()}
-                          className="border border-gray-300 rounded px-1 py-0.5 text-sm flex-grow"
+                          className="bg-bg-secondary border border-border-secondary rounded px-2 py-1 text-sm flex-grow text-text-primary focus:outline-none focus:ring-1 focus:ring-accent-primary"
                           autoFocus
                         />
                         <button
                           onClick={(e) => { e.stopPropagation(); saveEditedFileName(); }}
-                          className="ml-1 text-green-500 hover:text-green-700"
+                          className="ml-1 text-accent-primary hover:text-accent-hover"
                         >
                           <Save size={14} />
                         </button>
@@ -499,7 +499,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
                         </button>
                       </div>
                     ) : (
-                      <span>{file.name}</span>
+                      <span className="text-text-secondary">{file.name}</span>
                     )}
                   </div>
                   
@@ -507,7 +507,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
                     <div className="flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
                       <button
                         onClick={(e) => { e.stopPropagation(); handleEditFile(file); }}
-                        className="p-1 rounded hover:bg-gray-200 text-gray-600"
+                        className="p-1 rounded hover:bg-bg-primary text-text-tertiary hover:text-text-secondary transition-colors"
                         title="Rename File"
                       >
                         <Edit size={16} />
@@ -515,7 +515,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
                       
                       <button
                         onClick={(e) => { e.stopPropagation(); removeFile(file.id); }}
-                        className="p-1 rounded hover:bg-gray-200 text-gray-600"
+                        className="p-1 rounded hover:bg-bg-primary text-text-tertiary hover:text-text-secondary transition-colors"
                         title="Delete File"
                       >
                         <Trash2 size={16} />
@@ -547,11 +547,11 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
   
   return (
     <div 
-      className="h-full overflow-auto bg-white border-r border-gray-200"
+      className="h-full overflow-auto bg-bg-secondary border-r border-border-primary"
       onDragOver={handleDragOver}
       onDrop={handleDrop}
     >
-      <div className="p-2 font-semibold border-b border-gray-200">
+      <div className="p-3 font-medium text-text-primary border-b border-border-primary">
         Files
       </div>
       

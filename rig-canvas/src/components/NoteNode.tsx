@@ -433,13 +433,14 @@ const NoteNode: React.FC<NodeProps> = ({ id, data, selected, positionAbsoluteX, 
 
   return (
     <div
-      className={`p-3 rounded-md shadow-md bg-white border-2 relative ${
-        selected ? 'border-blue-500' : 'border-gray-200'
+      className={`p-3 rounded-lg shadow-node border-2 relative ${
+        selected ? 'border-node-border-selected' : 'border-node-border'
       }`}
       style={{ 
-        backgroundColor,
+        backgroundColor: '#1f2937', // Hard-coded dark mode color
         width: `${width}px`,
-        height: `${height}px`
+        height: `${height}px`,
+        boxShadow: 'var(--shadow)'
       }}
       onClickCapture={onClickCapture}
       onMouseDownCapture={onMouseDownCapture}
@@ -449,37 +450,37 @@ const NoteNode: React.FC<NodeProps> = ({ id, data, selected, positionAbsoluteX, 
         type="target" 
         position={Position.Top} 
         id="top-target" 
-        className="w-1.5 h-1.5 rounded-full border border-gray-300 bg-white shadow-sm opacity-50 hover:opacity-100 hover:scale-125 transition-all" 
+        className="w-2 h-2 rounded-full border border-border-primary bg-handle-color shadow-sm opacity-50 hover:opacity-100 hover:scale-125 transition-all" 
       />
       <Handle 
         type="source" 
         position={Position.Bottom} 
         id="bottom-source" 
-        className="w-1.5 h-1.5 rounded-full border border-gray-300 bg-white shadow-sm opacity-50 hover:opacity-100 hover:scale-125 transition-all" 
+        className="w-2 h-2 rounded-full border border-border-primary bg-handle-color shadow-sm opacity-50 hover:opacity-100 hover:scale-125 transition-all" 
       />
       <Handle 
         type="source" 
         position={Position.Left} 
         id="left-source" 
-        className="w-1.5 h-1.5 rounded-full border border-gray-300 bg-white shadow-sm opacity-50 hover:opacity-100 hover:scale-125 transition-all" 
+        className="w-2 h-2 rounded-full border border-border-primary bg-handle-color shadow-sm opacity-50 hover:opacity-100 hover:scale-125 transition-all" 
       />
       <Handle 
         type="target" 
         position={Position.Left} 
         id="left-target" 
-        className="w-1.5 h-1.5 rounded-full border border-gray-300 bg-white shadow-sm opacity-50 hover:opacity-100 hover:scale-125 transition-all" 
+        className="w-2 h-2 rounded-full border border-border-primary bg-handle-color shadow-sm opacity-50 hover:opacity-100 hover:scale-125 transition-all" 
       />
       <Handle 
         type="source" 
         position={Position.Right} 
         id="right-source" 
-        className="w-1.5 h-1.5 rounded-full border border-gray-300 bg-white shadow-sm opacity-50 hover:opacity-100 hover:scale-125 transition-all" 
+        className="w-2 h-2 rounded-full border border-border-primary bg-handle-color shadow-sm opacity-50 hover:opacity-100 hover:scale-125 transition-all" 
       />
       <Handle 
         type="target" 
         position={Position.Right} 
         id="right-target" 
-        className="w-1.5 h-1.5 rounded-full border border-gray-300 bg-white shadow-sm opacity-50 hover:opacity-100 hover:scale-125 transition-all" 
+        className="w-2 h-2 rounded-full border border-border-primary bg-handle-color shadow-sm opacity-50 hover:opacity-100 hover:scale-125 transition-all" 
       />
       
       {/* Render focus mode if active */}
@@ -588,13 +589,6 @@ const NoteNode: React.FC<NodeProps> = ({ id, data, selected, positionAbsoluteX, 
                 title="Focus Mode"
               >
                 <Maximize2 size={16} />
-              </button>
-              <button
-                onClick={handleEdit}
-                className="p-1 text-gray-500 hover:text-gray-700"
-                title="Edit"
-              >
-                <Edit size={16} />
               </button>
               <button
                 onClick={handleDelete}

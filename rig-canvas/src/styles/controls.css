@@ -1,0 +1,38 @@
+/* Custom styles for ReactFlow Controls */
+
+/* Base button styles */
+.react-flow__controls-button {
+  background-color: #1f2937 !important; /* Dark background */
+  color: white !important;
+  border: 1px solid #374151 !important;
+  border-radius: 4px !important;
+  margin: 2px !important;
+  width: 24px !important;
+  height: 24px !important;
+  padding: 2px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-shadow: none !important;
+}
+
+/* Hover state */
+.react-flow__controls-button:hover {
+  background-color: #374151 !important;
+  color: white !important;
+}
+
+/* SVG icons */
+.react-flow__controls-button svg {
+  fill: white !important;
+  width: 14px !important;
+  height: 14px !important;
+}
+
+/* Container */
+.react-flow__controls {
+  background-color: #1f2937 !important;
+  border: 1px solid #374151 !important;
+  border-radius: 4px !important;
+  padding: 4px !important;
+}

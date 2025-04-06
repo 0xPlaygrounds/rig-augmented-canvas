@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import CanvasWithProvider from './components/Canvas';
 import Sidebar from './components/Sidebar';
 import FileViewer from './components/FileViewer';
@@ -16,6 +16,11 @@ function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [selectedFile, setSelectedFile] = useState<FileData | null>(null);
   const [viewMode, setViewMode] = useState<'canvas' | 'file'>('canvas');
+  
+  // Always use dark mode
+  useEffect(() => {
+    document.body.classList.remove('light-mode');
+  }, []);
   
   // Handle file selection from the sidebar
   const handleFileSelect = useCallback((file: FileData) => {
@@ -43,7 +48,7 @@ function App() {
   }, [loadCanvas]);
   
   return (
-    <div className="min-h-screen bg-gray-100 flex">
+    <div className="min-h-screen flex">
       {isSidebarOpen && (
         <div className="h-screen">
           <Sidebar 
@@ -54,14 +59,15 @@ function App() {
         </div>
       )}
       
-      <div className="flex-grow h-screen">
+      <div className="flex-grow h-screen relative">
+        
         {isLoading ? (
           <div className="flex items-center justify-center h-full">
-            <div className="text-xl text-gray-600">Loading canvas...</div>
+            <div className="text-xl text-text-secondary">Loading canvas...</div>
           </div>
         ) : error ? (
           <div className="flex items-center justify-center h-full">
-            <div className="text-xl text-red-600">{error}</div>
+            <div className="text-xl text-red-500">{error}</div>
           </div>
         ) : viewMode === 'canvas' ? (
           <CanvasWithProvider onFileDrop={handleFileDrop} />

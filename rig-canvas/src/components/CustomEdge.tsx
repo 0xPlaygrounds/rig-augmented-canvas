@@ -39,14 +39,15 @@ const CustomEdge: React.FC<EdgeProps> = ({
   const endArrowId = `${id}-end-arrow`;
 
   // Extract stroke color from style for the markers
-  const strokeColor = style?.stroke || '#555';
+  const strokeColor = style?.stroke || 'var(--accent-primary)';
   
   // Determine the effective stroke width based on hover/selected state
+  const baseStrokeWidth = typeof style.strokeWidth === 'number' ? style.strokeWidth : 2;
   const effectiveStrokeWidth = selected 
-    ? (style.strokeWidth || 2) * 1.5 
+    ? baseStrokeWidth * 1.5 
     : isHovered 
-      ? (style.strokeWidth || 2) * 1.25 
-      : (style.strokeWidth || 2);
+      ? baseStrokeWidth * 1.25 
+      : baseStrokeWidth;
   
   return (
     <>

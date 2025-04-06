@@ -98,18 +98,18 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
   
   return (
     <div
-      className="absolute bg-white rounded-md shadow-lg border border-gray-200 py-1 z-50"
+      className="absolute bg-bg-secondary rounded-lg shadow-md border border-border-primary py-1 z-50"
       style={{ top: y, left: x }}
       onClick={(e) => e.stopPropagation()}
     >
-      <ul className="min-w-[150px]">
+      <ul className="min-w-[180px]">
         {!nodeId && !edgeId && (
           <li>
             <button
-              className="w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center gap-2"
+              className="w-full text-left px-4 py-2 hover:bg-bg-tertiary text-text-primary flex items-center gap-2 transition-colors"
               onClick={handleAddNote}
             >
-              <Plus size={16} />
+              <Plus size={16} className="text-accent-primary" />
               <span>Add Note</span>
             </button>
           </li>
@@ -119,10 +119,10 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
           <>
             <li>
               <button
-                className="w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center gap-2"
+                className="w-full text-left px-4 py-2 hover:bg-bg-tertiary text-text-primary flex items-center gap-2 transition-colors"
                 onClick={handleDeleteNode}
               >
-                <Trash2 size={16} />
+                <Trash2 size={16} className="text-red-500" />
                 <span>Delete Note</span>
               </button>
             </li>
@@ -133,37 +133,37 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
           <>
             <li>
               <button
-                className="w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center gap-2"
+                className="w-full text-left px-4 py-2 hover:bg-bg-tertiary text-text-primary flex items-center gap-2 transition-colors"
                 onClick={() => handleChangeEdgeDirection('forward')}
               >
-                <ArrowRight size={16} />
+                <ArrowRight size={16} className="text-accent-primary" />
                 <span>Forward Direction</span>
               </button>
             </li>
             <li>
               <button
-                className="w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center gap-2"
+                className="w-full text-left px-4 py-2 hover:bg-bg-tertiary text-text-primary flex items-center gap-2 transition-colors"
                 onClick={() => handleChangeEdgeDirection('backward')}
               >
-                <ArrowLeft size={16} />
+                <ArrowLeft size={16} className="text-accent-primary" />
                 <span>Backward Direction</span>
               </button>
             </li>
             <li>
               <button
-                className="w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center gap-2"
+                className="w-full text-left px-4 py-2 hover:bg-bg-tertiary text-text-primary flex items-center gap-2 transition-colors"
                 onClick={() => handleChangeEdgeDirection('bidirectional')}
               >
-                <ArrowLeftRight size={16} />
+                <ArrowLeftRight size={16} className="text-accent-primary" />
                 <span>Bidirectional</span>
               </button>
             </li>
-            <li>
+            <li className="border-t border-border-primary mt-1 pt-1">
               <button
-                className="w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center gap-2"
+                className="w-full text-left px-4 py-2 hover:bg-bg-tertiary text-text-primary flex items-center gap-2 transition-colors"
                 onClick={handleDeleteEdge}
               >
-                <Unlink size={16} />
+                <Unlink size={16} className="text-red-500" />
                 <span>Delete Connection</span>
               </button>
             </li>

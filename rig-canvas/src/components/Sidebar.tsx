@@ -114,10 +114,10 @@ const Sidebar: React.FC<SidebarProps> = ({ onFileSelect, onFileDrop, onCanvasSel
 
   if (isCollapsed) {
     return (
-      <div className="h-full flex flex-col bg-gray-100 border-r border-gray-200 w-10">
+      <div className="h-full flex flex-col bg-bg-secondary border-r border-border-primary w-sidebar-collapsed">
         <button
           onClick={toggleCollapse}
-          className="p-2 hover:bg-gray-200 text-gray-600 flex justify-center"
+          className="p-2 hover:bg-bg-tertiary text-text-secondary flex justify-center transition-colors"
           title="Expand Sidebar"
         >
           <ChevronRight size={20} />
@@ -127,12 +127,17 @@ const Sidebar: React.FC<SidebarProps> = ({ onFileSelect, onFileDrop, onCanvasSel
   }
   
   return (
-    <div className="h-full flex flex-col bg-white border-r border-gray-200 relative" style={{ width: `${sidebarWidth}px` }}>
-      <div className="flex justify-between items-center p-2 border-b border-gray-200 bg-gray-50">
-        <div className="font-semibold">Rig Canvas</div>
+    <div className="h-full flex flex-col bg-bg-secondary border-r border-border-primary relative" style={{ width: `${sidebarWidth}px` }}>
+      <div className="flex justify-between items-center p-3 border-b border-border-primary">
+        <div className="font-semibold text-text-primary flex items-center gap-2">
+          <div className="w-6 h-6 bg-gradient-to-br from-accent-primary to-purple-500 rounded-md flex items-center justify-center text-white">
+            R
+          </div>
+          Rig Canvas
+        </div>
         <button
           onClick={toggleCollapse}
-          className="p-1 hover:bg-gray-200 text-gray-600 rounded"
+          className="p-1 hover:bg-bg-tertiary text-text-secondary rounded transition-colors"
           title="Collapse Sidebar"
         >
           <ChevronLeft size={20} />
@@ -141,7 +146,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onFileSelect, onFileDrop, onCanvasSel
       
       {/* Resize handle - positioned exactly on the border */}
       <div 
-        className="absolute top-0 right-0 bottom-0 w-2 cursor-ew-resize z-50 hover:bg-blue-400 transition-colors"
+        className="absolute top-0 right-0 bottom-0 w-2 cursor-ew-resize z-50 hover:bg-accent-primary transition-colors"
         style={{ transform: 'translateX(1px)' }}
         onMouseDown={(e) => {
           e.preventDefault();
@@ -168,15 +173,23 @@ const Sidebar: React.FC<SidebarProps> = ({ onFileSelect, onFileDrop, onCanvasSel
         }}
       />
       
-      <div className="flex border-b border-gray-200">
+      <div className="flex border-b border-border-primary">
         <button
-          className={`flex-1 py-2 px-4 ${activeTab === 'files' ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-700'}`}
+          className={`flex-1 py-2 px-4 font-medium text-sm ${
+            activeTab === 'files' 
+              ? 'bg-accent-primary text-white' 
+              : 'bg-bg-tertiary text-text-secondary hover:bg-bg-tertiary/80'
+          } transition-colors`}
           onClick={() => setActiveTab('files')}
         >
           Files
         </button>
         <button
-          className={`flex-1 py-2 px-4 ${activeTab === 'canvases' ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-700'}`}
+          className={`flex-1 py-2 px-4 font-medium text-sm ${
+            activeTab === 'canvases' 
+              ? 'bg-accent-primary text-white' 
+              : 'bg-bg-tertiary text-text-secondary hover:bg-bg-tertiary/80'
+          } transition-colors`}
           onClick={() => setActiveTab('canvases')}
         >
           Canvases
@@ -193,38 +206,38 @@ const Sidebar: React.FC<SidebarProps> = ({ onFileSelect, onFileDrop, onCanvasSel
         </div>
       ) : (
         <div className="flex-grow overflow-auto">
-          <div className="p-2 flex justify-between items-center border-b border-gray-200">
-            <div className="font-semibold">Canvases</div>
+          <div className="p-3 flex justify-between items-center border-b border-border-primary">
+            <div className="font-medium text-text-primary">Canvases</div>
             <button
               onClick={handleNewCanvas}
-              className="p-1 hover:bg-gray-200 text-green-600 rounded"
+              className="p-1 hover:bg-bg-tertiary text-accent-primary rounded transition-colors"
               title="New Canvas"
             >
               <Plus size={18} />
             </button>
           </div>
           
-          <div className="p-2">
+          <div className="p-3">
             {isCreatingCanvas && (
-              <div className="flex items-center py-1 px-2 mb-2 border border-gray-200 rounded">
-                <FileText size={16} className="text-orange-500 mr-2" />
+              <div className="flex items-center py-2 px-3 mb-2 border border-border-secondary rounded bg-bg-tertiary">
+                <FileText size={16} className="text-accent-primary mr-2" />
                 <input
                   type="text"
                   value={newCanvasName}
                   onChange={(e) => setNewCanvasName(e.target.value)}
-                  className="border border-gray-300 rounded px-1 py-0.5 text-sm flex-grow"
+                  className="bg-bg-secondary border border-border-secondary rounded px-2 py-1 text-sm flex-grow text-text-primary focus:outline-none focus:ring-1 focus:ring-accent-primary"
                   placeholder="New Canvas"
                   autoFocus
                 />
                 <button
                   onClick={createNewCanvas}
-                  className="ml-1 text-green-500 hover:text-green-700"
+                  className="ml-2 text-accent-primary hover:text-accent-hover"
                 >
                   <Save size={14} />
                 </button>
                 <button
                   onClick={cancelNewCanvas}
-                  className="ml-1 text-red-500 hover:text-red-700"
+                  className="ml-1 text-text-tertiary hover:text-text-secondary"
                 >
                   <X size={14} />
                 </button>
@@ -238,12 +251,14 @@ const Sidebar: React.FC<SidebarProps> = ({ onFileSelect, onFileDrop, onCanvasSel
               return (
                 <div
                   key={canvas.id}
-                  className={`flex items-center py-2 px-2 mb-1 rounded cursor-pointer group ${
-                    isActive ? 'bg-blue-100 border border-blue-300' : 'hover:bg-gray-100'
-                  }`}
+                  className={`flex items-center py-2 px-3 mb-2 rounded cursor-pointer group ${
+                    isActive 
+                      ? 'bg-bg-tertiary border border-accent-primary' 
+                      : 'hover:bg-bg-tertiary border border-transparent'
+                  } transition-colors`}
                   onClick={() => handleCanvasSelect(canvas.id)}
                 >
-                  <FileText size={16} className="text-orange-500 mr-2" />
+                  <FileText size={16} className="text-accent-primary mr-2" />
                   
                   {isEditing ? (
                     <div className="flex items-center flex-grow">
@@ -252,30 +267,30 @@ const Sidebar: React.FC<SidebarProps> = ({ onFileSelect, onFileDrop, onCanvasSel
                         value={editingCanvas.name}
                         onChange={(e) => setEditingCanvas({ ...editingCanvas, name: e.target.value })}
                         onClick={(e) => e.stopPropagation()}
-                        className="border border-gray-300 rounded px-1 py-0.5 text-sm flex-grow"
+                        className="bg-bg-secondary border border-border-secondary rounded px-2 py-1 text-sm flex-grow text-text-primary focus:outline-none focus:ring-1 focus:ring-accent-primary"
                         autoFocus
                       />
                       <button
                         onClick={(e) => { e.stopPropagation(); saveEditedCanvasName(); }}
-                        className="ml-1 text-green-500 hover:text-green-700"
+                        className="ml-2 text-accent-primary hover:text-accent-hover"
                       >
                         <Save size={14} />
                       </button>
                       <button
                         onClick={(e) => { e.stopPropagation(); cancelEditCanvasName(); }}
-                        className="ml-1 text-red-500 hover:text-red-700"
+                        className="ml-1 text-text-tertiary hover:text-text-secondary"
                       >
                         <X size={14} />
                       </button>
                     </div>
                   ) : (
                     <>
-                      <span className="flex-grow truncate">{canvas.name}</span>
+                      <span className="flex-grow truncate text-text-primary">{canvas.name}</span>
                       
                       <div className="flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
                         <button
                           onClick={(e) => { e.stopPropagation(); handleEditCanvas(canvas); }}
-                          className="p-1 rounded hover:bg-gray-200 text-gray-600"
+                          className="p-1 rounded hover:bg-bg-secondary text-text-tertiary hover:text-text-secondary transition-colors"
                           title="Rename Canvas"
                         >
                           <Edit size={16} />
@@ -284,7 +299,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onFileSelect, onFileDrop, onCanvasSel
                         {!isActive && (
                           <button
                             onClick={(e) => { e.stopPropagation(); removeCanvas(canvas.id); }}
-                            className="p-1 rounded hover:bg-gray-200 text-gray-600"
+                            className="p-1 rounded hover:bg-bg-secondary text-text-tertiary hover:text-text-secondary transition-colors"
                             title="Delete Canvas"
                           >
                             <Trash2 size={16} />

@@ -92,7 +92,7 @@ const FileViewer: React.FC<FileViewerProps> = ({ file, onClose }) => {
         return isEditing ? (
           <div className="flex flex-col h-full">
             {/* Format toolbar */}
-            <div className="flex gap-1 p-2 border-b border-gray-200 bg-gray-50 overflow-x-auto">
+            <div className="flex gap-1 p-2 border-b border-border-primary bg-bg-tertiary overflow-x-auto">
               <FormatButton onClick={() => handleFormatClick('**')} title="Bold">
                 <strong>B</strong>
               </FormatButton>
@@ -126,15 +126,15 @@ const FileViewer: React.FC<FileViewerProps> = ({ file, onClose }) => {
               id="content-editor"
               value={content}
               onChange={handleContentChange}
-              className="flex-grow p-4 resize-none outline-none border-none"
+              className="flex-grow p-4 resize-none outline-none border-none bg-bg-secondary text-text-primary"
               placeholder="Write your content here..."
             />
             
-            <div className="flex justify-between items-center p-2 border-t border-gray-200 bg-gray-50">
-              <div className="text-sm text-gray-500">Markdown supported</div>
+            <div className="flex justify-between items-center p-2 border-t border-border-primary bg-bg-tertiary">
+              <div className="text-sm text-text-tertiary">Markdown supported</div>
               <button
                 onClick={handleSave}
-                className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 flex items-center"
+                className="px-3 py-2 bg-accent-primary text-white rounded hover:bg-accent-hover flex items-center transition-colors"
               >
                 <Save size={16} className="mr-1" />
                 Save
@@ -142,8 +142,8 @@ const FileViewer: React.FC<FileViewerProps> = ({ file, onClose }) => {
             </div>
           </div>
         ) : (
-          <div className="p-4 overflow-auto h-full">
-            <div className="prose max-w-none">
+          <div className="p-4 overflow-auto h-full bg-bg-secondary">
+            <div className="prose prose-invert max-w-none">
               <ReactMarkdown remarkPlugins={[remarkGfm]}>
                 {content}
               </ReactMarkdown>
@@ -153,7 +153,7 @@ const FileViewer: React.FC<FileViewerProps> = ({ file, onClose }) => {
       
       case 'image':
         return (
-          <div className="flex items-center justify-center h-full p-4 bg-gray-100">
+          <div className="flex items-center justify-center h-full p-4 bg-bg-primary">
             <img 
               src={file.url} 
               alt={file.name} 
@@ -175,8 +175,8 @@ const FileViewer: React.FC<FileViewerProps> = ({ file, onClose }) => {
       
       case 'audio':
         return (
-          <div className="flex flex-col items-center justify-center h-full p-4">
-            <div className="text-xl mb-4">{file.name}</div>
+          <div className="flex flex-col items-center justify-center h-full p-4 bg-bg-secondary">
+            <div className="text-xl mb-4 text-text-primary">{file.name}</div>
             <audio controls src={file.url} className="w-full max-w-md">
               Your browser does not support the audio element.
             </audio>
@@ -185,8 +185,8 @@ const FileViewer: React.FC<FileViewerProps> = ({ file, onClose }) => {
       
       default:
         return (
-          <div className="flex items-center justify-center h-full">
-            <div className="text-xl text-gray-500">
+          <div className="flex items-center justify-center h-full bg-bg-secondary">
+            <div className="text-xl text-text-tertiary">
               No preview available for this file type
             </div>
           </div>
@@ -195,15 +195,15 @@ const FileViewer: React.FC<FileViewerProps> = ({ file, onClose }) => {
   };
 
   return (
-    <div className="flex flex-col h-full bg-white">
+    <div className="flex flex-col h-full bg-bg-secondary">
       {/* Header */}
-      <div className="flex justify-between items-center p-3 border-b border-gray-200 bg-gray-50">
-        <h2 className="text-lg font-medium truncate">{file.name}</h2>
+      <div className="flex justify-between items-center p-3 border-b border-border-primary bg-bg-tertiary">
+        <h2 className="text-lg font-medium truncate text-text-primary">{file.name}</h2>
         <div className="flex items-center space-x-2">
           {(file.type === 'note' || file.type === 'markdown') && (
             <button
               onClick={() => setIsEditing(!isEditing)}
-              className="p-1 rounded hover:bg-gray-200"
+              className="p-1 rounded hover:bg-bg-primary text-text-secondary hover:text-text-primary transition-colors"
               title={isEditing ? "View" : "Edit"}
             >
               <Edit size={18} />
@@ -211,7 +211,7 @@ const FileViewer: React.FC<FileViewerProps> = ({ file, onClose }) => {
           )}
           <button
             onClick={onClose}
-            className="p-1 rounded hover:bg-gray-200"
+            className="p-1 rounded hover:bg-bg-primary text-text-secondary hover:text-text-primary transition-colors"
             title="Close"
           >
             <X size={18} />
@@ -236,7 +236,7 @@ const FormatButton: React.FC<{
   return (
     <button
       onClick={onClick}
-      className="px-2 py-1 border border-gray-300 rounded text-sm hover:bg-gray-200 transition-colors"
+      className="px-2 py-1 border border-border-secondary rounded text-sm text-text-primary hover:bg-bg-primary transition-colors"
       title={title}
     >
       {children}
