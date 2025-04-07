@@ -1,0 +1,15 @@
+{
+  "name": "rig-canvas-collaboration-server",
+  "version": "1.0.0",
+  "description": "WebSocket server for Rig Canvas collaboration",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "ws": "^8.16.0",
+    "yjs": "^13.6.24",
+    "y-websocket": "^3.0.0"
+  }
+}

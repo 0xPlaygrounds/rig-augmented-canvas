@@ -15,17 +15,23 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "server": "cd server && node server.js"
   },
   "dependencies": {
     "@tailwindcss/typography": "^0.5.16",
     "@xyflow/react": "^12.0.0",
     "idb": "^8.0.0",
+    "lib0": "^0.2.102",
     "lucide-react": "^0.344.0",
+    "nanoid": "^5.1.5",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-markdown": "^10.1.0",
     "remark-gfm": "^4.0.1",
+    "y-indexeddb": "^9.0.12",
+    "y-websocket": "^3.0.0",
+    "yjs": "^13.6.24",
     "zustand": "^4.5.2"
   },
   "devDependencies": {

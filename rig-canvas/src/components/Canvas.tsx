@@ -1,4 +1,5 @@
 import React, { useCallback, useRef, useMemo, useState, useEffect, DragEvent } from 'react';
+import { nanoid } from 'nanoid';
 import {
   ReactFlow,
   Background,
@@ -27,12 +28,65 @@ import ContextMenu from './ContextMenu';
 import { Plus } from 'lucide-react';
 import { Node, NoteData, FileData } from '../types';
 import { useFileSystem } from '../hooks/useFileSystem';
+import { useYjsCanvas } from '../hooks/useYjsCanvas';
+import { UserCursor } from './UserCursor';
+import { CollaborationPanel } from './CollaborationPanel';
+import { ShareDialog } from './ShareDialog';
+import { UserNamePrompt } from './UserNamePrompt';
 
 interface CanvasProps {
   onFileDrop?: (file: FileData) => void;
+  documentId?: string;
 }
 
-const Canvas: React.FC<CanvasProps> = ({ onFileDrop }) => {
+const Canvas: React.FC<CanvasProps> = ({ onFileDrop, documentId: propDocumentId }) => {
+  // Get document ID from props, URL params, or use default
+  const [documentId, setDocumentId] = useState<string>(() => {
+    // Try to get from URL search params
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlId = urlParams.get('document');
+    
+    // Use prop, URL param, or generate a default ID
+    return propDocumentId || urlId || `canvas-${Date.now()}`;
+  });
+  
+  // Get or generate token for authentication
+  const [token, setToken] = useState<string>(() => {
+    // Try to get from URL search params
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlToken = urlParams.get('token');
+    
+    // Use URL token, stored token, or generate a new one
+    return urlToken || localStorage.getItem(`token-${documentId}`) || nanoid(16);
+  });
+  
+  // Store token in localStorage if not from URL
+  useEffect(() => {
+    if (!new URLSearchParams(window.location.search).get('token')) {
+      localStorage.setItem(`token-${documentId}`, token);
+    }
+  }, [documentId, token]);
+  
+  // Username state
+  const [username, setUsername] = useState<string>(
+    localStorage.getItem('username') || `User-${nanoid(4)}`
+  );
+  
+  // Show username prompt if no username is set
+  const [showUsernamePrompt, setShowUsernamePrompt] = useState<boolean>(
+    !localStorage.getItem('username')
+  );
+  
+  // Share dialog state
+  const [showShareDialog, setShowShareDialog] = useState<boolean>(false);
+  
+  // Initialize Yjs collaboration
+  const { isConnected, isLoading, error, activeUsers, userCursors } = useYjsCanvas({
+    documentId,
+    token,
+    username
+  });
+  
   const canvasStore = useCanvasStore();
   const { 
     nodes, 
@@ -457,6 +511,47 @@ const Canvas: React.FC<CanvasProps> = ({ onFileDrop }) => {
           />
         )}
       </ReactFlow>
+      
+      {/* User Cursors */}
+      {userCursors.map(cursor => (
+        <UserCursor
+          key={cursor.id}
+          x={cursor.x}
+          y={cursor.y}
+          color={cursor.color}
+          name={cursor.name}
+        />
+      ))}
+      
+      {/* Collaboration Panel */}
+      <div className="absolute top-4 right-4 z-10">
+        <CollaborationPanel
+          isConnected={isConnected}
+          isLoading={isLoading}
+          error={error}
+          activeUsers={activeUsers}
+          documentId={documentId}
+          onShareClick={() => setShowShareDialog(true)}
+        />
+      </div>
+      
+      {/* Share Dialog */}
+      <ShareDialog
+        isOpen={showShareDialog}
+        onClose={() => setShowShareDialog(false)}
+        documentId={documentId}
+        token={token}
+      />
+      
+      {/* Username Prompt */}
+      <UserNamePrompt
+        isOpen={showUsernamePrompt}
+        onSubmit={(name) => {
+          setUsername(name);
+          localStorage.setItem('username', name);
+        }}
+        onClose={() => setShowUsernamePrompt(false)}
+      />
     </div>
   );
 };
