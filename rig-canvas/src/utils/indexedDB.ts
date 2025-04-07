@@ -189,6 +189,72 @@ export const createFile = async (
   return newFile;
 };
 
+// Update a folder name
+export const updateFolderName = async (folderId: string, newName: string): Promise<FolderData | null> => {
+  const fileSystem = await getFileSystem();
+  let updatedFolder: FolderData | null = null;
+  
+  // Helper function to find and update a folder's name
+  const findAndUpdateFolder = (folder: FolderData, isRoot = false): boolean => {
+    if (folder.id === folderId) {
+      folder.name = newName;
+      folder.lastModified = Date.now();
+      updatedFolder = folder;
+      return true;
+    }
+    
+    for (let i = 0; i < folder.folders.length; i++) {
+      if (findAndUpdateFolder(folder.folders[i])) {
+        return true;
+      }
+    }
+    
+    return false;
+  };
+  
+  // If it's the root folder or a normal folder
+  if (folderId === 'root') {
+    fileSystem.rootFolder.name = newName;
+    fileSystem.rootFolder.lastModified = Date.now();
+    updatedFolder = fileSystem.rootFolder;
+  } else {
+    findAndUpdateFolder(fileSystem.rootFolder);
+  }
+  
+  if (updatedFolder) {
+    await saveFileSystem(fileSystem);
+    return updatedFolder;
+  }
+  
+  return null;
+};
+
+// Create a new root folder
+export const createRootFolder = async (name: string): Promise<FolderData> => {
+  const fileSystem = await getFileSystem();
+  
+  const newRootFolder: FolderData = {
+    id: `folder-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+    name,
+    files: [],
+    folders: [],
+    lastModified: Date.now()
+  };
+  
+  // Add the new root folder directly to the file system structure
+  fileSystem.rootFolders = fileSystem.rootFolders || [fileSystem.rootFolder];
+  
+  // If rootFolders array doesn't exist yet, migrate the structure
+  if (!fileSystem.rootFolders.some((folder: FolderData) => folder.id === 'root')) {
+    fileSystem.rootFolders.push(fileSystem.rootFolder);
+  }
+  
+  fileSystem.rootFolders.push(newRootFolder);
+  
+  await saveFileSystem(fileSystem);
+  return newRootFolder;
+};
+
 // Update a file
 export const updateFile = async (fileId: string, updates: Partial<FileData>): Promise<FileData | null> => {
   console.log('updateFile called with fileId:', fileId);

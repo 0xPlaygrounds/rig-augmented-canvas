@@ -7,7 +7,9 @@ import {
   deleteFile,
   deleteFolder,
   getFileById,
-  moveFile
+  moveFile,
+  updateFolderName,
+  createRootFolder
 } from '../utils/indexedDB';
 import { FileSystemData, FolderData, FileData, FileType } from '../types';
 
@@ -124,6 +126,32 @@ export const useFileSystem = () => {
       return false;
     }
   }, [loadFileSystem]);
+  
+  // Rename a folder (including root folder)
+  const renameFolder = useCallback(async (folderId: string, newName: string) => {
+    try {
+      const updatedFolder = await updateFolderName(folderId, newName);
+      await loadFileSystem();
+      return updatedFolder;
+    } catch (err) {
+      console.error('Failed to rename folder:', err);
+      setError('Failed to rename folder');
+      return null;
+    }
+  }, [loadFileSystem]);
+  
+  // Add a new root folder
+  const addRootFolder = useCallback(async (name: string) => {
+    try {
+      const newRootFolder = await createRootFolder(name);
+      await loadFileSystem();
+      return newRootFolder;
+    } catch (err) {
+      console.error('Failed to create root folder:', err);
+      setError('Failed to create root folder');
+      return null;
+    }
+  }, [loadFileSystem]);
 
   // Get a file by ID
   const getFile = useCallback(async (fileId: string) => {
@@ -165,6 +193,8 @@ export const useFileSystem = () => {
     removeFile,
     removeFolder,
     getFile,
-    moveFileToFolder
+    moveFileToFolder,
+    renameFolder,
+    addRootFolder
   };
 };

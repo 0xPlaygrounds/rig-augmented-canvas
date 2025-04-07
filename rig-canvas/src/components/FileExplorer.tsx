@@ -1,7 +1,7 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { useFileSystem } from '../hooks/useFileSystem';
 import { FolderData, FileData, FileType } from '../types';
-import { ChevronRight, ChevronDown, Folder, File, FileText, Music, Image, Plus, Trash2, Edit, Save, X, FileImage, FolderPlus, Upload, FilePlus } from 'lucide-react';
+import { ChevronRight, ChevronDown, Folder, File, FileText, Music, Image, Plus, Trash2, Edit, Save, X, FileImage, FolderPlus, Upload, FilePlus, PlusCircle } from 'lucide-react';
 import { useCanvasStore } from '../store/canvasStore';
 
 interface FileExplorerProps {
@@ -23,8 +23,13 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
     addFile, 
     updateFileContent, 
     removeFile, 
-    removeFolder 
+    removeFolder,
+    renameFolder,
+    addRootFolder
   } = useFileSystem();
+  
+  const [creatingRootFolder, setCreatingRootFolder] = useState(false);
+  const [newRootFolderName, setNewRootFolderName] = useState('');
   
   const [expandedFolders, setExpandedFolders] = useState<Record<string, boolean>>({
     root: true // Root folder is expanded by default
@@ -131,11 +136,30 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
   // Save the edited folder name
   const saveEditedFolderName = async () => {
     if (editingFolder && editingFolder.name.trim()) {
-      // We need to find the folder and update its name
-      // This is a bit more complex since we don't have a direct updateFolder function
-      // For now, we'll just reload the file system
+      await renameFolder(editingFolder.id, editingFolder.name.trim());
       setEditingFolder(null);
     }
+  };
+  
+  // Create a new root folder
+  const handleAddRootFolder = () => {
+    setCreatingRootFolder(true);
+    setNewRootFolderName('');
+  };
+  
+  // Save the new root folder
+  const createNewRootFolder = async () => {
+    if (newRootFolderName.trim()) {
+      await addRootFolder(newRootFolderName.trim());
+      setCreatingRootFolder(false);
+      setNewRootFolderName('');
+    }
+  };
+  
+  // Cancel creating a new root folder
+  const cancelNewRootFolder = () => {
+    setCreatingRootFolder(false);
+    setNewRootFolderName('');
   };
   
   // Cancel editing a folder name
@@ -318,7 +342,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
             {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
           </div>
           
-          <Folder size={16} className="text-yellow-500 mr-2" />
+          <Folder size={16} className="text-accent-primary mr-2" />
           
           {isEditing ? (
             <div className="flex items-center flex-grow">
@@ -327,12 +351,12 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
                 value={editingFolder.name}
                 onChange={(e) => setEditingFolder({ ...editingFolder, name: e.target.value })}
                 onClick={(e) => e.stopPropagation()}
-                className="border border-gray-300 rounded px-1 py-0.5 text-sm flex-grow"
+                className="bg-bg-secondary border border-border-secondary rounded px-2 py-1 text-sm flex-grow text-text-primary focus:outline-none focus:ring-1 focus:ring-accent-primary"
                 autoFocus
               />
               <button
                 onClick={(e) => { e.stopPropagation(); saveEditedFolderName(); }}
-                className="ml-1 text-green-500 hover:text-green-700"
+                className="ml-1 text-accent-primary hover:text-accent-hover"
               >
                 <Save size={14} />
               </button>
@@ -351,7 +375,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
             <div className="flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
               <button
                 onClick={(e) => { e.stopPropagation(); handleNewFolder(folder.id); }}
-                className="p-1 rounded hover:bg-gray-200 text-gray-600"
+                className="p-1 rounded hover:bg-bg-primary text-text-tertiary hover:text-text-secondary transition-colors"
                 title="New Folder"
               >
                 <FolderPlus size={16} />
@@ -359,13 +383,13 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
               
               <button
                 onClick={(e) => { e.stopPropagation(); handleNewNote(folder.id); }}
-                className="p-1 rounded hover:bg-gray-200 text-gray-600"
+                className="p-1 rounded hover:bg-bg-primary text-text-tertiary hover:text-text-secondary transition-colors"
                 title="New Note"
               >
                 <FilePlus size={16} />
               </button>
               
-              <label className="p-1 rounded hover:bg-gray-200 text-gray-600 cursor-pointer" title="Upload File">
+              <label className="p-1 rounded hover:bg-bg-primary text-text-tertiary hover:text-text-secondary transition-colors cursor-pointer" title="Upload File">
                 <input
                   type="file"
                   className="hidden"
@@ -376,29 +400,27 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
                 <Upload size={16} />
               </label>
               
-              {folder.id !== 'root' && (
-                <>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); handleEditFolder(folder); }}
-                    className="p-1 rounded hover:bg-gray-200 text-gray-600"
-                    title="Rename Folder"
-                  >
-                    <Edit size={16} />
-                  </button>
-                  
-                  <button
-                    onClick={(e) => { e.stopPropagation(); removeFolder(folder.id); }}
-                    className="p-1 rounded hover:bg-gray-200 text-gray-600"
-                    title="Delete Folder"
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </>
-              )}
+          <button
+            onClick={(e) => { e.stopPropagation(); handleEditFolder(folder); }}
+            className="p-1 rounded hover:bg-bg-primary text-text-tertiary hover:text-text-secondary transition-colors"
+            title="Rename Folder"
+          >
+            <Edit size={16} />
+          </button>
+          
+          {folder.id !== 'root' && (
+            <button
+              onClick={(e) => { e.stopPropagation(); removeFolder(folder.id); }}
+              className="p-1 rounded hover:bg-bg-primary text-text-tertiary hover:text-text-secondary transition-colors"
+              title="Delete Folder"
+            >
+              <Trash2 size={16} />
+            </button>
+          )}
               
               <button
                 onClick={(e) => { e.stopPropagation(); handleSaveNote(folder.id); }}
-                className="p-1 rounded hover:bg-gray-200 text-gray-600"
+                className="p-1 rounded hover:bg-bg-primary text-text-tertiary hover:text-text-secondary transition-colors"
                 title="Save Note Here"
               >
                 <Save size={16} />
@@ -416,13 +438,13 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
                   type="text"
                   value={newNoteName}
                   onChange={(e) => setNewNoteName(e.target.value)}
-                  className="border border-gray-300 rounded px-1 py-0.5 text-sm flex-grow"
+                  className="bg-bg-secondary border border-border-secondary rounded px-2 py-1 text-sm flex-grow text-text-primary focus:outline-none focus:ring-1 focus:ring-accent-primary"
                   placeholder="New Note.md"
                   autoFocus
                 />
                 <button
                   onClick={createNewNote}
-                  className="ml-1 text-green-500 hover:text-green-700"
+                  className="ml-1 text-accent-primary hover:text-accent-hover"
                 >
                   <Save size={14} />
                 </button>
@@ -437,18 +459,18 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
             
             {newFolderParentId === folder.id && (
               <div className="flex items-center py-1 px-2 ml-4">
-                <Folder size={16} className="text-yellow-500 mr-2" />
+                <Folder size={16} className="text-accent-primary mr-2" />
                 <input
                   type="text"
                   value={newFolderName}
                   onChange={(e) => setNewFolderName(e.target.value)}
-                  className="border border-gray-300 rounded px-1 py-0.5 text-sm flex-grow"
+                  className="bg-bg-secondary border border-border-secondary rounded px-2 py-1 text-sm flex-grow text-text-primary focus:outline-none focus:ring-1 focus:ring-accent-primary"
                   placeholder="New Folder"
                   autoFocus
                 />
                 <button
                   onClick={createNewFolder}
-                  className="ml-1 text-green-500 hover:text-green-700"
+                  className="ml-1 text-accent-primary hover:text-accent-hover"
                 >
                   <Save size={14} />
                 </button>
@@ -551,12 +573,49 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
       onDragOver={handleDragOver}
       onDrop={handleDrop}
     >
-      <div className="p-3 font-medium text-text-primary border-b border-border-primary">
-        Files
+      <div className="p-3 font-medium text-text-primary border-b border-border-primary flex justify-between items-center">
+        <span>Files</span>
+        <button
+          onClick={handleAddRootFolder}
+          className="p-1 rounded hover:bg-bg-primary text-text-tertiary hover:text-text-secondary transition-colors"
+          title="Add Root Folder"
+        >
+          <PlusCircle size={16} />
+        </button>
       </div>
       
       <div className="p-2">
-        {renderFolder(fileSystem.rootFolder)}
+        {creatingRootFolder && (
+          <div className="flex items-center py-1 px-2 mb-2">
+            <Folder size={16} className="text-accent-primary mr-2" />
+            <input
+              type="text"
+              value={newRootFolderName}
+              onChange={(e) => setNewRootFolderName(e.target.value)}
+              className="bg-bg-secondary border border-border-secondary rounded px-2 py-1 text-sm flex-grow text-text-primary focus:outline-none focus:ring-1 focus:ring-accent-primary"
+              placeholder="New Root Folder"
+              autoFocus
+            />
+            <button
+              onClick={createNewRootFolder}
+              className="ml-1 text-accent-primary hover:text-accent-hover"
+            >
+              <Save size={14} />
+            </button>
+            <button
+              onClick={cancelNewRootFolder}
+              className="ml-1 text-red-500 hover:text-red-700"
+            >
+              <X size={14} />
+            </button>
+          </div>
+        )}
+        
+        {fileSystem.rootFolders ? (
+          fileSystem.rootFolders.map(folder => renderFolder(folder, 0))
+        ) : (
+          renderFolder(fileSystem.rootFolder, 0)
+        )}
       </div>
       
       {savingNote && (

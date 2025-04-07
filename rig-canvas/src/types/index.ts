@@ -143,6 +143,8 @@ export interface FolderData {
  * Represents the entire file system structure
  */
 export interface FileSystemData {
-  /** The top-level folder of the file system */
+  /** The top-level folder of the file system (legacy support) */
   rootFolder: FolderData;
+  /** Multiple root folders (when multiple roots are enabled) */
+  rootFolders?: FolderData[];
 }
