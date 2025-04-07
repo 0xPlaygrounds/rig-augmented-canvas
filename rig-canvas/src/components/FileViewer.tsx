@@ -1,10 +1,22 @@
-import React, { useState, useEffect } from 'react';
-import { FileData } from '../types';
-import { useFileSystem } from '../hooks/useFileSystem';
-import { X, Edit, Save } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { 
+  X, Edit, Save, BookOpen, Bold, Italic, Heading1, 
+  Heading2, List, ListOrdered, Quote, Code, Link,
+  Type, BarChart
+} from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+
+// Types, Utils, and Hooks
+import { FileData } from '../types';
+import { useFileSystem } from '../hooks/useFileSystem';
+import { useSettingsStore } from '../store/settingsStore';
+import { useUIVisibility } from '../context/UIVisibilityContext';
+import { eventBus } from '../utils/eventBus';
 import { applyMarkdownFormat } from '../utils/markdownUtils';
+
+// Components
+import { TypographyContainer } from './Typography';
 
 interface FileViewerProps {
   file: FileData | null;
@@ -14,7 +26,21 @@ interface FileViewerProps {
 const FileViewer: React.FC<FileViewerProps> = ({ file, onClose }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [content, setContent] = useState<string>('');
+  const [wordCount, setWordCount] = useState(0);
+  const [showTypographySettings, setShowTypographySettings] = useState(false);
+  
+  // Get hooks
   const { updateFileContent, getFile } = useFileSystem();
+  const { settings, updateSetting } = useSettingsStore();
+  const { isReadingMode, toggleReadingMode, estimatedReadingTime } = useUIVisibility();
+  
+  // Calculate word count
+  useEffect(() => {
+    const words = content.split(/\s+/).filter(word => word.length > 0).length;
+    setWordCount(words);
+    // Publish content for reading time calculation
+    eventBus.publish('document:contentChanged', content, words);
+  }, [content]);
 
   useEffect(() => {
     if (file) {
@@ -143,11 +169,22 @@ const FileViewer: React.FC<FileViewerProps> = ({ file, onClose }) => {
           </div>
         ) : (
           <div className="p-4 overflow-auto h-full bg-bg-secondary">
-            <div className="prose prose-invert max-w-none">
+            <TypographyContainer 
+              content={content} 
+              id={`file-content-${file.id}`}
+              className={`prose prose-invert ${isReadingMode ? 'reading-mode' : ''}`}
+            >
               <ReactMarkdown remarkPlugins={[remarkGfm]}>
                 {content}
               </ReactMarkdown>
-            </div>
+              
+              {/* Word count indicator */}
+              {settings.editor.showWordCount && (
+                <div className="word-count mt-4 text-text-tertiary text-xs">
+                  {wordCount} words • {estimatedReadingTime} min read
+                </div>
+              )}
+            </TypographyContainer>
           </div>
         );
       
@@ -200,6 +237,29 @@ const FileViewer: React.FC<FileViewerProps> = ({ file, onClose }) => {
       <div className="flex justify-between items-center p-3 border-b border-border-primary bg-bg-tertiary">
         <h2 className="text-lg font-medium truncate text-text-primary">{file.name}</h2>
         <div className="flex items-center space-x-2">
+          {/* Typography settings toggle */}
+          {(file.type === 'note' || file.type === 'markdown') && !isEditing && (
+            <button
+              onClick={() => setShowTypographySettings(!showTypographySettings)}
+              className={`p-1 rounded hover:bg-bg-primary ${showTypographySettings ? 'text-accent-primary' : 'text-text-secondary'} hover:text-text-primary transition-colors`}
+              title="Typography Settings"
+            >
+              <Type size={18} />
+            </button>
+          )}
+          
+          {/* Reading mode toggle */}
+          {(file.type === 'note' || file.type === 'markdown') && !isEditing && (
+            <button
+              onClick={toggleReadingMode}
+              className={`p-1 rounded hover:bg-bg-primary ${isReadingMode ? 'text-accent-primary' : 'text-text-secondary'} hover:text-text-primary transition-colors`}
+              title={isReadingMode ? "Exit Reading Mode" : "Enter Reading Mode"}
+            >
+              <BookOpen size={18} />
+            </button>
+          )}
+          
+          {/* Edit/View toggle */}
           {(file.type === 'note' || file.type === 'markdown') && (
             <button
               onClick={() => setIsEditing(!isEditing)}
@@ -209,6 +269,8 @@ const FileViewer: React.FC<FileViewerProps> = ({ file, onClose }) => {
               <Edit size={18} />
             </button>
           )}
+          
+          {/* Close button */}
           <button
             onClick={onClose}
             className="p-1 rounded hover:bg-bg-primary text-text-secondary hover:text-text-primary transition-colors"
@@ -218,6 +280,54 @@ const FileViewer: React.FC<FileViewerProps> = ({ file, onClose }) => {
           </button>
         </div>
       </div>
+      
+      {/* Typography settings panel */}
+      {showTypographySettings && !isEditing && (
+        <div className="border-b border-border-primary bg-bg-tertiary p-3">
+          <div className="flex flex-col">
+            <h3 className="text-sm font-medium mb-2 text-text-primary">Typography Settings</h3>
+            
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs text-text-secondary mb-1">
+                  Line Width: {settings.typography.lineWidth} chars
+                </label>
+                <input 
+                  type="range" 
+                  min="40" 
+                  max="120" 
+                  value={settings.typography.lineWidth} 
+                  onChange={(e) => updateSetting('typography.lineWidth', parseInt(e.target.value))}
+                  className="w-full"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-xs text-text-secondary mb-1">
+                  Paragraph Spacing: {settings.typography.paragraphSpacing}rem
+                </label>
+                <input 
+                  type="range" 
+                  min="1" 
+                  max="3" 
+                  step="0.1" 
+                  value={settings.typography.paragraphSpacing} 
+                  onChange={(e) => updateSetting('typography.paragraphSpacing', parseFloat(e.target.value))}
+                  className="w-full"
+                />
+              </div>
+            </div>
+            
+            <div className="flex items-center justify-between mt-2">
+              <div className="text-xs text-text-tertiary">
+                <span className="flex items-center gap-1">
+                  <BarChart size={12} /> {wordCount} words • {estimatedReadingTime} min read
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       
       {/* Content */}
       <div className="flex-grow overflow-hidden">

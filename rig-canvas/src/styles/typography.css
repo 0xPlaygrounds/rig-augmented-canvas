@@ -1,0 +1,185 @@
+/**
+ * Typography and UI transition styles
+ */
+
+/* Typography containers */
+.typography-container {
+  position: relative;
+  transition: max-width 0.3s ease-in-out;
+}
+
+/* Reading time indicator */
+.reading-time {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-bottom: 1rem;
+  text-align: right;
+  opacity: 0.7;
+}
+
+/* Paragraph spacing using CSS variables */
+.content p {
+  margin-bottom: var(--paragraph-spacing, 1.5rem);
+}
+
+/* Optimized reading mode styles */
+.reading-mode .content {
+  transition: font-size 0.3s ease, line-height 0.3s ease;
+}
+
+/* Highlight animation for reading mode toggle */
+.highlight-animation {
+  animation: highlight-content 1s ease-out;
+}
+
+@keyframes highlight-content {
+  0% { background-color: transparent; }
+  20% { background-color: rgba(255, 255, 150, 0.15); }
+  100% { background-color: transparent; }
+}
+
+/* Smart typography for quotes and dashes (activate when setting enabled) */
+.smart-typography .content {
+  /* Proper quotes */
+  --quote-open: '"';
+  --quote-close: '"';
+  
+  /* Proper dashes */
+  --em-dash: '—';
+  --en-dash: '–';
+}
+
+/* UI fade transitions */
+.sidebar, .toolbar {
+  transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+}
+
+.sidebar--hidden {
+  opacity: 0.2;
+  transform: translateX(-10px);
+}
+
+.toolbar--hidden {
+  opacity: 0.2;
+  transform: translateY(-10px);
+}
+
+/* Focus & blur transitions */
+.content:focus {
+  outline: none;
+}
+
+.content.focused {
+  /* Subtle focus highlight */
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+}
+
+/* Headings with adjusted spacing */
+.typography-heading {
+  margin-top: 1.5em;
+  margin-bottom: 0.8em;
+  line-height: 1.2;
+}
+
+.typography-h1 { 
+  font-size: 2rem; 
+  margin-top: 0;
+}
+
+.typography-h2 { 
+  font-size: 1.5rem;
+  border-bottom: 1px solid var(--border-subtle, #e5e7eb);
+  padding-bottom: 0.3em;
+}
+
+.typography-h3 { font-size: 1.25rem; }
+.typography-h4 { font-size: 1rem; }
+.typography-h5 { font-size: 0.875rem; }
+.typography-h6 { font-size: 0.85rem; opacity: 0.8; }
+
+/* Paragraph typography */
+.typography-paragraph {
+  margin-bottom: var(--paragraph-spacing, 1.5rem);
+  hyphens: auto;
+}
+
+/* Word count display */
+.word-count {
+  position: absolute;
+  bottom: 0.5rem;
+  right: 0.5rem;
+  font-size: 0.75rem;
+  color: var(--text-muted, #6b7280);
+  opacity: 0.7;
+  transition: opacity 0.3s ease;
+}
+
+.word-count:hover {
+  opacity: 1;
+}
+
+/* Improved link styles */
+.content a {
+  text-decoration: none;
+  border-bottom: 1px solid currentColor;
+  padding-bottom: 1px;
+  transition: border-color 0.2s ease, color 0.2s ease;
+}
+
+.content a:hover {
+  border-bottom-width: 2px;
+}
+
+/* Code blocks with better spacing */
+.content pre {
+  margin: 1rem 0;
+  padding: 1rem;
+  border-radius: 0.375rem;
+  background-color: var(--code-bg, #1f2937);
+  overflow-x: auto;
+}
+
+.content code {
+  font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+  font-size: 0.9em;
+}
+
+/* Lists with better spacing */
+.content ul, 
+.content ol {
+  margin-top: 0.5rem;
+  margin-bottom: var(--paragraph-spacing, 1.5rem);
+  padding-left: 1.5rem;
+}
+
+.content li {
+  margin-bottom: 0.25rem;
+}
+
+/* Blockquotes with nice styling */
+.content blockquote {
+  border-left: 4px solid var(--blockquote-border, #6b7280);
+  margin-left: 0;
+  margin-right: 0;
+  padding-left: 1rem;
+  font-style: italic;
+  color: var(--blockquote-text, #9ca3af);
+}
+
+/* Tables with better styling */
+.content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0;
+}
+
+.content th, 
+.content td {
+  border: 1px solid var(--border-subtle, #374151);
+  padding: 0.5rem;
+}
+
+.content th {
+  background-color: var(--th-bg, #1f2937);
+  font-weight: 600;
+}
