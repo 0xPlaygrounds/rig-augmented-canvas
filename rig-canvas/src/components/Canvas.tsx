@@ -204,7 +204,9 @@ const Canvas: React.FC<CanvasProps> = ({ onFileDrop }) => {
           animated: false,
           style: { stroke: '#555', strokeWidth: 2 },
           data: {
-            direction: 'forward' as const // Store direction in data with explicit type
+            direction: 'forward' as const, // Store direction in data with explicit type
+            edgeType: 'bezier' as const,
+            animated: false
           }
         };
         console.log('Creating new edge:', newEdge);
@@ -395,9 +397,11 @@ const Canvas: React.FC<CanvasProps> = ({ onFileDrop }) => {
         defaultEdgeOptions={{ 
           type: 'default',
           animated: false,
-          style: { stroke: 'var(--accent-primary)', strokeWidth: 2, strokeDasharray: '5 5' },
+          style: { stroke: 'var(--accent-primary)', strokeWidth: 2 },
           data: {
-            direction: 'forward' as const // Store direction in data with explicit type
+            direction: 'forward' as const, // Store direction in data with explicit type
+            edgeType: 'bezier' as const,
+            animated: false
           }
         }}
         className="bg-bg-primary"

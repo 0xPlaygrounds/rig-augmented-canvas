@@ -1,5 +1,12 @@
 import React, { useState } from 'react';
-import { EdgeProps, getBezierPath, MarkerType } from '@xyflow/react';
+import { 
+  EdgeProps, 
+  getBezierPath, 
+  getSmoothStepPath, 
+  getSimpleBezierPath, 
+  getStraightPath,
+  MarkerType 
+} from '@xyflow/react';
 
 const CustomEdge: React.FC<EdgeProps> = ({
   id,
@@ -14,21 +21,66 @@ const CustomEdge: React.FC<EdgeProps> = ({
   style = {},
   data,
   selected,
+  label,
+  labelStyle,
+  labelShowBg = true,
+  labelBgStyle,
+  labelBgPadding = [4, 2],
+  labelBgBorderRadius = 4,
 }) => {
   const [isHovered, setIsHovered] = useState(false);
   
-  // Get the path for the edge
-  const [edgePath] = getBezierPath({
+  // Get the edge type from data or default to bezier
+  const edgeType = data?.edgeType || 'bezier';
+  
+  // Get the path for the edge based on the edge type
+  let edgePath = '';
+  let labelX = 0;
+  let labelY = 0;
+  
+  const pathParams = {
     sourceX,
     sourceY,
     sourcePosition,
     targetX,
     targetY,
     targetPosition,
-  });
+  };
+  
+  // Get path based on edge type
+  switch (edgeType) {
+    case 'smoothstep':
+      const [smoothPath, smoothLabelX, smoothLabelY] = getSmoothStepPath(pathParams);
+      edgePath = smoothPath;
+      labelX = smoothLabelX;
+      labelY = smoothLabelY;
+      break;
+    case 'straight':
+      const [straightPath, straightLabelX, straightLabelY] = getStraightPath(pathParams);
+      edgePath = straightPath;
+      labelX = straightLabelX;
+      labelY = straightLabelY;
+      break;
+    case 'simplebezier':
+      const [simplePath, simpleLabelX, simpleLabelY] = getSimpleBezierPath(pathParams);
+      edgePath = simplePath;
+      labelX = simpleLabelX;
+      labelY = simpleLabelY;
+      break;
+    case 'bezier':
+    default:
+      const [bezierPath, bezierLabelX, bezierLabelY] = getBezierPath(pathParams);
+      edgePath = bezierPath;
+      labelX = bezierLabelX;
+      labelY = bezierLabelY;
+      break;
+  }
 
-  // Get the direction from the edge data
+  // Get the direction from the edge data or default to forward
   const direction = data?.direction || 'forward';
+  
+  // Get the label from props or data
+  const edgeLabel = label || data?.label || '';
 
   // Determine markers based on direction
   const showStartArrow = direction === 'backward' || direction === 'bidirectional';
@@ -48,6 +100,10 @@ const CustomEdge: React.FC<EdgeProps> = ({
     : isHovered 
       ? baseStrokeWidth * 1.25 
       : baseStrokeWidth;
+      
+  // Determine if the edge should be animated (dashed)
+  const isAnimated = data?.animated || false;
+  const dashArray = isAnimated ? '5 5' : undefined;
   
   return (
     <>
@@ -91,6 +147,7 @@ const CustomEdge: React.FC<EdgeProps> = ({
           strokeWidth: effectiveStrokeWidth,
           cursor: 'pointer',
           transition: 'stroke-width 0.2s ease-in-out, stroke 0.2s ease-in-out',
+          strokeDasharray: dashArray,
         }}
         className="react-flow__edge-path"
         d={edgePath}
@@ -99,6 +156,45 @@ const CustomEdge: React.FC<EdgeProps> = ({
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       />
+      
+      {/* Edge Label */}
+      {edgeLabel && (
+        <g
+          transform={`translate(${labelX}, ${labelY})`}
+          className="react-flow__edge-label"
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
+        >
+          {labelShowBg && (
+            <rect
+              x={-labelBgPadding[0]}
+              y={-labelBgPadding[1]}
+              width={typeof edgeLabel === 'string' ? edgeLabel.length * 8 + labelBgPadding[0] * 2 : 100}
+              height={20 + labelBgPadding[1] * 2}
+              style={{
+                fill: '#ffffff',
+                stroke: 'none',
+                ...labelBgStyle,
+              }}
+              rx={labelBgBorderRadius}
+              ry={labelBgBorderRadius}
+            />
+          )}
+          <text
+            style={{
+              fontFamily: 'sans-serif',
+              fontSize: 12,
+              pointerEvents: 'all',
+              fill: '#222',
+              ...labelStyle,
+            }}
+            dominantBaseline="central"
+            textAnchor="middle"
+          >
+            {typeof edgeLabel === 'string' ? edgeLabel : ''}
+          </text>
+        </g>
+      )}
       
       {/* Invisible wider path for easier selection */}
       <path

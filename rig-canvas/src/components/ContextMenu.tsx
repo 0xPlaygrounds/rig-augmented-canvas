@@ -1,5 +1,19 @@
-import React from 'react';
-import { Plus, Trash2, Link, Unlink, Edit, ArrowRight, ArrowLeft, ArrowLeftRight } from 'lucide-react';
+import React, { useState } from 'react';
+import { 
+  Plus, 
+  Trash2, 
+  Link, 
+  Unlink, 
+  Edit, 
+  ArrowRight, 
+  ArrowLeft, 
+  ArrowLeftRight,
+  Type,
+  PenTool,
+  LineChart,
+  Minus,
+  Zap
+} from 'lucide-react';
 import { useCanvasStore } from '../store/canvasStore';
 import { useReactFlow, MarkerType } from '@xyflow/react';
 import { Edge as EdgeType } from '../types';
@@ -60,6 +74,11 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
     onClose();
   };
 
+  const [showEdgeTypeMenu, setShowEdgeTypeMenu] = useState(false);
+  const [showEdgeStyleMenu, setShowEdgeStyleMenu] = useState(false);
+  const [edgeLabelInput, setEdgeLabelInput] = useState('');
+  const [showLabelInput, setShowLabelInput] = useState(false);
+
   const handleChangeEdgeDirection = (direction: 'forward' | 'backward' | 'bidirectional') => {
     console.log(`Changing edge ${edgeId} direction to ${direction}`);
     if (edgeId) {
@@ -91,6 +110,73 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
         }, 100);
       }
     }
+    onClose();
+  };
+  
+  const handleChangeEdgeType = (edgeType: 'bezier' | 'straight' | 'smoothstep' | 'simplebezier') => {
+    console.log(`Changing edge ${edgeId} type to ${edgeType}`);
+    if (edgeId) {
+      const edge = edges.find(e => e.id === edgeId);
+      if (edge) {
+        const currentStyle = edge.style || { stroke: '#555', strokeWidth: 2 };
+        
+        const updatedEdge = { 
+          ...edge,
+          style: currentStyle,
+          data: {
+            ...(edge.data || {}),
+            edgeType
+          }
+        };
+        
+        updateEdge(edgeId, updatedEdge);
+      }
+    }
+    setShowEdgeTypeMenu(false);
+    onClose();
+  };
+  
+  const handleChangeEdgeStyle = (style: { animated?: boolean, strokeDasharray?: string }) => {
+    console.log(`Changing edge ${edgeId} style`);
+    if (edgeId) {
+      const edge = edges.find(e => e.id === edgeId);
+      if (edge) {
+        const currentStyle = edge.style || { stroke: '#555', strokeWidth: 2 };
+        
+        const updatedEdge = { 
+          ...edge,
+          style: currentStyle,
+          data: {
+            ...(edge.data || {}),
+            animated: style.animated
+          }
+        };
+        
+        updateEdge(edgeId, updatedEdge);
+      }
+    }
+    setShowEdgeStyleMenu(false);
+    onClose();
+  };
+  
+  const handleSetEdgeLabel = () => {
+    console.log(`Setting edge ${edgeId} label to ${edgeLabelInput}`);
+    if (edgeId && edgeLabelInput.trim()) {
+      const edge = edges.find(e => e.id === edgeId);
+      if (edge) {
+        const updatedEdge = { 
+          ...edge,
+          data: {
+            ...(edge.data || {}),
+            label: edgeLabelInput.trim()
+          }
+        };
+        
+        updateEdge(edgeId, updatedEdge);
+      }
+    }
+    setShowLabelInput(false);
+    setEdgeLabelInput('');
     onClose();
   };
 
@@ -129,7 +215,7 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
           </>
         )}
 
-        {edgeId && (
+        {edgeId && !showEdgeTypeMenu && !showEdgeStyleMenu && !showLabelInput && (
           <>
             <li>
               <button
@@ -161,10 +247,164 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
             <li className="border-t border-border-primary mt-1 pt-1">
               <button
                 className="w-full text-left px-4 py-2 hover:bg-bg-tertiary text-text-primary flex items-center gap-2 transition-colors"
+                onClick={() => setShowEdgeTypeMenu(true)}
+              >
+                <PenTool size={16} className="text-accent-primary" />
+                <span>Change Edge Type</span>
+              </button>
+            </li>
+            <li>
+              <button
+                className="w-full text-left px-4 py-2 hover:bg-bg-tertiary text-text-primary flex items-center gap-2 transition-colors"
+                onClick={() => setShowEdgeStyleMenu(true)}
+              >
+                <LineChart size={16} className="text-accent-primary" />
+                <span>Edge Style</span>
+              </button>
+            </li>
+            <li>
+              <button
+                className="w-full text-left px-4 py-2 hover:bg-bg-tertiary text-text-primary flex items-center gap-2 transition-colors"
+                onClick={() => setShowLabelInput(true)}
+              >
+                <Type size={16} className="text-accent-primary" />
+                <span>Add Label</span>
+              </button>
+            </li>
+            <li className="border-t border-border-primary mt-1 pt-1">
+              <button
+                className="w-full text-left px-4 py-2 hover:bg-bg-tertiary text-text-primary flex items-center gap-2 transition-colors"
                 onClick={handleDeleteEdge}
               >
                 <Unlink size={16} className="text-red-500" />
                 <span>Delete Connection</span>
+              </button>
+            </li>
+          </>
+        )}
+        
+        {/* Edge Type Submenu */}
+        {edgeId && showEdgeTypeMenu && (
+          <>
+            <li className="px-4 py-2 text-text-secondary text-sm font-medium">
+              Edge Type
+            </li>
+            <li>
+              <button
+                className="w-full text-left px-4 py-2 hover:bg-bg-tertiary text-text-primary flex items-center gap-2 transition-colors"
+                onClick={() => handleChangeEdgeType('bezier')}
+              >
+                <PenTool size={16} className="text-accent-primary" />
+                <span>Bezier Curve</span>
+              </button>
+            </li>
+            <li>
+              <button
+                className="w-full text-left px-4 py-2 hover:bg-bg-tertiary text-text-primary flex items-center gap-2 transition-colors"
+                onClick={() => handleChangeEdgeType('straight')}
+              >
+                <Minus size={16} className="text-accent-primary" />
+                <span>Straight Line</span>
+              </button>
+            </li>
+            <li>
+              <button
+                className="w-full text-left px-4 py-2 hover:bg-bg-tertiary text-text-primary flex items-center gap-2 transition-colors"
+                onClick={() => handleChangeEdgeType('smoothstep')}
+              >
+                <LineChart size={16} className="text-accent-primary" />
+                <span>Smooth Step</span>
+              </button>
+            </li>
+            <li>
+              <button
+                className="w-full text-left px-4 py-2 hover:bg-bg-tertiary text-text-primary flex items-center gap-2 transition-colors"
+                onClick={() => handleChangeEdgeType('simplebezier')}
+              >
+                <LineChart size={16} className="text-accent-primary" />
+                <span>Simple Bezier</span>
+              </button>
+            </li>
+            <li className="border-t border-border-primary mt-1 pt-1">
+              <button
+                className="w-full text-left px-4 py-2 hover:bg-bg-tertiary text-text-primary flex items-center gap-2 transition-colors"
+                onClick={() => setShowEdgeTypeMenu(false)}
+              >
+                <ArrowLeft size={16} className="text-accent-primary" />
+                <span>Back</span>
+              </button>
+            </li>
+          </>
+        )}
+        
+        {/* Edge Style Submenu */}
+        {edgeId && showEdgeStyleMenu && (
+          <>
+            <li className="px-4 py-2 text-text-secondary text-sm font-medium">
+              Edge Style
+            </li>
+            <li>
+              <button
+                className="w-full text-left px-4 py-2 hover:bg-bg-tertiary text-text-primary flex items-center gap-2 transition-colors"
+                onClick={() => handleChangeEdgeStyle({ animated: false })}
+              >
+                <Minus size={16} className="text-accent-primary" />
+                <span>Solid Line</span>
+              </button>
+            </li>
+            <li>
+              <button
+                className="w-full text-left px-4 py-2 hover:bg-bg-tertiary text-text-primary flex items-center gap-2 transition-colors"
+                onClick={() => handleChangeEdgeStyle({ animated: true })}
+              >
+                <Zap size={16} className="text-accent-primary" />
+                <span>Dashed Line</span>
+              </button>
+            </li>
+            <li className="border-t border-border-primary mt-1 pt-1">
+              <button
+                className="w-full text-left px-4 py-2 hover:bg-bg-tertiary text-text-primary flex items-center gap-2 transition-colors"
+                onClick={() => setShowEdgeStyleMenu(false)}
+              >
+                <ArrowLeft size={16} className="text-accent-primary" />
+                <span>Back</span>
+              </button>
+            </li>
+          </>
+        )}
+        
+        {/* Edge Label Input */}
+        {edgeId && showLabelInput && (
+          <>
+            <li className="px-4 py-2 text-text-secondary text-sm font-medium">
+              Add Label
+            </li>
+            <li className="px-4 py-2">
+              <input
+                type="text"
+                value={edgeLabelInput}
+                onChange={(e) => setEdgeLabelInput(e.target.value)}
+                placeholder="Enter label text"
+                className="w-full px-2 py-1 bg-bg-primary border border-border-primary rounded text-text-primary"
+                autoFocus
+              />
+            </li>
+            <li>
+              <button
+                className="w-full text-left px-4 py-2 hover:bg-bg-tertiary text-text-primary flex items-center gap-2 transition-colors"
+                onClick={handleSetEdgeLabel}
+              >
+                <Type size={16} className="text-accent-primary" />
+                <span>Set Label</span>
+              </button>
+            </li>
+            <li className="border-t border-border-primary mt-1 pt-1">
+              <button
+                className="w-full text-left px-4 py-2 hover:bg-bg-tertiary text-text-primary flex items-center gap-2 transition-colors"
+                onClick={() => setShowLabelInput(false)}
+              >
+                <ArrowLeft size={16} className="text-accent-primary" />
+                <span>Back</span>
               </button>
             </li>
           </>

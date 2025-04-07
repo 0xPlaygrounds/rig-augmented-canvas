@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IndexedDB Viewer for Rig Canvas</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1, h2, h3 {
+            color: #2c3e50;
+        }
+        .container {
+            display: flex;
+            gap: 20px;
+        }
+        .sidebar {
+            flex: 0 0 250px;
+            border-right: 1px solid #eee;
+            padding-right: 20px;
+        }
+        .content {
+            flex: 1;
+        }
+        .store-list {
+            list-style: none;
+            padding: 0;
+        }
+        .store-list li {
+            padding: 8px 12px;
+            margin-bottom: 5px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        .store-list li:hover {
+            background-color: #f5f5f5;
+        }
+        .store-list li.active {
+            background-color: #e0f7fa;
+            font-weight: bold;
+        }
+        pre {
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            padding: 15px;
+            overflow: auto;
+            max-height: 600px;
+        }
+        .key-list {
+            list-style: none;
+            padding: 0;
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #eee;
+            border-radius: 4px;
+        }
+        .key-list li {
+            padding: 8px 12px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+        }
+        .key-list li:hover {
+            background-color: #f5f5f5;
+        }
+        .key-list li.active {
+            background-color: #e0f7fa;
+        }
+        .actions {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+        }
+        button {
+            padding: 8px 16px;
+            background-color: #4caf50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .error {
+            color: #e53935;
+            padding: 10px;
+            background-color: #ffebee;
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
+        .info {
+            margin-bottom: 20px;
+            padding: 10px;
+            background-color: #e3f2fd;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>IndexedDB Viewer for Rig Canvas</h1>
+    
+    <div class="info">
+        <p>This tool allows you to view the contents of the IndexedDB database used by Rig Canvas.</p>
+        <p><strong>Database Name:</strong> rig-augmented-canvas</p>
+        <p><strong>Version:</strong> <span id="db-version">Loading...</span></p>
+    </div>
+    
+    <div id="error-container" class="error" style="display: none;"></div>
+    
+    <div class="container">
+        <div class="sidebar">
+            <h2>Object Stores</h2>
+            <ul id="store-list" class="store-list">
+                <li>Loading stores...</li>
+            </ul>
+            
+            <div class="actions">
+                <button id="refresh-btn">Refresh Data</button>
+            </div>
+        </div>
+        
+        <div class="content">
+            <h2 id="current-store">Select a store</h2>
+            
+            <div id="keys-container" style="display: none;">
+                <h3>Keys in Store</h3>
+                <ul id="key-list" class="key-list"></ul>
+            </div>
+            
+            <h3>Data Preview</h3>
+            <pre id="data-preview">Select a store and key to view data</pre>
+        </div>
+    </div>
+    
+    <script>
+        // Database constants from your application
+        const DB_NAME = 'rig-augmented-canvas';
+        const CANVAS_STORE = 'canvas-data';
+        const FILE_SYSTEM_STORE = 'file-system';
+        
+        // UI Elements
+        const storeListEl = document.getElementById('store-list');
+        const currentStoreEl = document.getElementById('current-store');
+        const keysContainerEl = document.getElementById('keys-container');
+        const keyListEl = document.getElementById('key-list');
+        const dataPreviewEl = document.getElementById('data-preview');
+        const dbVersionEl = document.getElementById('db-version');
+        const refreshBtnEl = document.getElementById('refresh-btn');
+        const errorContainerEl = document.getElementById('error-container');
+        
+        // State
+        let db = null;
+        let currentStore = null;
+        let currentKey = null;
+        
+        // Initialize the application
+        async function init() {
+            try {
+                await openDatabase();
+                await listObjectStores();
+                
+                // Add event listener for refresh button
+                refreshBtnEl.addEventListener('click', async () => {
+                    if (currentStore) {
+                        await listKeysInStore(currentStore);
+                        if (currentKey) {
+                            await showData(currentStore, currentKey);
+                        }
+                    }
+                });
+            } catch (error) {
+                showError(`Failed to initialize: ${error.message}`);
+                console.error('Initialization error:', error);
+            }
+        }
+        
+        // Open the database
+        async function openDatabase() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME);
+                
+                request.onerror = (event) => {
+                    reject(new Error('Failed to open database'));
+                };
+                
+                request.onsuccess = (event) => {
+                    db = event.target.result;
+                    dbVersionEl.textContent = db.version;
+                    resolve(db);
+                };
+                
+                request.onupgradeneeded = (event) => {
+                    // This shouldn't happen when just viewing the database
+                    console.log('Database upgrade needed');
+                };
+            });
+        }
+        
+        // List all object stores in the database
+        async function listObjectStores() {
+            if (!db) {
+                throw new Error('Database not open');
+            }
+            
+            const storeNames = Array.from(db.objectStoreNames);
+            
+            if (storeNames.length === 0) {
+                storeListEl.innerHTML = '<li>No object stores found</li>';
+                return;
+            }
+            
+            storeListEl.innerHTML = '';
+            
+            storeNames.forEach(storeName => {
+                const li = document.createElement('li');
+                li.textContent = storeName;
+                li.addEventListener('click', async () => {
+                    // Update active class
+                    document.querySelectorAll('.store-list li').forEach(el => {
+                        el.classList.remove('active');
+                    });
+                    li.classList.add('active');
+                    
+                    // Update current store and list keys
+                    currentStore = storeName;
+                    currentStoreEl.textContent = `Store: ${storeName}`;
+                    await listKeysInStore(storeName);
+                });
+                storeListEl.appendChild(li);
+            });
+        }
+        
+        // List all keys in a store
+        async function listKeysInStore(storeName) {
+            if (!db) {
+                throw new Error('Database not open');
+            }
+            
+            try {
+                const transaction = db.transaction(storeName, 'readonly');
+                const store = transaction.objectStore(storeName);
+                const request = store.getAllKeys();
+                
+                request.onsuccess = (event) => {
+                    const keys = event.target.result;
+                    
+                    if (keys.length === 0) {
+                        keyListEl.innerHTML = '<li>No keys found</li>';
+                    } else {
+                        keyListEl.innerHTML = '';
+                        
+                        keys.forEach(key => {
+                            const li = document.createElement('li');
+                            li.textContent = typeof key === 'object' ? JSON.stringify(key) : key;
+                            li.addEventListener('click', async () => {
+                                // Update active class
+                                document.querySelectorAll('.key-list li').forEach(el => {
+                                    el.classList.remove('active');
+                                });
+                                li.classList.add('active');
+                                
+                                // Show data for this key
+                                currentKey = key;
+                                await showData(storeName, key);
+                            });
+                            keyListEl.appendChild(li);
+                        });
+                    }
+                    
+                    keysContainerEl.style.display = 'block';
+                };
+                
+                request.onerror = (event) => {
+                    showError(`Failed to list keys: ${event.target.error}`);
+                };
+            } catch (error) {
+                showError(`Error listing keys: ${error.message}`);
+                console.error('Error listing keys:', error);
+            }
+        }
+        
+        // Show data for a specific key in a store
+        async function showData(storeName, key) {
+            if (!db) {
+                throw new Error('Database not open');
+            }
+            
+            try {
+                const transaction = db.transaction(storeName, 'readonly');
+                const store = transaction.objectStore(storeName);
+                const request = store.get(key);
+                
+                request.onsuccess = (event) => {
+                    const data = event.target.result;
+                    dataPreviewEl.textContent = JSON.stringify(data, null, 2);
+                };
+                
+                request.onerror = (event) => {
+                    showError(`Failed to get data: ${event.target.error}`);
+                };
+            } catch (error) {
+                showError(`Error getting data: ${error.message}`);
+                console.error('Error getting data:', error);
+            }
+        }
+        
+        // Show error message
+        function showError(message) {
+            errorContainerEl.textContent = message;
+            errorContainerEl.style.display = 'block';
+            
+            // Hide after 5 seconds
+            setTimeout(() => {
+                errorContainerEl.style.display = 'none';
+            }, 5000);
+        }
+        
+        // Start the application
+        init();
+    </script>
+</body>
+</html>

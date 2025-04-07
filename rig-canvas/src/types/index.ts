@@ -24,6 +24,9 @@ export type Edge = ReactFlowEdge & {
   // Add data property to store additional data
   data?: {
     direction?: 'forward' | 'backward' | 'bidirectional';
+    edgeType?: 'bezier' | 'straight' | 'smoothstep' | 'simplebezier';
+    label?: string | ReactNode;
+    animated?: boolean;
     [key: string]: unknown;
   };
 };
