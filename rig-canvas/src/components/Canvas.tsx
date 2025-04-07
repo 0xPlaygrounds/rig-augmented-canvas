@@ -1,4 +1,13 @@
-import React, { useCallback, useRef, useMemo, useState, useEffect, DragEvent } from 'react';
+/**
+ * Canvas Component
+ * 
+ * The core component that powers the interactive canvas area where users create notes
+ * and connect them with edges. It leverages React Flow to provide the interactive
+ * node-based diagram functionality.
+ */
+
+import React, { useCallback, useRef, useMemo, useState, DragEvent } from 'react';
+// XY Flow (React Flow) imports
 import {
   ReactFlow,
   Background,
@@ -13,22 +22,31 @@ import {
   Panel,
   ReactFlowProvider,
   useReactFlow,
-  NodeChange,
   Node as ReactFlowNode,
-  ConnectionLineType,
-  MarkerType,
+  NodeChange,
 } from '@xyflow/react';
-import CustomEdge from './CustomEdge';
 import '@xyflow/react/dist/style.css';
 
-import { useCanvasStore } from '../store/canvasStore';
+// Local components
+import CustomEdge from './CustomEdge';
 import NoteNode from './NoteNode';
 import ContextMenu from './ContextMenu';
-import { Plus } from 'lucide-react';
-import { Node, NoteData, FileData } from '../types';
+
+// Hooks
+import { useCanvasStore } from '../store/canvasStore';
 import { useFileSystem } from '../hooks/useFileSystem';
 
+// Types
+import { Node, NoteData, FileData, Edge as CustomEdgeType } from '../types';
+
+// Icons
+import { Plus } from 'lucide-react';
+
+/**
+ * Props for the Canvas component
+ */
 interface CanvasProps {
+  /** Optional callback when a file is dropped onto the canvas */
   onFileDrop?: (file: FileData) => void;
 }
 
@@ -54,13 +72,12 @@ const Canvas: React.FC<CanvasProps> = ({ onFileDrop }) => {
   const reactFlowInstance = useReactFlow();
   const { getFile } = useFileSystem();
   
-  // Handle file drop from the sidebar
+  /**
+   * Handles dropping a file from the sidebar onto the canvas
+   * Creates a new node with the file's content
+   */
   const handleFileDrop = useCallback(async (file: FileData, dropPosition?: { x: number, y: number }) => {
     if (!reactFlowInstance) return;
-    
-    console.log('handleFileDrop called with file:', file);
-    console.log('File ID:', file.id);
-    console.log('File content:', file.content);
     
     // Create a position for the new node
     let position;
@@ -76,16 +93,12 @@ const Canvas: React.FC<CanvasProps> = ({ onFileDrop }) => {
       });
     }
     
-    console.log('Node position:', position);
-    
     const id = `file-node-${Date.now()}`;
     let nodeData: NoteData = {
       fileId: file.id,
       width: 250,
       height: 150
     };
-    
-    console.log('Node data before setting content:', nodeData);
     
     // Set content based on file type
     if (file.type === 'note' || file.type === 'markdown') {
@@ -96,8 +109,6 @@ const Canvas: React.FC<CanvasProps> = ({ onFileDrop }) => {
       nodeData.content = `<audio controls src="${file.url}"></audio>`;
     }
     
-    console.log('Node data after setting content:', nodeData);
-    
     const newNode: Node = {
       id,
       type: 'note',
@@ -105,46 +116,38 @@ const Canvas: React.FC<CanvasProps> = ({ onFileDrop }) => {
       data: nodeData
     };
     
-    console.log('Creating new node:', newNode);
-    
     // Verify the file exists before creating the node
-    const existingFile = await getFile(file.id);
-    console.log('Verified file exists:', existingFile);
-    
+    await getFile(file.id);
     addNode(newNode);
-    
-    console.log('Node added to canvas');
   }, [reactFlowInstance, addNode, getFile]);
   
-  // Handle direct drag and drop from file explorer to canvas
+  /**
+   * Handles drag over event to indicate we can drop files
+   */
   const onDragOver = useCallback((event: DragEvent<HTMLDivElement>) => {
     event.preventDefault();
     event.dataTransfer.dropEffect = 'copy';
   }, []);
   
+  /**
+   * Handles drop events from file explorer to canvas
+   * Parses the file data and creates a new node at the drop position
+   */
   const onDrop = useCallback((event: DragEvent<HTMLDivElement>) => {
     event.preventDefault();
     
-    console.log('Drop event on canvas');
-    
     // Get the dragged file data from the dataTransfer
     const fileData = event.dataTransfer.getData('application/json');
-    console.log('Received file data:', fileData);
     
     if (fileData) {
       try {
         const file = JSON.parse(fileData) as FileData;
-        console.log('Parsed file:', file);
-        console.log('File ID:', file.id);
-        console.log('File content:', file.content);
         
         // Get the drop position
         const dropPosition = {
           x: event.clientX,
           y: event.clientY
         };
-        
-        console.log('Drop position:', dropPosition);
         
         // Create a new node at the drop position
         handleFileDrop(file, dropPosition);
@@ -176,13 +179,15 @@ const Canvas: React.FC<CanvasProps> = ({ onFileDrop }) => {
     setEdges(edges);
   }, [nodes, edges, setNodes, setEdges]);
   
-  // Handle node position changes
-  const handleNodesChange = useCallback((changes: any) => {
+  /**
+   * Handles node position changes and persists them to the store
+   */
+  const handleNodesChange = useCallback((changes: any[]) => {
     // First, let ReactFlow update its internal state
     onNodesChange(changes);
     
     // Then, update our persistent store with the new positions
-    changes.forEach((change: any) => {
+    changes.forEach((change) => {
       // Only process position changes
       if (change.type === 'position' && 'position' in change && change.position) {
         updateNode(change.id, { position: change.position });
@@ -190,6 +195,9 @@ const Canvas: React.FC<CanvasProps> = ({ onFileDrop }) => {
     });
   }, [onNodesChange, updateNode]);
 
+  /**
+   * Handles connecting two nodes with an edge
+   */
   const onConnect = useCallback(
     (connection: Connection) => {
       // Ensure source and target are not null
@@ -209,13 +217,16 @@ const Canvas: React.FC<CanvasProps> = ({ onFileDrop }) => {
             animated: false
           }
         };
-        console.log('Creating new edge:', newEdge);
         addEdge(newEdge);
       }
     },
     [addEdge]
   );
 
+  /**
+   * Handles clicks on the canvas pane
+   * Closes any open context menu and deselects edges
+   */
   const onPaneClick = useCallback(() => {
     // Close context menu when clicking on the pane
     setContextMenu(null);
@@ -235,6 +246,9 @@ const Canvas: React.FC<CanvasProps> = ({ onFileDrop }) => {
     prevSelectedEdgeIdRef.current = null;
   }, [setContextMenu, edges, updateEdge]);
 
+  /**
+   * Handles right-click on a node to open the context menu
+   */
   const onNodeContextMenu = useCallback(
     (event: React.MouseEvent, node: ReactFlowNode) => {
       // Prevent default context menu
@@ -251,7 +265,9 @@ const Canvas: React.FC<CanvasProps> = ({ onFileDrop }) => {
     [setContextMenu]
   );
 
-  // Handle edge click to select it
+  /**
+   * Handles edge clicks to show selection styling
+   */
   const onEdgeClick = useCallback(
     (event: React.MouseEvent, edge: Edge) => {
       event.stopPropagation();
@@ -281,6 +297,9 @@ const Canvas: React.FC<CanvasProps> = ({ onFileDrop }) => {
     [updateEdge, edges]
   );
 
+  /**
+   * Handles right-click on an edge to open the context menu
+   */
   const onEdgeContextMenu = useCallback(
     (event: React.MouseEvent, edge: Edge) => {
       // Prevent default context menu
@@ -321,6 +340,9 @@ const Canvas: React.FC<CanvasProps> = ({ onFileDrop }) => {
     [setContextMenu, selectedEdgeId, updateEdge, edges]
   );
 
+  /**
+   * Handles right-click on the canvas pane to open the context menu
+   */
   const onPaneContextMenu = useCallback(
     (event: React.MouseEvent<Element, MouseEvent> | MouseEvent) => {
       // Prevent default context menu
@@ -335,12 +357,14 @@ const Canvas: React.FC<CanvasProps> = ({ onFileDrop }) => {
       const x = clientX - (boundingRect?.left || 0);
       const y = clientY - (boundingRect?.top || 0);
       
-      console.log('Opening context menu at:', { x, y });
       setContextMenu({ x, y });
     },
     [setContextMenu]
   );
 
+  /**
+   * Creates a new note in the center of the viewport
+   */
   const handleAddNote = useCallback(() => {
     if (!reactFlowInstance) return;
     

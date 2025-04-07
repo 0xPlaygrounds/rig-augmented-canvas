@@ -1,15 +1,48 @@
-import React, { useState, useRef } from 'react';
-import { ChevronLeft, ChevronRight, Plus, Trash2, Edit, Save, X, FileText, FolderPlus, Upload } from 'lucide-react';
-import ResizeHandle from './ResizeHandle';
+/**
+ * Sidebar Component
+ * 
+ * A collapsible sidebar that provides navigation between files and canvases.
+ * Includes file explorer, canvas management, and resizing capabilities.
+ * 
+ * Features:
+ * - File browser with drag-and-drop support
+ * - Canvas creation, selection, and management
+ * - Collapsible interface to maximize workspace
+ * - Resizable width for user preference
+ */
+
+import React, { useState } from 'react';
+import { 
+  ChevronLeft, 
+  ChevronRight, 
+  Plus, 
+  Trash2, 
+  Edit, 
+  Save, 
+  X, 
+  FileText 
+} from 'lucide-react';
+
+// Components
 import FileExplorer from './FileExplorer';
+
+// Hooks
 import { useCanvasPersistence } from '../hooks/useCanvasPersistence';
 import { useFileSystem } from '../hooks/useFileSystem';
-import { FileData, CanvasData } from '../types';
 import { useCanvasStore } from '../store/canvasStore';
 
+// Types
+import { FileData, CanvasData } from '../types';
+
+/**
+ * Props for the Sidebar component
+ */
 interface SidebarProps {
+  /** Callback when a file is selected */
   onFileSelect: (file: FileData) => void;
+  /** Callback when a file is dragged and dropped */
   onFileDrop: (file: FileData) => void;
+  /** Callback when a canvas is selected */
   onCanvasSelect: (canvasId: string) => void;
 }
 
@@ -34,24 +67,34 @@ const Sidebar: React.FC<SidebarProps> = ({ onFileSelect, onFileDrop, onCanvasSel
   const { addFile } = useFileSystem();
   const { nodes } = useCanvasStore();
   
-  // Toggle sidebar collapse
+  /**
+   * Toggles the sidebar between collapsed and expanded states
+   */
   const toggleCollapse = () => {
     setIsCollapsed(!isCollapsed);
   };
   
-  // Handle canvas selection
+  /**
+   * Handles selection of a canvas from the list
+   * Loads the canvas and notifies parent component
+   */
   const handleCanvasSelect = (canvasId: string) => {
     loadCanvas(canvasId);
     onCanvasSelect(canvasId);
   };
   
-  // Start creating a new canvas
+  /**
+   * Initiates the canvas creation UI
+   */
   const handleNewCanvas = () => {
     setIsCreatingCanvas(true);
     setNewCanvasName('');
   };
   
-  // Create the new canvas
+  /**
+   * Creates a new canvas with the provided name
+   * and selects it automatically
+   */
   const createNewCanvas = async () => {
     if (newCanvasName.trim()) {
       const canvasId = await createCanvas(newCanvasName.trim());
@@ -63,18 +106,24 @@ const Sidebar: React.FC<SidebarProps> = ({ onFileSelect, onFileDrop, onCanvasSel
     }
   };
   
-  // Cancel creating a new canvas
+  /**
+   * Cancels the new canvas creation process
+   */
   const cancelNewCanvas = () => {
     setIsCreatingCanvas(false);
     setNewCanvasName('');
   };
   
-  // Start editing a canvas name
+  /**
+   * Initiates editing of a canvas name
+   */
   const handleEditCanvas = (canvas: CanvasData) => {
     setEditingCanvas({ id: canvas.id, name: canvas.name });
   };
   
-  // Save the edited canvas name
+  /**
+   * Saves the updated canvas name
+   */
   const saveEditedCanvasName = async () => {
     if (editingCanvas && editingCanvas.name.trim()) {
       // We need to update the canvas name
@@ -83,12 +132,17 @@ const Sidebar: React.FC<SidebarProps> = ({ onFileSelect, onFileDrop, onCanvasSel
     }
   };
   
-  // Cancel editing a canvas name
+  /**
+   * Cancels the canvas name editing process
+   */
   const cancelEditCanvasName = () => {
     setEditingCanvas(null);
   };
   
-  // Handle saving a note to a folder
+  /**
+   * Saves the content of a selected note to a folder
+   * Creates a new file in the specified folder
+   */
   const handleSaveNote = async (folderId: string, content: string) => {
     // Find the selected node (if any)
     const selectedNode = nodes.find(node => node.selected);
@@ -106,6 +160,10 @@ const Sidebar: React.FC<SidebarProps> = ({ onFileSelect, onFileDrop, onCanvasSel
     }
   };
   
+  /**
+   * Handles resize of the sidebar width
+   * Ensures width stays within min/max constraints
+   */
   const handleResize = (newWidth: number) => {
     if (newWidth >= minWidth && newWidth <= maxWidth) {
       setSidebarWidth(newWidth);

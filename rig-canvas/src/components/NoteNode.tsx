@@ -1,35 +1,64 @@
+/**
+ * NoteNode Component
+ * 
+ * Represents a note node in the canvas. Supports:
+ * - Markdown content editing and rendering
+ * - Resizing, focus mode, and quick editing
+ * - File linking for persistence
+ * - Multiple connection points for edges
+ */
+
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Handle, Position, useReactFlow, NodeProps, NodeResizer } from '@xyflow/react';
 import { Trash2, Edit, X, Check, Maximize2, Link } from 'lucide-react';
-import { useCanvasStore } from '../store/canvasStore';
-import { useFileSystem } from '../hooks/useFileSystem';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+
+// Local components
 import NoteToolbar from './NoteToolbar';
-import ResizeHandle, { ResizeHandlePosition } from './ResizeHandle';
 import FocusMode from './FocusMode';
+
+// Hooks
+import { useCanvasStore } from '../store/canvasStore';
+import { useFileSystem } from '../hooks/useFileSystem';
+
+// Utils
 import { applyMarkdownFormat } from '../utils/markdownUtils';
 
-// Define the data structure for our note nodes
+/**
+ * Data structure for note nodes
+ */
 interface NoteNodeData {
+  /** Content text (markdown supported) */
   content?: string;
+  /** Background color */
   color?: string;
+  /** Width in pixels */
   width?: number;
+  /** Height in pixels */
   height?: number;
+  /** Reference to a file ID if linked */
   fileId?: string;
+  /** Node display label */
+  label?: string;
+  /** Additional properties */
   [key: string]: unknown;
 }
 
-// Use any for now to avoid type issues
+/**
+ * NoteNode - A customizable markdown note component for the canvas
+ */
 const NoteNode: React.FC<NodeProps> = ({ id, data, selected, positionAbsoluteX, positionAbsoluteY }) => {
   // Use positionAbsoluteX and positionAbsoluteY instead of xPos and yPos
   const xPos = positionAbsoluteX;
   const yPos = positionAbsoluteY;
   const [isEditing, setIsEditing] = useState(false);
   const [isFocusMode, setIsFocusMode] = useState(false);
+  const [isEditingLabel, setIsEditingLabel] = useState(false);
   // Cast data to NoteNodeData to access properties safely
   const nodeData = data as NoteNodeData;
   const [content, setContent] = useState(nodeData.content || '');
+  const [label, setLabel] = useState(nodeData.label || 'Untitled');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const reactFlowInstance = useReactFlow();
   
@@ -52,20 +81,22 @@ const NoteNode: React.FC<NodeProps> = ({ id, data, selected, positionAbsoluteX, 
   // Check if this node is linked to a file
   const isLinkedToFile = Boolean(nodeData.fileId);
 
-  // Update local content when data changes (e.g., when loading from persistence)
+  // Update local content and label when data changes (e.g., when loading from persistence)
   useEffect(() => {
     const typedData = data as NoteNodeData;
     setContent(typedData.content || '');
+    setLabel(typedData.label || 'Untitled');
   }, [data]);
   
-  // Periodically check for updates to the linked file
+  /**
+   * Sync node content with linked file
+   * Checks for file updates every 2 seconds if this node is linked to a file
+   */
   useEffect(() => {
     const typedData = data as NoteNodeData;
     const fileId = typedData.fileId;
     
     if (!fileId) return; // Not linked to a file
-    
-    console.log('Setting up file update check for fileId:', fileId);
     
     // Function to check for file updates
     const checkForFileUpdates = async () => {
@@ -73,10 +104,6 @@ const NoteNode: React.FC<NodeProps> = ({ id, data, selected, positionAbsoluteX, 
         const file = await getFile(fileId);
         
         if (file && file.content !== content) {
-          console.log('File content changed, updating node content');
-          console.log('Old content:', content);
-          console.log('New content:', file.content);
-          
           // Update the local content
           setContent(file.content || '');
           
@@ -118,11 +145,11 @@ const NoteNode: React.FC<NodeProps> = ({ id, data, selected, positionAbsoluteX, 
     setIsEditing(true);
   }, []);
 
+  /**
+   * Save the note content and update linked file if necessary
+   */
   const handleSave = useCallback(async () => {
     const typedData = data as NoteNodeData;
-    
-    console.log('Saving note with data:', typedData);
-    console.log('File ID:', typedData.fileId);
     
     // Update the node in the canvas
     updateNode(id, { 
@@ -136,25 +163,18 @@ const NoteNode: React.FC<NodeProps> = ({ id, data, selected, positionAbsoluteX, 
     // If this node is linked to a file, update the file content as well
     if (typedData.fileId) {
       try {
-        console.log('Updating file content for file ID:', typedData.fileId);
-        console.log('New content:', content);
-        
         // Get the current file to verify it exists
         const currentFile = await getFile(typedData.fileId);
-        console.log('Current file:', currentFile);
         
         if (currentFile) {
           // Update the file content in the file system
-          const updatedFile = await updateFileContent(typedData.fileId, { content });
-          console.log('File update result:', updatedFile);
+          await updateFileContent(typedData.fileId, { content });
         } else {
           console.error('File not found with ID:', typedData.fileId);
         }
       } catch (error) {
         console.error('Failed to update file content:', error);
       }
-    } else {
-      console.log('Note is not linked to a file');
     }
     
     setIsEditing(false);
@@ -224,87 +244,31 @@ const NoteNode: React.FC<NodeProps> = ({ id, data, selected, positionAbsoluteX, 
     }
   }, [handleFormatClick, handleSave, handleCancel]);
 
-  const handleResize = useCallback((deltaWidth: number, deltaHeight: number, position: ResizeHandlePosition) => {
-    console.log(`Resizing node ${id} with deltas: width=${deltaWidth}, height=${deltaHeight}, position=${position}`);
-    
-    // Cast data to NoteNodeData and use type assertions for width and height
+  /**
+   * Handles resizing the node through NodeResizer component
+   * Updates the width and height in the node data for persistence
+   */
+  const handleResize = useCallback((event: any, { width, height }: { width: number, height: number }) => {
+    // Cast data to NoteNodeData
     const typedData = data as NoteNodeData;
-    const currentWidth = (typedData.width as number) || defaultWidth;
-    const currentHeight = (typedData.height as number) || defaultHeight;
     
-    let newWidth = currentWidth;
-    let newHeight = currentHeight;
-    let newPosition = { x: xPos, y: yPos };
+    // Create a copy of the current data with updated dimensions
+    const updatedData = {
+      ...typedData,
+      width,
+      height
+    };
     
-    // Calculate new dimensions and any position offsets needed
-    switch (position) {
-      case 'bottom-right':
-        // Simple addition for bottom-right resizing
-        newWidth = Math.max(minWidth, Math.min(maxWidth, currentWidth + deltaWidth));
-        newHeight = Math.max(minHeight, Math.min(maxHeight, currentHeight + deltaHeight));
-        break;
-        
-      case 'bottom-left':
-        // Adjust width and position from left side
-        newWidth = Math.max(minWidth, Math.min(maxWidth, currentWidth - deltaWidth));
-        newHeight = Math.max(minHeight, Math.min(maxHeight, currentHeight + deltaHeight));
-        newPosition.x = xPos + (currentWidth - newWidth);
-        break;
-        
-      case 'top-right':
-        // Adjust height and position from top side
-        newWidth = Math.max(minWidth, Math.min(maxWidth, currentWidth + deltaWidth));
-        newHeight = Math.max(minHeight, Math.min(maxHeight, currentHeight - deltaHeight));
-        newPosition.y = yPos + (currentHeight - newHeight);
-        break;
-        
-      case 'top-left':
-        // Adjust both width and height from top-left
-        newWidth = Math.max(minWidth, Math.min(maxWidth, currentWidth - deltaWidth));
-        newHeight = Math.max(minHeight, Math.min(maxHeight, currentHeight - deltaHeight));
-        newPosition.x = xPos + (currentWidth - newWidth);
-        newPosition.y = yPos + (currentHeight - newHeight);
-        break;
-    }
-    
-    console.log(`New dimensions: width=${newWidth}, height=${newHeight}, position=`, newPosition);
-    
-    try {
-      // Force a direct update to the ReactFlow nodes
-      reactFlowInstance.setNodes(nodes => 
-        nodes.map(node => {
-          if (node.id === id) {
-            return {
-              ...node,
-              position: newPosition,
-              data: {
-                ...node.data,
-                width: newWidth,
-                height: newHeight
-              }
-            };
-          }
-          return node;
-        })
-      );
-      
-      // Also update the store to ensure persistence
-      // Make sure to include the position in the update to ensure it's persisted
-      updateNode(id, {
-        position: newPosition,
-        data: {
-          ...typedData,
-          width: newWidth,
-          height: newHeight
-        }
-      });
-      
-      console.log('Node updated successfully');
-    } catch (error) {
-      console.error('Error updating node:', error);
-    }
-  }, [data, defaultWidth, defaultHeight, id, updateNode, xPos, yPos, reactFlowInstance]);
+    // Update the node in the store to ensure persistence
+    // Note: The data object should be directly assigned, not nested inside another data property
+    updateNode(id, {
+      data: updatedData
+    });
+  }, [data, id, updateNode]);
   
+  /**
+   * Enters full-screen focus mode for better content editing
+   */
   const handleFocusModeToggle = useCallback((e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent event bubbling
     setIsFocusMode(true);
@@ -313,17 +277,63 @@ const NoteNode: React.FC<NodeProps> = ({ id, data, selected, positionAbsoluteX, 
   // Handler for double-click to enter focus mode
   const handleDoubleClick = useCallback((e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent event bubbling
-    if (!isEditing) { // Only enter focus mode if not already editing
+    if (!isEditing && !isEditingLabel) { // Only enter focus mode if not already editing
       setIsFocusMode(true);
     }
-  }, [isEditing]);
+  }, [isEditing, isEditingLabel]);
   
+  // Handler for double-clicking the label to edit it
+  const handleLabelDoubleClick = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent event bubbling
+    setIsEditingLabel(true);
+  }, []);
+  
+  // Handler for saving the label
+  const handleLabelSave = useCallback(() => {
+    const typedData = data as NoteNodeData;
+    
+    // Update the node in the canvas with the new label
+    updateNode(id, { 
+      position: { x: xPos, y: yPos },
+      data: { 
+        ...typedData, 
+        label 
+      } 
+    });
+    
+    setIsEditingLabel(false);
+  }, [id, data, label, updateNode, xPos, yPos]);
+  
+  // Handler for canceling label editing
+  const handleLabelCancel = useCallback(() => {
+    const typedData = data as NoteNodeData;
+    setLabel(typedData.label || 'Untitled');
+    setIsEditingLabel(false);
+  }, [data]);
+  
+  // Handler for label input changes
+  const handleLabelChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setLabel(e.target.value);
+  }, []);
+  
+  // Handler for label input key down events
+  const handleLabelKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleLabelSave();
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      handleLabelCancel();
+    }
+  }, [handleLabelSave, handleLabelCancel]);
+  
+  /**
+   * Save content from focus mode and update linked file if needed
+   * Called when exiting focus mode with content changes
+   */
   const handleFocusModeSave = useCallback(async (newContent: string) => {
     setContent(newContent);
     const typedData = data as NoteNodeData;
-    
-    console.log('Saving note from focus mode with data:', typedData);
-    console.log('File ID:', typedData.fileId);
     
     // Update the node in the canvas
     updateNode(id, { 
@@ -334,28 +344,24 @@ const NoteNode: React.FC<NodeProps> = ({ id, data, selected, positionAbsoluteX, 
     // If this node is linked to a file, update the file content as well
     if (typedData.fileId) {
       try {
-        console.log('Updating file content from focus mode for file ID:', typedData.fileId);
-        console.log('New content:', newContent);
-        
         // Get the current file to verify it exists
         const currentFile = await getFile(typedData.fileId);
-        console.log('Current file:', currentFile);
         
         if (currentFile) {
           // Update the file content in the file system
-          const updatedFile = await updateFileContent(typedData.fileId, { content: newContent });
-          console.log('File update result from focus mode:', updatedFile);
+          await updateFileContent(typedData.fileId, { content: newContent });
         } else {
           console.error('File not found with ID:', typedData.fileId);
         }
       } catch (error) {
         console.error('Failed to update file content from focus mode:', error);
       }
-    } else {
-      console.log('Note is not linked to a file');
     }
   }, [data, id, updateNode, xPos, yPos, updateFileContent, getFile]);
   
+  /**
+   * Exit focus mode without saving changes
+   */
   const handleFocusModeClose = useCallback(() => {
     setIsFocusMode(false);
   }, []);
@@ -387,8 +393,11 @@ const NoteNode: React.FC<NodeProps> = ({ id, data, selected, positionAbsoluteX, 
     }
   }, []);
 
+  /**
+   * Increases node size by 50px in both width and height
+   * Respects maximum size constraints
+   */
   const handleIncreaseSize = useCallback(() => {
-    console.log("Increasing size");
     // Increase size by 50px in width and height
     const typedData = data as NoteNodeData;
     const currentWidth = (typedData.width as number) || defaultWidth;
@@ -396,21 +405,24 @@ const NoteNode: React.FC<NodeProps> = ({ id, data, selected, positionAbsoluteX, 
     const newWidth = Math.min(maxWidth, currentWidth + 50);
     const newHeight = Math.min(maxHeight, currentHeight + 50);
     
-    // Update node data - make sure to include the position
-    updateNode(id, {
-      position: { x: xPos, y: yPos },
-      data: {
-        ...typedData,
-        width: newWidth,
-        height: newHeight
-      }
-    });
+    // Create a copy of the current data with updated dimensions
+    const updatedData = {
+      ...typedData,
+      width: newWidth,
+      height: newHeight
+    };
     
-    console.log(`Resized to: ${newWidth}x${newHeight}`);
-  }, [data, defaultWidth, defaultHeight, id, maxWidth, maxHeight, updateNode, xPos, yPos]);
+    // Update node data with the new dimensions
+    updateNode(id, {
+      data: updatedData
+    });
+  }, [data, defaultWidth, defaultHeight, id, maxWidth, maxHeight, updateNode]);
 
+  /**
+   * Decreases node size by 50px in both width and height
+   * Respects minimum size constraints
+   */
   const handleDecreaseSize = useCallback(() => {
-    console.log("Decreasing size");
     // Decrease size by 50px in width and height
     const typedData = data as NoteNodeData;
     const currentWidth = (typedData.width as number) || defaultWidth;
@@ -418,18 +430,18 @@ const NoteNode: React.FC<NodeProps> = ({ id, data, selected, positionAbsoluteX, 
     const newWidth = Math.max(minWidth, currentWidth - 50);
     const newHeight = Math.max(minHeight, currentHeight - 50);
     
-    // Update node data - make sure to include the position
-    updateNode(id, {
-      position: { x: xPos, y: yPos },
-      data: {
-        ...typedData,
-        width: newWidth,
-        height: newHeight
-      }
-    });
+    // Create a copy of the current data with updated dimensions
+    const updatedData = {
+      ...typedData,
+      width: newWidth,
+      height: newHeight
+    };
     
-    console.log(`Resized to: ${newWidth}x${newHeight}`);
-  }, [data, defaultWidth, defaultHeight, id, minWidth, minHeight, updateNode, xPos, yPos]);
+    // Update node data with the new dimensions
+    updateNode(id, {
+      data: updatedData
+    });
+  }, [data, defaultWidth, defaultHeight, id, minWidth, minHeight, updateNode]);
 
   return (
     <div
@@ -492,65 +504,123 @@ const NoteNode: React.FC<NodeProps> = ({ id, data, selected, positionAbsoluteX, 
         />
       )}
       
-      {/* Use ReactFlow's built-in NodeResizer component */}
+      {/* Use ReactFlow's NodeResizer component with more control */}
       {!isEditing && !isFocusMode && (
         <NodeResizer
+          nodeId={id}
           minWidth={minWidth}
           minHeight={minHeight}
           maxWidth={maxWidth}
           maxHeight={maxHeight}
           isVisible={selected}
-          onResize={(event, { width, height }) => {
-            const typedData = data as NoteNodeData;
-            updateNode(id, {
-              position: { x: xPos, y: yPos },
-              data: {
-                ...typedData,
-                width,
-                height
-              }
-            });
-          }}
+          handleClassName="resize-handle bg-blue-500 border border-white"
+          handleStyle={{ width: '8px', height: '8px' }}
+          lineClassName="resize-line border-blue-500"
+          lineStyle={{ borderWidth: '1px', borderStyle: 'dashed' }}
+          color="#3b82f6" // Blue color for handles and lines
+          onResize={handleResize}
         />
       )}
       
-      {isEditing ? (
-        <div className="flex flex-col h-full">
-          <NoteToolbar onFormatClick={handleFormatClick} />
-          <textarea
-            ref={textareaRef}
-            value={content}
-            onChange={handleContentChange}
-            onKeyDown={handleKeyDown}
-            className="w-full h-full min-h-[80px] p-2 border border-gray-300 rounded resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
-            placeholder="Write your note here... (Markdown supported)"
-          />
-          <div className="flex justify-between mt-2">
-            <div className="text-xs text-gray-500">
-              Markdown supported
-            </div>
-            <div className="flex space-x-2">
-              <button
-                onClick={handleCancel}
-                className="p-1 text-gray-500 hover:text-gray-700"
-                title="Cancel (Esc)"
+      <div className="flex flex-col h-full">
+        {/* Header section with label and controls */}
+        <div className="flex justify-between items-center mb-2">
+          {/* Label section (left) */}
+          <div className="flex-grow mr-2">
+            {isEditingLabel ? (
+              <input
+                type="text"
+                value={label}
+                onChange={handleLabelChange}
+                onKeyDown={handleLabelKeyDown}
+                onBlur={handleLabelSave}
+                className="w-full px-2 py-1 text-sm font-medium bg-gray-700 border border-gray-500 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                autoFocus
+              />
+            ) : (
+              <div 
+                className="px-2 py-1 text-sm font-medium text-gray-200 cursor-pointer hover:bg-gray-700 rounded"
+                onDoubleClick={handleLabelDoubleClick}
+                title="Double-click to edit label"
               >
-                <X size={16} />
-              </button>
-              <button
-                onClick={handleSave}
-                className="p-1 text-green-500 hover:text-green-700"
-                title="Save (Ctrl+Enter)"
-                type="button"
-              >
-                <Check size={16} />
-              </button>
-            </div>
+                {label || 'Untitled'}
+              </div>
+            )}
+          </div>
+          
+          {/* Controls section (right) */}
+          <div className="flex space-x-1">
+            <button
+              onClick={handleIncreaseSize}
+              className="p-1 text-green-500 hover:text-green-700 hover:bg-gray-700 rounded"
+              title="Increase Size"
+            >
+              <span style={{ fontWeight: 'bold', fontSize: '14px' }}>+</span>
+            </button>
+            <button
+              onClick={handleDecreaseSize}
+              className="p-1 text-red-500 hover:text-red-700 hover:bg-gray-700 rounded"
+              title="Decrease Size"
+            >
+              <span style={{ fontWeight: 'bold', fontSize: '14px' }}>-</span>
+            </button>
+            <button
+              onClick={handleFocusModeToggle}
+              className="p-1 text-blue-500 hover:text-blue-700 hover:bg-gray-700 rounded"
+              title="Focus Mode"
+            >
+              <Maximize2 size={14} />
+            </button>
+            <button
+              onClick={handleDelete}
+              className="p-1 text-red-500 hover:text-red-700 hover:bg-gray-700 rounded"
+              title="Delete"
+            >
+              <Trash2 size={14} />
+            </button>
           </div>
         </div>
-      ) : (
-        <div className="flex flex-col h-full">
-          <div className="flex-grow prose prose-sm max-w-none overflow-auto">
+        
+        {/* Separator line */}
+        <div className="h-px bg-gray-600 mb-2"></div>
+        
+        {/* Content section */}
+        {isEditing ? (
+          <div className="flex flex-col flex-grow">
+            <NoteToolbar onFormatClick={handleFormatClick} />
+            <textarea
+              ref={textareaRef}
+              value={content}
+              onChange={handleContentChange}
+              onKeyDown={handleKeyDown}
+              className="w-full flex-grow min-h-[80px] p-2 border border-gray-600 rounded resize-none focus:outline-none focus:ring-1 focus:ring-blue-500 font-mono text-sm bg-gray-800"
+              placeholder="Write your note here... (Markdown supported)"
+            />
+            <div className="flex justify-between mt-2">
+              <div className="text-xs text-gray-500">
+                Markdown supported
+              </div>
+              <div className="flex space-x-2">
+                <button
+                  onClick={handleCancel}
+                  className="p-1 text-gray-500 hover:text-gray-300"
+                  title="Cancel (Esc)"
+                >
+                  <X size={16} />
+                </button>
+                <button
+                  onClick={handleSave}
+                  className="p-1 text-green-500 hover:text-green-300"
+                  title="Save (Ctrl+Enter)"
+                  type="button"
+                >
+                  <Check size={16} />
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="flex-grow overflow-auto prose prose-sm max-w-none prose-invert">
             {content ? (
               <ReactMarkdown remarkPlugins={[remarkGfm]}>
                 {content}
@@ -559,48 +629,18 @@ const NoteNode: React.FC<NodeProps> = ({ id, data, selected, positionAbsoluteX, 
               <span className="text-gray-400">Empty note</span>
             )}
           </div>
-          <div className="flex justify-between mt-2">
-            <div className="flex items-center">
-              {isLinkedToFile && (
-                <span className="text-xs text-blue-500 flex items-center" title="Linked to file">
-                  <Link size={12} className="mr-1" />
-                  Linked
-                </span>
-              )}
-            </div>
-            <div className="flex space-x-2">
-              <button
-                onClick={handleIncreaseSize}
-                className="p-1 text-green-500 hover:text-green-700"
-                title="Increase Size"
-              >
-                <span style={{ fontWeight: 'bold', fontSize: '16px' }}>+</span>
-              </button>
-              <button
-                onClick={handleDecreaseSize}
-                className="p-1 text-red-500 hover:text-red-700"
-                title="Decrease Size"
-              >
-                <span style={{ fontWeight: 'bold', fontSize: '16px' }}>-</span>
-              </button>
-              <button
-                onClick={handleFocusModeToggle}
-                className="p-1 text-blue-500 hover:text-blue-700"
-                title="Focus Mode"
-              >
-                <Maximize2 size={16} />
-              </button>
-              <button
-                onClick={handleDelete}
-                className="p-1 text-red-500 hover:text-red-700"
-                title="Delete"
-              >
-                <Trash2 size={16} />
-              </button>
-            </div>
+        )}
+        
+        {/* File link indicator at the bottom */}
+        {isLinkedToFile && !isEditing && (
+          <div className="mt-2 flex items-center">
+            <span className="text-xs text-blue-500 flex items-center" title="Linked to file">
+              <Link size={12} className="mr-1" />
+              Linked
+            </span>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };

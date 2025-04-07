@@ -1,13 +1,30 @@
+/**
+ * CustomEdge Component
+ * 
+ * A highly configurable edge component for connecting nodes in the canvas.
+ * Supports different edge types (bezier, straight, smoothstep, simplebezier),
+ * directional arrows, labels, and interactive hover states.
+ */
+
 import React, { useState } from 'react';
 import { 
   EdgeProps, 
   getBezierPath, 
   getSmoothStepPath, 
   getSimpleBezierPath, 
-  getStraightPath,
-  MarkerType 
+  getStraightPath
 } from '@xyflow/react';
 
+/**
+ * CustomEdge component renders a connection between two nodes with various styling options
+ * 
+ * Features:
+ * - Multiple edge types (bezier, straight, smoothstep, simplebezier)
+ * - Directional arrows (forward, backward, bidirectional)
+ * - Optional labels with background
+ * - Interactive hover state
+ * - Wider invisible path for easier selection
+ */
 const CustomEdge: React.FC<EdgeProps> = ({
   id,
   source,
@@ -33,11 +50,18 @@ const CustomEdge: React.FC<EdgeProps> = ({
   // Get the edge type from data or default to bezier
   const edgeType = data?.edgeType || 'bezier';
   
-  // Get the path for the edge based on the edge type
+  // Get the direction from the edge data or default to forward
+  const direction = data?.direction || 'forward';
+  
+  /**
+   * Calculate the SVG path and label position for the edge
+   * based on the edge type and direction
+   */
   let edgePath = '';
   let labelX = 0;
   let labelY = 0;
   
+  // Base parameters for path generation - same for all edge types
   const pathParams = {
     sourceX,
     sourceY,
@@ -47,53 +71,81 @@ const CustomEdge: React.FC<EdgeProps> = ({
     targetPosition,
   };
   
-  // Get path based on edge type
-  switch (edgeType) {
-    case 'smoothstep':
-      const [smoothPath, smoothLabelX, smoothLabelY] = getSmoothStepPath(pathParams);
-      edgePath = smoothPath;
-      labelX = smoothLabelX;
-      labelY = smoothLabelY;
-      break;
-    case 'straight':
-      const [straightPath, straightLabelX, straightLabelY] = getStraightPath(pathParams);
-      edgePath = straightPath;
-      labelX = straightLabelX;
-      labelY = straightLabelY;
-      break;
-    case 'simplebezier':
-      const [simplePath, simpleLabelX, simpleLabelY] = getSimpleBezierPath(pathParams);
-      edgePath = simplePath;
-      labelX = simpleLabelX;
-      labelY = simpleLabelY;
-      break;
-    case 'bezier':
-    default:
-      const [bezierPath, bezierLabelX, bezierLabelY] = getBezierPath(pathParams);
-      edgePath = bezierPath;
-      labelX = bezierLabelX;
-      labelY = bezierLabelY;
-      break;
+  // Special case: bidirectional bezier edges need more curvature to display both arrows clearly
+  if (direction === 'bidirectional' && edgeType === 'bezier') {
+    // Calculate the distance between source and target
+    const dx = targetX - sourceX;
+    const dy = targetY - sourceY;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+    
+    // Use higher curvature for bidirectional edges to make both arrows visible
+    const curvedPathParams = {
+      ...pathParams,
+      curvature: 0.5, // Higher curvature value creates a more curved path
+    };
+    
+    // Generate the bezier path with the custom curvature
+    const [bezierPath, bezierLabelX, bezierLabelY] = getBezierPath(curvedPathParams);
+    edgePath = bezierPath;
+    labelX = bezierLabelX;
+    labelY = bezierLabelY;
+  } else {
+    // For all other cases, select the path type based on edgeType
+    switch (edgeType) {
+      case 'smoothstep':
+        const [smoothPath, smoothLabelX, smoothLabelY] = getSmoothStepPath(pathParams);
+        edgePath = smoothPath;
+        labelX = smoothLabelX;
+        labelY = smoothLabelY;
+        break;
+      case 'straight':
+        const [straightPath, straightLabelX, straightLabelY] = getStraightPath(pathParams);
+        edgePath = straightPath;
+        labelX = straightLabelX;
+        labelY = straightLabelY;
+        break;
+      case 'simplebezier':
+        const [simplePath, simpleLabelX, simpleLabelY] = getSimpleBezierPath(pathParams);
+        edgePath = simplePath;
+        labelX = simpleLabelX;
+        labelY = simpleLabelY;
+        break;
+      case 'bezier':
+      default:
+        const [bezierPath, bezierLabelX, bezierLabelY] = getBezierPath(pathParams);
+        edgePath = bezierPath;
+        labelX = bezierLabelX;
+        labelY = bezierLabelY;
+        break;
+    }
   }
-
-  // Get the direction from the edge data or default to forward
-  const direction = data?.direction || 'forward';
   
   // Get the label from props or data
   const edgeLabel = label || data?.label || '';
 
-  // Determine markers based on direction
+  /**
+   * Arrow configuration based on the edge direction
+   * - 'forward': show arrow at target end
+   * - 'backward': show arrow at source end
+   * - 'bidirectional': show arrows at both ends
+   */
   const showStartArrow = direction === 'backward' || direction === 'bidirectional';
   const showEndArrow = direction === 'forward' || direction === 'bidirectional';
 
-  // Define marker IDs
+  // Create unique marker IDs for this edge to prevent SVG conflicts
   const startArrowId = `${id}-start-arrow`;
   const endArrowId = `${id}-end-arrow`;
 
-  // Extract stroke color from style for the markers
+  // Use the edge's stroke color for the arrow markers
   const strokeColor = style?.stroke || 'var(--accent-primary)';
   
-  // Determine the effective stroke width based on hover/selected state
+  /**
+   * Visual enhancement: dynamic stroke width
+   * - Default: base width
+   * - Hovered: 125% of base width
+   * - Selected: 150% of base width
+   * This provides visual feedback when interacting with edges
+   */
   const baseStrokeWidth = typeof style.strokeWidth === 'number' ? style.strokeWidth : 2;
   const effectiveStrokeWidth = selected 
     ? baseStrokeWidth * 1.5 
@@ -101,7 +153,10 @@ const CustomEdge: React.FC<EdgeProps> = ({
       ? baseStrokeWidth * 1.25 
       : baseStrokeWidth;
       
-  // Determine if the edge should be animated (dashed)
+  /**
+   * Create a dashed line effect if the edge is animated
+   * Used to represent special relationships like weak links or temporary connections
+   */
   const isAnimated = data?.animated || false;
   const dashArray = isAnimated ? '5 5' : undefined;
   
@@ -112,29 +167,33 @@ const CustomEdge: React.FC<EdgeProps> = ({
         {showStartArrow && (
           <marker
             id={startArrowId}
-            viewBox="0 0 10 8"
-            refX="0"
-            refY="4"
-            markerWidth="5"
-            markerHeight="5"
+            viewBox="0 0 12 10"
+            refX="9"
+            refY="5"
+            markerWidth="6"
+            markerHeight="6"
             orient="auto-start-reverse"
           >
-            {/* More modern, cleaner arrow shape */}
-            <path d="M 0 0 L 10 4 L 0 8 L 3 4 Z" fill={strokeColor} />
+            <path 
+              d="M 0 0 L 12 5 L 0 10 L 3 5 Z" 
+              fill={strokeColor} 
+            />
           </marker>
         )}
         {showEndArrow && (
           <marker
             id={endArrowId}
-            viewBox="0 0 10 8"
-            refX="10"
-            refY="4"
-            markerWidth="5"
-            markerHeight="5"
+            viewBox="0 0 12 10"
+            refX="12"
+            refY="5"
+            markerWidth="6"
+            markerHeight="6"
             orient="auto"
           >
-            {/* More modern, cleaner arrow shape */}
-            <path d="M 0 0 L 10 4 L 0 8 L 3 4 Z" fill={strokeColor} />
+            <path 
+              d="M 0 0 L 12 5 L 0 10 L 3 5 Z" 
+              fill={strokeColor}
+            />
           </marker>
         )}
       </defs>
