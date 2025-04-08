@@ -173,33 +173,33 @@ const Canvas: React.FC<CanvasProps> = ({ onFileDrop }) => {
     smoothstep: CustomEdge // Also use our custom edge for smoothstep type
   }), []);
 
-  // Sync store with ReactFlow state
+  // Sync store with ReactFlow state and ensure nodes are draggable
   React.useEffect(() => {
-    setNodes(nodes);
+    setNodes(
+      nodes.map(node => ({
+        ...node,
+        draggable: true, // Ensure nodes are draggable
+        connectable: true, // Ensure connections can be made
+      }))
+    );
     setEdges(edges);
   }, [nodes, edges, setNodes, setEdges]);
   
   /**
    * Handles node position changes and persists them to the store
+   * Only updates the store when dragging is complete to improve performance
    */
   const handleNodesChange = useCallback((changes: NodeChange<Node>[]) => {
-    // Let ReactFlow handle the changes internally
+    // Let ReactFlow handle internal changes
     onNodesChange(changes);
     
-    // After ReactFlow processes the changes, update our store with the current nodes
-    // This ensures we're not interfering with ReactFlow's internal state management
-    setTimeout(() => {
-      // Get the current nodes from ReactFlow instance
-      const currentNodes = reactFlowInstance.getNodes();
-      
-      // Update our store with the current nodes
-      currentNodes.forEach(node => {
-        if (node.position) {
-          updateNode(node.id, { position: node.position });
-        }
-      });
-    }, 0);
-  }, [onNodesChange, updateNode, reactFlowInstance]);
+    // Only update the store for position changes when they're complete
+    changes.forEach(change => {
+      if (change.type === 'position' && change.dragging === false && change.position) {
+        updateNode(change.id, { position: change.position });
+      }
+    });
+  }, [onNodesChange, updateNode]);
 
   /**
    * Handles connecting two nodes with an edge
@@ -421,15 +421,23 @@ const Canvas: React.FC<CanvasProps> = ({ onFileDrop }) => {
         nodesConnectable={true}
         elementsSelectable={true}
         edgesFocusable={true}
-        fitView
-        snapToGrid
-        snapGrid={[40, 40]} // Match grid size from CSS variables
+        nodesFocusable={true}
+        snapToGrid={true}
+        snapGrid={[20, 20]} // Reduced from 40 for finer control
+        defaultViewport={{ x: 0, y: 0, zoom: 1 }}
+        minZoom={0.1}
+        maxZoom={2}
+        proOptions={{ hideAttribution: true }} // Optional if you have a pro license
+        // Add these performance options
+        onlyRenderVisibleElements={true}
+        elevateNodesOnSelect={true}
+        elevateEdgesOnSelect={true}
         defaultEdgeOptions={{ 
           type: 'default',
           animated: false,
           style: { stroke: 'var(--accent-primary)', strokeWidth: 2 },
           data: {
-            direction: 'forward' as const, // Store direction in data with explicit type
+            direction: 'forward' as const, 
             edgeType: 'bezier' as const,
             animated: false
           }

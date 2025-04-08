@@ -1,5 +1,49 @@
 /* Additional styles for markdown content */
 
+/* Node Selection and Interaction Styles */
+.react-flow__node.selected {
+  border: 2px solid var(--accent-primary) !important;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.3) !important;
+}
+
+.react-flow__node:hover {
+  border-color: var(--accent-hover) !important;
+}
+
+/* Make sure the node is draggable from any area */
+.react-flow__node {
+  cursor: grab;
+}
+
+.react-flow__node.dragging {
+  cursor: grabbing;
+}
+
+/* Improve handle visibility */
+.react-flow__handle {
+  width: 10px !important;
+  height: 10px !important;
+  background-color: var(--accent-primary) !important;
+  border: 2px solid white !important;
+  opacity: 0.8 !important;
+  transition: all 0.2s ease !important;
+}
+
+.react-flow__handle:hover {
+  opacity: 1 !important;
+  transform: scale(1.3) !important;
+  cursor: crosshair !important;
+}
+
+/* Make resize handles more visible */
+.react-flow__resize-control.handle {
+  width: 8px !important;
+  height: 8px !important;
+  background-color: var(--accent-primary) !important;
+  border: 2px solid white !important;
+}
+
+/* Markdown content styles */
 .prose {
   color: inherit;
   max-width: 100%;
