@@ -22,6 +22,36 @@ export interface TypographySettings {
 }
 
 /**
+ * Theme settings for each writing mode
+ */
+export interface ThemeSettings {
+  /** Theme for brainstorming mode */
+  brainstorming: {
+    background: string;
+    accent: string;
+    text: string;
+  };
+  /** Theme for drafting mode */
+  drafting: {
+    background: string;
+    accent: string;
+    text: string;
+  };
+  /** Theme for editing mode */
+  editing: {
+    background: string;
+    accent: string;
+    text: string;
+  };
+  /** Theme for reviewing mode */
+  reviewing: {
+    background: string;
+    accent: string;
+    text: string;
+  };
+}
+
+/**
  * Focus mode settings
  */
 export interface FocusSettings {
@@ -71,6 +101,7 @@ export interface UserSettings {
   focus: FocusSettings;
   ui: UISettings;
   editor: EditorSettings;
+  themes: ThemeSettings;
 }
 
 /**
@@ -103,6 +134,28 @@ const DEFAULT_SETTINGS: UserSettings = {
     enableReadabilityCheck: false,
     showWordCount: true,
     autoSaveInterval: 30, // 30 seconds
+  },
+  themes: {
+    brainstorming: {
+      background: '#111827', // Dark blue
+      accent: '#8b5cf6',     // Purple
+      text: '#f3f4f6'
+    },
+    drafting: {
+      background: '#111827', // Dark blue
+      accent: '#3b82f6',     // Blue
+      text: '#f3f4f6'
+    },
+    editing: {
+      background: '#111827', // Dark blue
+      accent: '#10b981',     // Green
+      text: '#f3f4f6'
+    },
+    reviewing: {
+      background: '#111827', // Dark blue
+      accent: '#f59e0b',     // Amber
+      text: '#f3f4f6'
+    }
   }
 };
 

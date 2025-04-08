@@ -66,8 +66,8 @@ const Canvas: React.FC<CanvasProps> = ({ onFileDrop }) => {
   const [selectedEdgeId, setSelectedEdgeId] = useState<string | null>(null);
   // Keep track of previous selected edge to reset its style
   const prevSelectedEdgeIdRef = useRef<string | null>(null);
-  const [reactFlowNodes, setNodes, onNodesChange] = useNodesState(nodes);
-  const [reactFlowEdges, setEdges, onEdgesChange] = useEdgesState(edges);
+  const [reactFlowNodes, setNodes, onNodesChange] = useNodesState<Node>(nodes);
+  const [reactFlowEdges, setEdges, onEdgesChange] = useEdgesState<Edge>(edges);
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const reactFlowInstance = useReactFlow();
   const { getFile } = useFileSystem();
@@ -182,18 +182,24 @@ const Canvas: React.FC<CanvasProps> = ({ onFileDrop }) => {
   /**
    * Handles node position changes and persists them to the store
    */
-  const handleNodesChange = useCallback((changes: any[]) => {
-    // First, let ReactFlow update its internal state
+  const handleNodesChange = useCallback((changes: NodeChange<Node>[]) => {
+    // Let ReactFlow handle the changes internally
     onNodesChange(changes);
     
-    // Then, update our persistent store with the new positions
-    changes.forEach((change) => {
-      // Only process position changes
-      if (change.type === 'position' && 'position' in change && change.position) {
-        updateNode(change.id, { position: change.position });
-      }
-    });
-  }, [onNodesChange, updateNode]);
+    // After ReactFlow processes the changes, update our store with the current nodes
+    // This ensures we're not interfering with ReactFlow's internal state management
+    setTimeout(() => {
+      // Get the current nodes from ReactFlow instance
+      const currentNodes = reactFlowInstance.getNodes();
+      
+      // Update our store with the current nodes
+      currentNodes.forEach(node => {
+        if (node.position) {
+          updateNode(node.id, { position: node.position });
+        }
+      });
+    }, 0);
+  }, [onNodesChange, updateNode, reactFlowInstance]);
 
   /**
    * Handles connecting two nodes with an edge

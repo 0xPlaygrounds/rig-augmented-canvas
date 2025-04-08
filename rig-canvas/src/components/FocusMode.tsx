@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState, useCallback } from 'react';
+import React, { useRef, useEffect, useState, useCallback, RefObject, useMemo, useLayoutEffect } from 'react';
 import { 
   X, Check, Bold, Italic, List, ListOrdered, Heading1, Heading2, 
   Quote, Code, Link, AlignLeft, BookOpen, Clock, Target, Edit3,
@@ -51,6 +51,334 @@ const FocusMode: React.FC<FocusModeProps> = ({ content, onSave, onClose }) => {
   const { settings, updateSetting } = useSettingsStore();
   const { estimatedReadingTime } = useUIVisibility();
   
+  // Theme variables based on current writing mode with fallback
+  const defaultTheme = {
+    background: '#111827',
+    accent: '#3b82f6',
+    text: '#f3f4f6'
+  };
+  
+  // Use theme from settings if available, otherwise use default theme
+  const currentTheme = settings.themes && settings.themes[currentWritingMode as keyof typeof settings.themes] 
+    ? settings.themes[currentWritingMode as keyof typeof settings.themes] 
+    : defaultTheme;
+  
+  // Pomodoro timer state
+  const [pomodoroActive, setPomodoroActive] = useState(false);
+  const [pomodoroMinutes, setPomodoroMinutes] = useState(25);
+  const [pomodoroSeconds, setPomodoroSeconds] = useState(0);
+  const [pomodoroInterval, setPomodoroInterval] = useState<number | null>(null);
+  
+  // Text-to-speech state
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const speechUtterance = useRef<SpeechSynthesisUtterance | null>(null);
+  
+  // Text-to-speech functions
+  const speakText = useCallback(() => {
+    if (!window.speechSynthesis) return;
+    
+    // Cancel any ongoing speech
+    window.speechSynthesis.cancel();
+    
+    // Create new utterance
+    const utterance = new SpeechSynthesisUtterance(editedContent);
+    utterance.rate = 0.9; // Slightly slower than default
+    utterance.pitch = 1.0;
+    
+    // Get available voices and set a good one if available
+    const voices = window.speechSynthesis.getVoices();
+    const preferredVoice = voices.find(voice => 
+      voice.name.includes('Daniel') || // macOS
+      voice.name.includes('Google UK English Male') || // Chrome
+      voice.name.includes('Microsoft David') // Windows
+    );
+    
+    if (preferredVoice) utterance.voice = preferredVoice;
+    
+    // Set up event handlers
+    utterance.onstart = () => setIsSpeaking(true);
+    utterance.onend = () => setIsSpeaking(false);
+    utterance.onerror = () => setIsSpeaking(false);
+    
+    // Store reference to cancel later if needed
+    speechUtterance.current = utterance;
+    
+    // Start speaking
+    window.speechSynthesis.speak(utterance);
+  }, [editedContent]);
+
+  const stopSpeaking = useCallback(() => {
+    if (window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+      setIsSpeaking(false);
+    }
+  }, []);
+  
+  // Text-to-speech component
+  const TextToSpeechControl = useCallback(() => (
+    <div style={{
+      padding: '12px',
+      background: '#111827',
+      borderRadius: '6px',
+      border: '1px solid #374151',
+      marginTop: '16px'
+    }}>
+      <h4 style={{ margin: '0 0 8px 0', fontSize: '14px', color: '#e5e7eb' }}>
+        Listen to Your Text
+      </h4>
+      <p style={{ margin: '0 0 12px 0', fontSize: '12px', color: '#9ca3af' }}>
+        Hearing your text read aloud helps catch awkward phrasing and errors.
+      </p>
+      <div style={{ display: 'flex', gap: '8px' }}>
+        {!isSpeaking ? (
+          <button 
+            onClick={speakText}
+            style={{
+              flex: 1,
+              padding: '6px 12px',
+              background: '#3b82f6',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px'
+            }}
+          >
+            <span>Read Aloud</span>
+          </button>
+        ) : (
+          <button 
+            onClick={stopSpeaking}
+            style={{
+              flex: 1,
+              padding: '6px 12px',
+              background: '#ef4444',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer'
+            }}
+          >
+            Stop Reading
+          </button>
+        )}
+      </div>
+    </div>
+  ), [isSpeaking, speakText, stopSpeaking]);
+  
+  // Clean up speech synthesis on unmount
+  useEffect(() => {
+    return () => {
+      if (window.speechSynthesis && isSpeaking) {
+        window.speechSynthesis.cancel();
+      }
+    };
+  }, [isSpeaking]);
+  
+  // Pomodoro timer functions
+  const startPomodoro = useCallback(() => {
+    if (pomodoroInterval) clearInterval(pomodoroInterval);
+    
+    setPomodoroActive(true);
+    setPomodoroMinutes(settings.focus.pomodoroDuration);
+    setPomodoroSeconds(0);
+    
+    const interval = setInterval(() => {
+      setPomodoroSeconds(prev => {
+        if (prev === 0) {
+          setPomodoroMinutes(prevMin => {
+            if (prevMin === 0) {
+              // Timer complete
+              clearInterval(interval);
+              setPomodoroActive(false);
+              // Play sound or show notification
+              try {
+                new Audio('/notification.mp3').play().catch(e => console.log('Audio play failed:', e));
+              } catch (e) {
+                console.log('Audio play failed:', e);
+              }
+              return 0;
+            }
+            return prevMin - 1;
+          });
+          return 59;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    
+    setPomodoroInterval(interval);
+  }, [pomodoroInterval, settings.focus.pomodoroDuration]);
+
+  const stopPomodoro = useCallback(() => {
+    if (pomodoroInterval) {
+      clearInterval(pomodoroInterval);
+      setPomodoroInterval(null);
+    }
+    setPomodoroActive(false);
+  }, [pomodoroInterval]);
+  
+  // Pomodoro Timer component
+  const PomodoroTimer = useCallback(() => (
+    <div style={{
+      padding: '12px',
+      background: '#111827',
+      borderRadius: '6px',
+      border: '1px solid #374151',
+      marginTop: '16px'
+    }}>
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center',
+        marginBottom: '8px'
+      }}>
+        <h4 style={{ margin: 0, fontSize: '14px', color: '#e5e7eb' }}>
+          Focus Timer
+        </h4>
+        <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#e5e7eb' }}>
+          {String(pomodoroMinutes).padStart(2, '0')}:{String(pomodoroSeconds).padStart(2, '0')}
+        </div>
+      </div>
+      <div style={{ display: 'flex', gap: '8px' }}>
+        {!pomodoroActive ? (
+          <button 
+            onClick={startPomodoro}
+            style={{
+              flex: 1,
+              padding: '6px 12px',
+              background: '#3b82f6',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer'
+            }}
+          >
+            Start Focus Session
+          </button>
+        ) : (
+          <button 
+            onClick={stopPomodoro}
+            style={{
+              flex: 1,
+              padding: '6px 12px',
+              background: '#ef4444',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer'
+            }}
+          >
+            Stop Timer
+          </button>
+        )}
+      </div>
+    </div>
+  ), [pomodoroActive, pomodoroMinutes, pomodoroSeconds, startPomodoro, stopPomodoro]);
+  
+  // Clean up pomodoro timer on unmount
+  useEffect(() => {
+    return () => {
+      if (pomodoroInterval) clearInterval(pomodoroInterval);
+    };
+  }, [pomodoroInterval]);
+  
+  // Word frequency analysis
+  const analyzeWordFrequency = useCallback((text: string) => {
+    // Remove common punctuation and convert to lowercase
+    const cleanText = text.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, '');
+    
+    // Split into words
+    const words = cleanText.split(/\s+/);
+    
+    // Count word frequency
+    const wordFrequency: Record<string, number> = {};
+    const commonWords = new Set(['the', 'and', 'a', 'to', 'of', 'in', 'is', 'it', 'that', 'was', 'for', 'on', 'with']);
+    
+    words.forEach(word => {
+      // Skip very short words and common words
+      if (word.length <= 2 || commonWords.has(word)) return;
+      
+      wordFrequency[word] = (wordFrequency[word] || 0) + 1;
+    });
+    
+    // Sort by frequency
+    return Object.entries(wordFrequency)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 10); // Top 10 most frequent words
+  }, []);
+  
+  // Memoize the word frequency analysis to avoid recalculating on every render
+  const frequentWords = useMemo(() => {
+    if (currentWritingMode === 'editing') {
+      return analyzeWordFrequency(editedContent);
+    }
+    return [];
+  }, [editedContent, currentWritingMode, analyzeWordFrequency]);
+  
+  // Word Frequency Display component
+  const WordFrequencyDisplay = useCallback(() => {
+    return (
+      <div className="word-frequency-panel" style={{
+        padding: '12px',
+        background: '#111827',
+        borderRadius: '6px',
+        border: '1px solid #374151',
+        marginTop: '16px'
+      }}>
+        <h4 style={{ margin: '0 0 8px 0', fontSize: '14px', color: '#e5e7eb' }}>
+          Frequently Used Words
+        </h4>
+        {frequentWords.length > 0 ? (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+            {frequentWords.map(([word, count]) => (
+              <div key={word} style={{
+                padding: '4px 8px',
+                background: '#1f2937',
+                borderRadius: '4px',
+                fontSize: '12px',
+                color: count > 3 ? '#ef4444' : '#9ca3af'
+              }}>
+                {word} ({count})
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div style={{ fontSize: '13px', color: '#9ca3af' }}>
+            No significant word patterns detected yet.
+          </div>
+        )}
+      </div>
+    );
+  }, [frequentWords]);
+  
+  // Typewriter mode state
+  const enableTypewriterMode = useCallback(() => {
+    if (textareaRef.current && currentWritingMode === 'drafting') {
+      // Get the current cursor position
+      const cursorPosition = textareaRef.current.selectionStart;
+      
+      // Find the line number of the cursor
+      const text = textareaRef.current.value;
+      const lines = text.substr(0, cursorPosition).split('\n');
+      const currentLineNumber = lines.length;
+      
+      // Calculate line height (can be determined from computed styles)
+      const lineHeight = parseInt(window.getComputedStyle(textareaRef.current).lineHeight) || 24;
+      
+      // Calculate the position to scroll to (center the current line)
+      const scrollPosition = (currentLineNumber - 1) * lineHeight - 
+        (textareaRef.current.clientHeight / 2) + (lineHeight / 2);
+      
+      // Scroll to position
+      textareaRef.current.scrollTop = Math.max(0, scrollPosition);
+    }
+  }, [currentWritingMode]);
+  
+  
   // Calculate word count when content changes
   useEffect(() => {
     const words = editedContent.split(/\s+/).filter(word => word.length > 0).length;
@@ -60,6 +388,23 @@ const FocusMode: React.FC<FocusModeProps> = ({ content, onSave, onClose }) => {
     eventBus.publish('document:contentChanged', editedContent, words);
   }, [editedContent]);
   
+  // Typewriter mode effect
+  useEffect(() => {
+    const textarea = textareaRef.current;
+    if (textarea && currentWritingMode === 'drafting') {
+      const handleKeyUp = () => enableTypewriterMode();
+      const handleClick = () => enableTypewriterMode();
+      
+      textarea.addEventListener('keyup', handleKeyUp);
+      textarea.addEventListener('click', handleClick);
+      
+      return () => {
+        textarea.removeEventListener('keyup', handleKeyUp);
+        textarea.removeEventListener('click', handleClick);
+      };
+    }
+  }, [textareaRef, currentWritingMode, enableTypewriterMode]);
+
   // Setup the portal container when component mounts
   useEffect(() => {
     // Set up portal container styles
@@ -258,7 +603,7 @@ const FocusMode: React.FC<FocusModeProps> = ({ content, onSave, onClose }) => {
           width: '95%',
           maxWidth: '1200px',
           height: '90%',
-          background: '#1f2937', // Dark mode background
+          background: currentTheme.background,
           borderRadius: '8px',
           boxShadow: '0 4px 20px rgba(0, 0, 0, 0.5)',
           display: 'flex',
@@ -327,7 +672,7 @@ const FocusMode: React.FC<FocusModeProps> = ({ content, onSave, onClose }) => {
             onClick={toggleReadingMode}
             className={`mode-toggle-btn ${isReadingMode ? 'active' : ''}`}
             style={{
-              background: isReadingMode ? '#3b82f6' : '#1f2937',
+              background: isReadingMode ? currentTheme.accent : '#1f2937',
               border: '1px solid #374151',
               borderRadius: '6px',
               padding: '6px 12px',
@@ -349,7 +694,7 @@ const FocusMode: React.FC<FocusModeProps> = ({ content, onSave, onClose }) => {
             onClick={() => setShowSettingsPanel(prev => !prev)}
             className={`settings-btn ${showSettingsPanel ? 'active' : ''}`}
             style={{
-              background: showSettingsPanel ? '#3b82f6' : '#1f2937',
+              background: showSettingsPanel ? currentTheme.accent : '#1f2937',
               border: '1px solid #374151',
               borderRadius: '6px',
               padding: '6px 12px',
@@ -596,6 +941,21 @@ const FocusMode: React.FC<FocusModeProps> = ({ content, onSave, onClose }) => {
                 </div>
               </div>
               
+              {/* Pomodoro Timer (only in brainstorming mode) */}
+              {currentWritingMode === 'brainstorming' && (
+                <PomodoroTimer />
+              )}
+              
+              {/* Word Frequency Analysis (only in editing mode) */}
+              {currentWritingMode === 'editing' && (
+                <WordFrequencyDisplay />
+              )}
+              
+              {/* Text-to-Speech (only in reviewing mode) */}
+              {currentWritingMode === 'reviewing' && (
+                <TextToSpeechControl />
+              )}
+              
               <div style={{ 
                 marginTop: '24px', 
                 padding: '12px', 
@@ -800,7 +1160,7 @@ const FocusMode: React.FC<FocusModeProps> = ({ content, onSave, onClose }) => {
             width: '56px',
             height: '56px',
             borderRadius: '28px',
-            background: '#3b82f6',
+            background: currentTheme.accent,
             border: 'none',
             display: 'flex',
             alignItems: 'center',
