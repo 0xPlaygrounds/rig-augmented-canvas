@@ -1,0 +1,63 @@
+/* Node resizer customizations */
+.node-resizer-line {
+  transition: all 0.15s cubic-bezier(0.17, 0.67, 0.83, 0.67) !important;
+}
+
+.node-resizer-handle {
+  width: 12px !important;
+  height: 12px !important;
+  transition: transform 0.1s, background-color 0.1s !important;
+  box-shadow: 0 0 3px rgba(0, 0, 0, 0.3) !important;
+}
+
+.node-resizer-handle:hover {
+  transform: scale(1.2) !important;
+  background-color: #4f46e5 !important; /* A brighter accent color when hovering */
+}
+
+/* Custom cursor styles for each resize direction */
+.node-resizer-handle[data-position="top"] {
+  cursor: n-resize !important;
+}
+.node-resizer-handle[data-position="top-right"] {
+  cursor: ne-resize !important;
+}
+.node-resizer-handle[data-position="right"] {
+  cursor: e-resize !important;
+}
+.node-resizer-handle[data-position="bottom-right"] {
+  cursor: se-resize !important;
+}
+.node-resizer-handle[data-position="bottom"] {
+  cursor: s-resize !important;
+}
+.node-resizer-handle[data-position="bottom-left"] {
+  cursor: sw-resize !important;
+}
+.node-resizer-handle[data-position="left"] {
+  cursor: w-resize !important;
+}
+.node-resizer-handle[data-position="top-left"] {
+  cursor: nw-resize !important;
+}
+
+/* Improved content styling */
+.note-content {
+  overflow: auto;
+  word-wrap: break-word;
+  transition: all 0.15s cubic-bezier(0.17, 0.67, 0.83, 0.67);
+  will-change: width, height, transform;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+}
+
+/* Smooth markdown rendering */
+.prose {
+  transition: all 0.15s cubic-bezier(0.17, 0.67, 0.83, 0.67);
+  will-change: transform;
+}
+
+/* Make toolbar move smoothly with resize */
+.note-toolbar {
+  transition: all 0.15s cubic-bezier(0.17, 0.67, 0.83, 0.67);
+}

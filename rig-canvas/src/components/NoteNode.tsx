@@ -8,7 +8,7 @@
  * - Multiple connection points for edges
  */
 
-import React, { useState, useCallback, memo } from 'react';
+import React, { useState, useCallback, memo, useEffect, useRef } from 'react';
 import { Handle, Position, NodeProps, NodeResizer } from '@xyflow/react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -17,6 +17,7 @@ import { NoteData } from '../types';
 import { useCanvasStore } from '../store/canvasStore';
 import { applyMarkdownFormat } from '../utils/markdownUtils';
 import FocusMode from './FocusMode';
+import '../styles/nodeStyles.css';
 
 // Define the component with proper typing
 const NoteNode: React.FC<NodeProps> = ({ 
@@ -32,9 +33,23 @@ const NoteNode: React.FC<NodeProps> = ({
   const [content, setContent] = useState(nodeData.content || '');
   const [isFocused, setIsFocused] = useState(false);
   
-  // Default dimensions if not provided
+  // State to track dimensions during resize
+  const [nodeDimensions, setNodeDimensions] = useState({
+    width: nodeData.width || 250,
+    height: nodeData.height || 150
+  });
+  
+  // Default dimensions if not provided - used for initial values
   const width = nodeData.width || 250;
   const height = nodeData.height || 150;
+
+  // Update dimensions when node data changes
+  useEffect(() => {
+    setNodeDimensions({
+      width: nodeData.width || 250,
+      height: nodeData.height || 150
+    });
+  }, [nodeData.width, nodeData.height]);
 
   // Handle content change
   const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -64,6 +79,27 @@ const NoteNode: React.FC<NodeProps> = ({
     setIsFocused(!isFocused);
   }, [isFocused]);
 
+  // Track previous dimensions to calculate the magnitude of change
+  const prevDimensionsRef = useRef({ width, height });
+  
+  // Handle resize during drag for real-time updates
+  const onResize = useCallback((_: any, params: { width: number, height: number }) => {
+    // Update local state immediately during resize using requestAnimationFrame for smoother performance
+    requestAnimationFrame(() => {
+      // Calculate size difference from previous dimensions to current ones
+      const widthDiff = Math.abs(params.width - prevDimensionsRef.current.width);
+      const heightDiff = Math.abs(params.height - prevDimensionsRef.current.height);
+      
+      // Store current dimensions as previous for next update
+      prevDimensionsRef.current = { width: params.width, height: params.height };
+      
+      setNodeDimensions({
+        width: params.width, 
+        height: params.height
+      });
+    });
+  }, []);
+
   // Handle resize end
   const onResizeEnd = useCallback((_: any, params: { width: number, height: number }) => {
     updateNode(id, { 
@@ -75,12 +111,21 @@ const NoteNode: React.FC<NodeProps> = ({
     });
   }, [id, nodeData, updateNode]);
 
-  // Style for the node
+  // Style for the node - using dynamic dimensions with optimized transitions
   const nodeStyle = {
-    width: `${width}px`,
-    height: `${height}px`,
+    width: `${nodeDimensions.width}px`,
+    height: `${nodeDimensions.height}px`,
     backgroundColor: nodeData.color || 'var(--bg-secondary)',
-    transition: 'width 0.2s, height 0.2s, transform 0.2s',
+    // Use a faster, more natural curve for the transition
+    transition: selected 
+      ? 'none' // No transition when selected (during active resize) for immediate feedback
+      : 'width 0.15s cubic-bezier(0.17, 0.67, 0.83, 0.67), height 0.15s cubic-bezier(0.17, 0.67, 0.83, 0.67), transform 0.15s cubic-bezier(0.17, 0.67, 0.83, 0.67)',
+    // Add performance optimizations
+    willChange: 'width, height, transform',
+    backfaceVisibility: 'hidden' as const,
+    transform: selected 
+      ? 'translateZ(0) scale(1.001)' // Subtle scale during selection enhances perception of responsiveness
+      : 'translateZ(0)',
   };
 
   // Handle focus mode save
@@ -115,9 +160,10 @@ const NoteNode: React.FC<NodeProps> = ({
         minWidth={100} 
         minHeight={50}
         isVisible={selected}
+        onResize={onResize}
         onResizeEnd={onResizeEnd}
-        lineClassName="border-accent-primary"
-        handleClassName="bg-accent-primary border-2 border-white hover:scale-110"
+        lineClassName="border-accent-primary node-resizer-line"
+        handleClassName="bg-accent-primary border-2 border-white hover:scale-110 node-resizer-handle"
       />
       
       {/* Connection handles */}
@@ -134,6 +180,13 @@ const NoteNode: React.FC<NodeProps> = ({
         }`}
         style={nodeStyle}
         onClick={(e) => isEditing && e.stopPropagation()}
+        onDoubleClick={(e) => {
+          // Only enter focus mode on double-click if not already editing
+          if (!isEditing) {
+            e.stopPropagation();
+            setIsFocused(true);
+          }
+        }}
       >
         {/* Toolbar */}
         <div className="note-toolbar flex justify-end mb-2 gap-1">
