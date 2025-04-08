@@ -449,10 +449,12 @@ const NoteNode: React.FC<NodeProps> = ({ id, data, selected, positionAbsoluteX, 
         selected ? 'border-node-border-selected' : 'border-node-border'
       }`}
       style={{ 
-        backgroundColor: '#1f2937', // Hard-coded dark mode color
+        backgroundColor: '#1f2937', // Dark mode color
         width: `${width}px`,
         height: `${height}px`,
-        boxShadow: 'var(--shadow)'
+        boxShadow: 'var(--shadow)',
+        display: 'flex',
+        flexDirection: 'column'
       }}
       onClickCapture={onClickCapture}
       onMouseDownCapture={onMouseDownCapture}
@@ -522,125 +524,123 @@ const NoteNode: React.FC<NodeProps> = ({ id, data, selected, positionAbsoluteX, 
         />
       )}
       
-      <div className="flex flex-col h-full">
-        {/* Header section with label and controls */}
-        <div className="flex justify-between items-center mb-2">
-          {/* Label section (left) */}
-          <div className="flex-grow mr-2">
-            {isEditingLabel ? (
-              <input
-                type="text"
-                value={label}
-                onChange={handleLabelChange}
-                onKeyDown={handleLabelKeyDown}
-                onBlur={handleLabelSave}
-                className="w-full px-2 py-1 text-sm font-medium bg-gray-700 border border-gray-500 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
-                autoFocus
-              />
-            ) : (
-              <div 
-                className="px-2 py-1 text-sm font-medium text-gray-200 cursor-pointer hover:bg-gray-700 rounded"
-                onDoubleClick={handleLabelDoubleClick}
-                title="Double-click to edit label"
-              >
-                {label || 'Untitled'}
-              </div>
-            )}
-          </div>
-          
-          {/* Controls section (right) */}
-          <div className="flex space-x-1">
-            <button
-              onClick={handleIncreaseSize}
-              className="p-1 text-green-500 hover:text-green-700 hover:bg-gray-700 rounded"
-              title="Increase Size"
+      {/* Header section with label and controls */}
+      <div className="flex justify-between items-center mb-2">
+        {/* Label section (left) */}
+        <div className="flex-grow mr-2">
+          {isEditingLabel ? (
+            <input
+              type="text"
+              value={label}
+              onChange={handleLabelChange}
+              onKeyDown={handleLabelKeyDown}
+              onBlur={handleLabelSave}
+              className="w-full px-2 py-1 text-sm font-medium bg-gray-700 border border-gray-500 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+              autoFocus
+            />
+          ) : (
+            <div 
+              className="px-2 py-1 text-sm font-medium text-gray-200 cursor-pointer hover:bg-gray-700 rounded"
+              onDoubleClick={handleLabelDoubleClick}
+              title="Double-click to edit label"
             >
-              <span style={{ fontWeight: 'bold', fontSize: '14px' }}>+</span>
-            </button>
-            <button
-              onClick={handleDecreaseSize}
-              className="p-1 text-red-500 hover:text-red-700 hover:bg-gray-700 rounded"
-              title="Decrease Size"
-            >
-              <span style={{ fontWeight: 'bold', fontSize: '14px' }}>-</span>
-            </button>
-            <button
-              onClick={handleFocusModeToggle}
-              className="p-1 text-blue-500 hover:text-blue-700 hover:bg-gray-700 rounded"
-              title="Focus Mode"
-            >
-              <Maximize2 size={14} />
-            </button>
-            <button
-              onClick={handleDelete}
-              className="p-1 text-red-500 hover:text-red-700 hover:bg-gray-700 rounded"
-              title="Delete"
-            >
-              <Trash2 size={14} />
-            </button>
-          </div>
+              {label || 'Untitled'}
+            </div>
+          )}
         </div>
         
-        {/* Separator line */}
-        <div className="h-px bg-gray-600 mb-2"></div>
+        {/* Controls section (right) */}
+        <div className="flex space-x-1">
+          <button
+            onClick={handleIncreaseSize}
+            className="p-1 text-green-500 hover:text-green-700 hover:bg-gray-700 rounded"
+            title="Increase Size"
+          >
+            <span style={{ fontWeight: 'bold', fontSize: '14px' }}>+</span>
+          </button>
+          <button
+            onClick={handleDecreaseSize}
+            className="p-1 text-red-500 hover:text-red-700 hover:bg-gray-700 rounded"
+            title="Decrease Size"
+          >
+            <span style={{ fontWeight: 'bold', fontSize: '14px' }}>-</span>
+          </button>
+          <button
+            onClick={handleFocusModeToggle}
+            className="p-1 text-blue-500 hover:text-blue-700 hover:bg-gray-700 rounded"
+            title="Focus Mode"
+          >
+            <Maximize2 size={14} />
+          </button>
+          <button
+            onClick={handleDelete}
+            className="p-1 text-red-500 hover:text-red-700 hover:bg-gray-700 rounded"
+            title="Delete"
+          >
+            <Trash2 size={14} />
+          </button>
+        </div>
+      </div>
         
-        {/* Content section */}
-        {isEditing ? (
-          <div className="flex flex-col flex-grow">
-            <NoteToolbar onFormatClick={handleFormatClick} />
-            <textarea
-              ref={textareaRef}
-              value={content}
-              onChange={handleContentChange}
-              onKeyDown={handleKeyDown}
-              className="w-full flex-grow min-h-[80px] p-2 border border-gray-600 rounded resize-none focus:outline-none focus:ring-1 focus:ring-blue-500 font-mono text-sm bg-gray-800"
-              placeholder="Write your note here... (Markdown supported)"
-            />
-            <div className="flex justify-between mt-2">
-              <div className="text-xs text-gray-500">
-                Markdown supported
-              </div>
-              <div className="flex space-x-2">
-                <button
-                  onClick={handleCancel}
-                  className="p-1 text-gray-500 hover:text-gray-300"
-                  title="Cancel (Esc)"
-                >
-                  <X size={16} />
-                </button>
-                <button
-                  onClick={handleSave}
-                  className="p-1 text-green-500 hover:text-green-300"
-                  title="Save (Ctrl+Enter)"
-                  type="button"
-                >
-                  <Check size={16} />
-                </button>
-              </div>
+      {/* Separator line */}
+      <div className="h-px bg-gray-600 mb-2"></div>
+      
+      {/* Content section */}
+      {isEditing ? (
+        <div className="flex flex-col flex-grow">
+          <NoteToolbar onFormatClick={handleFormatClick} />
+          <textarea
+            ref={textareaRef}
+            value={content}
+            onChange={handleContentChange}
+            onKeyDown={handleKeyDown}
+            className="w-full flex-grow min-h-[80px] p-2 border border-gray-600 rounded resize-none focus:outline-none focus:ring-1 focus:ring-blue-500 font-mono text-sm bg-gray-800"
+            placeholder="Write your note here... (Markdown supported)"
+          />
+          <div className="flex justify-between mt-2">
+            <div className="text-xs text-gray-500">
+              Markdown supported
+            </div>
+            <div className="flex space-x-2">
+              <button
+                onClick={handleCancel}
+                className="p-1 text-gray-500 hover:text-gray-300"
+                title="Cancel (Esc)"
+              >
+                <X size={16} />
+              </button>
+              <button
+                onClick={handleSave}
+                className="p-1 text-green-500 hover:text-green-300"
+                title="Save (Ctrl+Enter)"
+                type="button"
+              >
+                <Check size={16} />
+              </button>
             </div>
           </div>
-        ) : (
-          <div className="flex-grow overflow-auto prose prose-sm max-w-none prose-invert">
-            {content ? (
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                {content}
-              </ReactMarkdown>
-            ) : (
-              <span className="text-gray-400">Empty note</span>
-            )}
-          </div>
-        )}
-        
-        {/* File link indicator at the bottom */}
-        {isLinkedToFile && !isEditing && (
-          <div className="mt-2 flex items-center">
-            <span className="text-xs text-blue-500 flex items-center" title="Linked to file">
-              <Link size={12} className="mr-1" />
-              Linked
-            </span>
-          </div>
-        )}
-      </div>
+        </div>
+      ) : (
+        <div className="flex-grow overflow-auto prose prose-sm max-w-none prose-invert">
+          {content ? (
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              {content}
+            </ReactMarkdown>
+          ) : (
+            <span className="text-gray-400">Empty note</span>
+          )}
+        </div>
+      )}
+      
+      {/* File link indicator at the bottom */}
+      {isLinkedToFile && !isEditing && (
+        <div className="mt-2 flex items-center">
+          <span className="text-xs text-blue-500 flex items-center" title="Linked to file">
+            <Link size={12} className="mr-1" />
+            Linked
+          </span>
+        </div>
+      )}
     </div>
   );
 };
