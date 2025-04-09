@@ -47,12 +47,46 @@ export const useCanvasStore = createStore<CanvasState, Omit<CanvasStoreState, ke
   (set) => ({
     initialized: false,
     
-    // State setters
+    // State setters with enhanced persistence
     setNodes: (nodes) => 
-      set((state) => ({ 
-        ...state,
-        nodes: typeof nodes === 'function' ? nodes(state.nodes) : nodes 
-      })),
+      set((state) => {
+        const updatedNodes = typeof nodes === 'function' ? nodes(state.nodes) : nodes;
+        
+        // Ensure all nodes have proper dimensions and positions saved
+        const processedNodes = updatedNodes.map(node => {
+          // Extract and safely convert dimensions to numbers
+          const measuredWidth = typeof node.measured?.width === 'number' ? node.measured.width : undefined;
+          const measuredHeight = typeof node.measured?.height === 'number' ? node.measured.height : undefined;
+          const nodeWidth = typeof node.width === 'number' ? node.width : undefined;
+          const nodeHeight = typeof node.height === 'number' ? node.height : undefined;
+          const dataWidth = typeof node.data?.width === 'number' ? node.data.width : undefined;
+          const dataHeight = typeof node.data?.height === 'number' ? node.data.height : undefined;
+          
+          // Start with the base node and selectively add properly typed properties
+          const processedNode = { 
+            ...node,
+            // Preserve draggable status and resizing flags
+            draggable: node.draggable !== false,
+            resizing: false
+          } as Node;
+          
+          // Only set width/height if we have valid numeric values
+          if (measuredWidth || nodeWidth || dataWidth) {
+            processedNode.width = measuredWidth || nodeWidth || dataWidth;
+          }
+          
+          if (measuredHeight || nodeHeight || dataHeight) {
+            processedNode.height = measuredHeight || nodeHeight || dataHeight;
+          }
+          
+          return processedNode;
+        });
+        
+        return { 
+          ...state,
+          nodes: processedNodes 
+        };
+      }),
     
     setEdges: (edges) => 
       set((state) => ({ 
@@ -83,15 +117,39 @@ export const useCanvasStore = createStore<CanvasState, Omit<CanvasStoreState, ke
       })),
     
     updateNode: (id, data) => 
-      set((state) => ({
-        ...state,
-        nodes: state.nodes.map((node) => 
-          node.id === id ? { 
-            ...node, 
-            data: { ...node.data, ...data } 
-          } : node
-        )
-      })),
+      set((state) => {
+        const nodeIndex = state.nodes.findIndex(node => node.id === id);
+        
+        // If node is not found, return unchanged state
+        if (nodeIndex === -1) return state;
+        
+        // Get the node to be updated
+        const nodeToUpdate = state.nodes[nodeIndex];
+        
+        // Create updated node with new data
+        const updatedNode = { 
+          ...nodeToUpdate, 
+          data: { ...nodeToUpdate.data, ...data } 
+        };
+        
+        // Explicitly handle width and height for resize operations
+        if (data && 'width' in data && typeof data.width === 'number') {
+          updatedNode.width = data.width;
+        }
+        
+        if (data && 'height' in data && typeof data.height === 'number') {
+          updatedNode.height = data.height;
+        }
+        
+        // Create new nodes array with updated node
+        const updatedNodes = [...state.nodes];
+        updatedNodes[nodeIndex] = updatedNode;
+        
+        return {
+          ...state,
+          nodes: updatedNodes
+        };
+      }),
     
     removeNode: (id) => 
       set((state) => ({

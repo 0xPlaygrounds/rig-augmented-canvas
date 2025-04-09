@@ -229,7 +229,7 @@ export const useCanvasPersistence = (options: CanvasPersistenceProps = {}) => {
     }
   }, [currentCanvasId, loadAvailableCanvases]);
 
-  // Auto-save functionality
+  // Auto-save functionality with enhanced node preservation
   const saveCanvas = useCallback(async () => {
     try {
       if (!currentCanvasId || !services.canvasStorage) {
@@ -238,11 +238,47 @@ export const useCanvasPersistence = (options: CanvasPersistenceProps = {}) => {
       
       const existingCanvas = availableCanvases.find(c => c.id === currentCanvasId);
       
+      // Process nodes to ensure all dimensions and visual properties are explicitly saved
+      const processedNodes = nodes.map(node => {
+        // Extract all dimensions from various sources in the node
+        const nodeWidth = typeof node.width === 'number' ? node.width : 
+                           (node.data?.width || 250);
+        const nodeHeight = typeof node.height === 'number' ? node.height : 
+                           (node.data?.height || 150);
+                           
+        // Ensure all style properties are properly set
+        const processedNode = {
+          ...node,
+          // Explicitly set dimensions on both node and data
+          width: nodeWidth,
+          height: nodeHeight,
+          // Ensure data also has dimensions
+          data: {
+            ...node.data,
+            width: nodeWidth,
+            height: nodeHeight
+          },
+          // Ensure draggable and selectable properties are explicitly set
+          draggable: node.draggable !== false,
+          selected: node.selected || false,
+        };
+        
+        return processedNode;
+      });
+      
+      // Process edges to ensure they have all required properties
+      const processedEdges = edges.map(edge => ({
+        ...edge,
+        // Ensure animated property is set to improve visibility
+        animated: edge.animated !== false,
+        selected: edge.selected || false
+      }));
+      
       const data: CanvasData = {
         id: currentCanvasId,
         name: existingCanvas?.name || (currentCanvasId === DEFAULT_CANVAS_ID ? 'Default Canvas' : `Canvas ${new Date().toLocaleString()}`),
-        nodes: nodes as any, // Type assertion to handle Node type mismatch
-        edges: edges as any, // Type assertion to handle Edge type mismatch
+        nodes: processedNodes as any, // Type assertion to handle Node type mismatch
+        edges: processedEdges as any, // Type assertion to handle Edge type mismatch
         lastModified: Date.now()
       };
       

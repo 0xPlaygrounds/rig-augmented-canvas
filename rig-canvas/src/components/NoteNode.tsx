@@ -8,8 +8,15 @@
  * - Multiple connection points for edges
  */
 
-import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { Handle, Position, NodeProps, NodeResizer } from '@xyflow/react';
+import React, { useState, useCallback, useEffect, useRef, useLayoutEffect } from 'react';
+import { 
+  Handle, 
+  Position, 
+  NodeProps, 
+  NodeResizer, 
+  useUpdateNodeInternals,
+  useNodesInitialized
+} from '@xyflow/react';
 import { Edit, Save, Trash2, Maximize2 } from 'lucide-react';
 import { NoteData } from '../types';
 import { useCanvasStore } from '../features/canvas';
@@ -31,6 +38,9 @@ const NoteNode: React.FC<NodeProps> = ({
   const [isEditing, setIsEditing] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
   
+  // Use React Flow's updateNodeInternals hook to inform React Flow about node changes
+  const updateNodeInternals = useUpdateNodeInternals();
+  
   // State to track dimensions during resize
   const [nodeDimensions, setNodeDimensions] = useState({
     width: nodeData.width || 250,
@@ -41,13 +51,96 @@ const NoteNode: React.FC<NodeProps> = ({
   const width = nodeData.width || 250;
   const height = nodeData.height || 150;
 
-  // Update dimensions when node data changes
+  // Check if all nodes are initialized
+  const nodesInitialized = useNodesInitialized();
+
+  // Reference to track if the node has been properly initialized
+  const isInitializedRef = useRef(false);
+  
+  // Initial setup with more aggressive updating to ensure node is properly measured
+  useLayoutEffect(() => {
+    // Use layout effect to ensure dimensions are set before any DOM updates
+    updateNodeInternals(id);
+    
+    // Multiple updates with increasing delays to ensure React Flow has time to initialize the node
+    // Use more frequent updates with longer total duration
+    const timeoutIds = [25, 50, 100, 200, 300, 500, 800, 1000, 1500].map(delay => 
+      setTimeout(() => {
+        updateNodeInternals(id);
+        if (delay >= 500) {
+          isInitializedRef.current = true;
+        }
+      }, delay)
+    );
+    
+    return () => timeoutIds.forEach(clearTimeout);
+  }, [id, updateNodeInternals]);
+  
+  // Force update node internals whenever selected state changes
   useEffect(() => {
-    setNodeDimensions({
-      width: nodeData.width || 250,
-      height: nodeData.height || 150
-    });
-  }, [nodeData.width, nodeData.height]);
+    // More aggressive updates when selected to ensure visibility
+    updateNodeInternals(id);
+    
+    // If selected, update multiple times to ensure visibility
+    if (selected) {
+      const timeoutIds = [50, 200].map(delay => 
+        setTimeout(() => {
+          updateNodeInternals(id);
+        }, delay)
+      );
+      
+      return () => timeoutIds.forEach(clearTimeout);
+    }
+  }, [selected, id, updateNodeInternals]);
+
+  // Update dimensions when node data changes - with fixed dependency array
+  useEffect(() => {
+    // When dimensions change, update both local state and node internals
+    const width = nodeData.width || 250;
+    const height = nodeData.height || 150;
+    
+    // Prevent infinite loop by only updating when dimensions actually change
+    if (width !== nodeDimensions.width || height !== nodeDimensions.height) {
+      setNodeDimensions({ width, height });
+      
+      // Initial update of node internals
+      updateNodeInternals(id);
+      
+      // One delayed update is enough
+      const timerId = setTimeout(() => updateNodeInternals(id), 100);
+      return () => clearTimeout(timerId);
+    }
+    
+  }, [nodeData.width, nodeData.height, id, updateNodeInternals, nodeDimensions.width, nodeDimensions.height]);
+  
+  // Separate effect for store updates to prevent infinite loops
+  useEffect(() => {
+    // Only update the store for significant changes or initialization
+    // Don't put isInitializedRef.current in the dependency array
+    if (nodeData) {
+      const width = nodeData.width || 250;
+      const height = nodeData.height || 150;
+      
+      // Only update if needed and not too frequently, and after initialization
+      if (isInitializedRef.current && 
+          (Math.abs(width - nodeDimensions.width) > 10 || 
+           Math.abs(height - nodeDimensions.height) > 10)) {
+        
+        // Debounce updates to prevent too many state changes
+        const timerId = setTimeout(() => {
+          updateNode(id, { 
+            data: { 
+              ...nodeData, 
+              width: nodeDimensions.width, 
+              height: nodeDimensions.height 
+            } 
+          });
+        }, 200);
+        
+        return () => clearTimeout(timerId);
+      }
+    }
+  }, [id, updateNode, nodeData, nodeDimensions.width, nodeDimensions.height]);
 
   // Toggle edit mode
   const toggleEdit = useCallback((e: React.MouseEvent) => {
@@ -63,7 +156,10 @@ const NoteNode: React.FC<NodeProps> = ({
   // Handle content save
   const handleContentSave = useCallback(() => {
     updateNode(id, { data: { ...nodeData, content } });
-  }, [id, content, nodeData, updateNode]);
+    
+    // Update node internals when content changes
+    updateNodeInternals(id);
+  }, [id, content, nodeData, updateNode, updateNodeInternals]);
 
   // Delete node
   const handleDelete = useCallback((e: React.MouseEvent) => {
@@ -81,49 +177,56 @@ const NoteNode: React.FC<NodeProps> = ({
   const prevDimensionsRef = useRef({ width, height });
   
   // Handle resize during drag for real-time updates
-  const onResize = useCallback((_: any, params: { width: number, height: number }) => {
-    // Update local state immediately during resize using requestAnimationFrame for smoother performance
-    requestAnimationFrame(() => {
-      // Calculate size difference from previous dimensions to current ones
-      const widthDiff = Math.abs(params.width - prevDimensionsRef.current.width);
-      const heightDiff = Math.abs(params.height - prevDimensionsRef.current.height);
-      
-      // Store current dimensions as previous for next update
-      prevDimensionsRef.current = { width: params.width, height: params.height };
-      
-      setNodeDimensions({
-        width: params.width, 
-        height: params.height
-      });
-    });
-  }, []);
+  const nodeRef = useRef<HTMLDivElement>(null);
+  
+  const onResize = useCallback((event: any, params: { width: number, height: number }) => {
+    // Use dimensions passed directly from the resizer component
+    const { width, height } = params;
+    
+    // Update local state for React rendering
+    setNodeDimensions({ width, height });
+    
+    // Important: Set a flag to avoid redundant updates during resize operations
+    prevDimensionsRef.current = { width, height };
+    
+    // Update React Flow about the change - don't debounce during active resize
+    updateNodeInternals(id);
+  }, [id, updateNodeInternals]);
 
-  // Handle resize end
-  const onResizeEnd = useCallback((_: any, params: { width: number, height: number }) => {
+  // Handle resize end - this is where we commit the final size to our store
+  const onResizeEnd = useCallback((event: any, params: { width: number, height: number }) => {
+    const { width, height } = params;
+    
+    // First update local state
+    setNodeDimensions({ width, height });
+    
+    // Then update the node data in the store
     updateNode(id, { 
       data: { 
         ...nodeData, 
-        width: params.width, 
-        height: params.height 
+        width, 
+        height 
       } 
     });
-  }, [id, nodeData, updateNode]);
+    
+    // Make sure React Flow knows about the new dimensions
+    updateNodeInternals(id);
+    
+    // One more update after a brief delay to ensure connections are updated properly
+    setTimeout(() => updateNodeInternals(id), 50);
+  }, [id, nodeData, updateNode, updateNodeInternals]);
 
-  // Style for the node - using dynamic dimensions with optimized transitions
+  // Style for the node - simplify to avoid conflicts
   const nodeStyle = {
     width: `${nodeDimensions.width}px`,
     height: `${nodeDimensions.height}px`,
     backgroundColor: nodeData.color || 'var(--bg-secondary)',
-    // Use a faster, more natural curve for the transition
-    transition: selected 
-      ? 'none' // No transition when selected (during active resize) for immediate feedback
-      : 'width 0.15s cubic-bezier(0.17, 0.67, 0.83, 0.67), height 0.15s cubic-bezier(0.17, 0.67, 0.83, 0.67), transform 0.15s cubic-bezier(0.17, 0.67, 0.83, 0.67)',
-    // Add performance optimizations
-    willChange: 'width, height, transform',
-    backfaceVisibility: 'hidden' as const,
-    transform: selected 
-      ? 'translateZ(0) scale(1.001)' // Subtle scale during selection enhances perception of responsiveness
-      : 'translateZ(0)',
+    transition: 'none', // Disable transitions during resize
+    // Promote to GPU rendering for smoother resizing
+    transform: 'translate3d(0,0,0)',
+    // Remove any potential interference with the resizer
+    position: 'relative' as const,
+    overflow: 'hidden' as const
   };
 
   // Handle focus mode save
@@ -135,7 +238,10 @@ const NoteNode: React.FC<NodeProps> = ({
         content: newContent 
       } 
     });
-  }, [id, nodeData, updateNode]);
+    
+    // Update node internals after content change
+    updateNodeInternals(id);
+  }, [id, nodeData, updateNode, updateNodeInternals]);
   
   // Handle focus mode close
   const handleFocusClose = useCallback(() => {
@@ -159,11 +265,14 @@ const NoteNode: React.FC<NodeProps> = ({
       <NodeResizer 
         minWidth={100} 
         minHeight={50}
+        maxWidth={1200}
+        maxHeight={800}
         isVisible={selected}
         onResize={onResize}
         onResizeEnd={onResizeEnd}
         lineClassName="border-accent-primary node-resizer-line"
         handleClassName="bg-accent-primary border-2 border-white hover:scale-110 node-resizer-handle"
+        keepAspectRatio={false} // Set explicitly to false to allow free resizing
       />
       
       {/* Connection handles */}
@@ -175,6 +284,7 @@ const NoteNode: React.FC<NodeProps> = ({
       />
       
       <div 
+        ref={nodeRef}
         className={`note-content p-3 overflow-auto bg-bg-secondary rounded-md border ${
           selected ? 'border-accent-primary' : 'border-border-primary'
         }`}

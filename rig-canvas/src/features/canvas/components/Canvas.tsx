@@ -1,4 +1,4 @@
-import { useMemo, useCallback, MouseEvent, ReactNode, DragEvent } from 'react';
+import { useMemo, useCallback, type MouseEvent, type ReactNode, type DragEvent, useState, useEffect, useRef } from 'react';
 import {
   ReactFlow,
   ReactFlowProvider,
@@ -7,21 +7,26 @@ import {
   Controls,
   MiniMap,
   Panel,
-  PanelPosition,
-  NodeTypes,
-  EdgeTypes,
-  Node,
-  OnNodesChange,
-  OnEdgesChange,
-  OnConnect,
-  NodeMouseHandler,
-  Viewport,
-  OnMove,
+  type PanelPosition,
+  type NodeTypes,
+  type EdgeTypes,
+  type Node,
+  type OnNodesChange,
+  type OnEdgesChange,
+  type OnConnect,
+  type NodeMouseHandler,
+  type Viewport,
+  type OnMove,
+  useReactFlow,
+  useNodesInitialized,
+  useUpdateNodeInternals,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import { CanvasProps } from '../types';
+import { type CanvasProps, type NoteNodeData } from '../types';
 import { useCanvas } from '../hooks/useCanvas';
 import { useCanvasPersistence } from '../hooks/useCanvasPersistence';
+import { type FileData, type FileType } from '../../../types';
+import NoteNode from '../../../components/NoteNode';
 
 interface ExtendedCanvasProps extends CanvasProps {
   canvasId?: string;
@@ -72,6 +77,7 @@ export const Canvas = ({
     onNodesChange,
     onEdgesChange,
     addEdge,
+    addNode,
     contextMenu: menuState,
     hideContextMenu,
     viewport,
@@ -85,14 +91,28 @@ export const Canvas = ({
     saveInterval: 2000,
   });
 
-  // Handle node click
+  // Node internals updating and initialization
+  const updateNodeInternals = useUpdateNodeInternals();
+  const nodesInitialized = useNodesInitialized();
+  const reactFlowInstance = useReactFlow();
+
+  // Handle node click with improved focus handling
   const handleNodeClick: NodeMouseHandler = useCallback(
     (event, node) => {
+      // Ensure the node gets proper focus for keyboard interactions
+      if (event.currentTarget && 'focus' in event.currentTarget) {
+        // This helps with accessibility and ensuring the node is the active element
+        (event.currentTarget as HTMLElement).focus();
+      }
+      
+      // Force an update to node internals when clicked
+      updateNodeInternals(node.id);
+      
       if (onNodeClick) {
         onNodeClick(node);
       }
     },
-    [onNodeClick]
+    [onNodeClick, updateNodeInternals]
   );
 
   // Handle node double click
@@ -159,13 +179,56 @@ export const Canvas = ({
     }
   }, [setViewport]);
 
-  // Process node types with defaults
+  // Process node types with defaults - keeping this outside component to avoid re-creation
   const processedNodeTypes = useMemo(
     () => ({
-      ...nodeTypes, // User-provided node types
+      note: NoteNode,  // Register the NoteNode component for 'note' type
+      ...nodeTypes,    // User-provided node types
     }),
     [nodeTypes]
   );
+  
+  // Track whether the canvas has completed its initial load
+  const hasInitializedRef = useRef(false);
+  
+  // Update node internals whenever nodes change or are initialized
+  useEffect(() => {
+    if (nodes.length > 0) {
+      // Use multiple delays with increasing timeouts to ensure the DOM has updated
+      // and React Flow has had time to process the nodes
+      const timeoutIds = [50, 200, 500, 1000, 2000].map(delay => 
+        setTimeout(() => {
+          // Update internal node measurements to ensure edges connect properly
+          nodes.forEach(node => {
+            updateNodeInternals(node.id);
+          });
+          
+          // After the final update, ensure the viewport is properly adjusted
+          // but only do fitView if viewport hasn't been restored from storage yet
+          if (delay === 2000 && nodesInitialized && reactFlowInstance) {
+            if (!hasInitializedRef.current) {
+              if (viewport && viewport.zoom) {
+                // If we have a saved viewport, explicitly set it
+                reactFlowInstance.setViewport({
+                  x: viewport.x,
+                  y: viewport.y,
+                  zoom: viewport.zoom
+                }, { duration: 0 });  // Instant transition
+              } else {
+                // Only fit view if no viewport was saved
+                reactFlowInstance.fitView({ padding: 0.2, includeHiddenNodes: false });
+              }
+              
+              // Mark as initialized to prevent multiple viewport resets
+              hasInitializedRef.current = true;
+            }
+          }
+        }, delay)
+      );
+      
+      return () => timeoutIds.forEach(clearTimeout);
+    }
+  }, [nodes, updateNodeInternals, nodesInitialized, reactFlowInstance, viewport]);
 
   // Process edge types with defaults
   const processedEdgeTypes = useMemo(
@@ -181,24 +244,105 @@ export const Canvas = ({
     event.dataTransfer.dropEffect = 'copy';
   }, []);
   
+  // Function to create a new node
+  const createNewNode = useCallback(() => {
+    const nodeId = `node-${Date.now()}`;
+    const position = { x: viewport.x + 200, y: viewport.y + 100 };
+    
+    // Create a new note node
+    const newNode: Node = {
+      id: nodeId,
+      type: 'note', // Make sure this matches a registered node type
+      position,
+      draggable: true, // Explicitly set draggable to true
+      data: {
+        type: 'note',
+        content: 'New note',
+        width: 250,
+        height: 150,
+      } as NoteNodeData,
+    };
+    
+    // Add the node to the canvas
+    addNode(newNode);
+  }, [addNode, viewport]);
+
   // Handle file drop
   const handleDrop = useCallback((event: DragEvent<HTMLDivElement>) => {
     event.preventDefault();
     
-    // Get the dragged file data from the dataTransfer
-    const fileData = event.dataTransfer.getData('application/json');
-    
-    if (fileData && onFileDrop) {
-      try {
-        const file = JSON.parse(fileData);
-        
-        // Call the onFileDrop callback with the file data
-        onFileDrop(file);
-      } catch (error) {
-        console.error('Error parsing dragged file data:', error);
+    // Check if files were dropped
+    if (event.dataTransfer.files && event.dataTransfer.files.length > 0) {
+      const file = event.dataTransfer.files[0];
+      
+      // Create a FileReader to read the file contents
+      const reader = new FileReader();
+      
+      reader.onload = (e) => {
+        if (e.target?.result && onFileDrop) {
+          // Create a FileData object with a generated ID
+          const fileData: FileData = {
+            id: `file-${Date.now()}`,
+            name: file.name,
+            type: 'markdown' as FileType, // Default to markdown for text files
+            content: e.target.result as string,
+            lastModified: Date.now(),
+            size: file.size
+          };
+          
+          // Call the onFileDrop callback with the file data
+          onFileDrop(fileData);
+          
+          // Optionally, create a node with the file information
+          const nodeId = `file-node-${Date.now()}`;
+          const dropPoint = { 
+            x: event.clientX - event.currentTarget.getBoundingClientRect().left,
+            y: event.clientY - event.currentTarget.getBoundingClientRect().top 
+          };
+          
+          // Convert screen coordinates to flow coordinates
+          const position = {
+            x: (dropPoint.x - viewport.x) / viewport.zoom,
+            y: (dropPoint.y - viewport.y) / viewport.zoom
+          };
+          
+          // Create a new note node with the file name as content
+          const newNode: Node = {
+            id: nodeId,
+            type: 'note',
+            position,
+            draggable: true, // Explicitly set draggable to true
+            data: {
+              type: 'note',
+              content: `# ${file.name}\n\nType: ${file.type}\nSize: ${(file.size / 1024).toFixed(2)} KB`,
+              width: 250,
+              height: 150,
+            } as NoteNodeData,
+          };
+          
+          // Add the node to the canvas
+          addNode(newNode);
+        }
+      };
+      
+      // Read the file as text
+      reader.readAsText(file);
+    } else {
+      // Try to get the dragged file data from the dataTransfer
+      const fileData = event.dataTransfer.getData('application/json');
+      
+      if (fileData && onFileDrop) {
+        try {
+          const file = JSON.parse(fileData);
+          
+          // Call the onFileDrop callback with the file data
+          onFileDrop(file);
+        } catch (error) {
+          console.error('Error parsing dragged file data:', error);
+        }
       }
     }
-  }, [onFileDrop]);
+  }, [onFileDrop, addNode, viewport]);
 
   return (
     <div 
@@ -207,6 +351,7 @@ export const Canvas = ({
       onDrop={handleDrop}
     >
       <ReactFlow
+        key={`flow-${nodes.length}`} // Force re-initialize when nodes change
         nodes={nodes}
         edges={edges}
         onNodesChange={wrappedOnNodesChange}
@@ -228,12 +373,37 @@ export const Canvas = ({
         zoomOnDoubleClick={zoomOnDoubleClick}
         snapToGrid={snapToGrid}
         snapGrid={snapGrid}
+        nodesDraggable={!readOnly}
+        elementsSelectable={!readOnly}
+        selectNodesOnDrag={true}
+        nodeDragThreshold={1}
+        nodesFocusable={true}
+        edgesFocusable={false}
+        disableKeyboardA11y={false}
+        nodeClickDistance={5}  // More responsive node clicking
+        proOptions={{ hideAttribution: true }}
+        
+        // Improved interaction to help with resizing
+        autoPanOnNodeDrag={true}
+        autoPanOnConnect={true}
+        elevateEdgesOnSelect={true}  // Better edge visibility
       >
         {/* Background */}
         <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
         
         {/* Controls */}
         <Controls showInteractive={false} />
+        
+        {/* Add Node Button */}
+        <Panel position="top-left" className="add-node-panel">
+          <button
+            onClick={createNewNode}
+            className="bg-accent-primary hover:bg-accent-secondary text-white font-medium py-2 px-4 rounded-full shadow-md transition-colors"
+            title="Add Note"
+          >
+            + Add Note
+          </button>
+        </Panel>
         
         {/* Mini map */}
         <MiniMap
@@ -296,4 +466,5 @@ export const CanvasWithProvider = (props: ExtendedCanvasProps) => {
   );
 };
 
+// This is the default export
 export default CanvasWithProvider;

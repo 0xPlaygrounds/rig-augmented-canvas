@@ -1,5 +1,5 @@
 // Export components
-export { default as Canvas, CanvasWithProvider } from './components/Canvas';
+export { Canvas, CanvasWithProvider, default } from './components/Canvas';
 
 // Export hooks
 export { useCanvas } from './hooks/useCanvas';

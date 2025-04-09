@@ -1,5 +1,15 @@
 import { useCallback } from 'react';
-import { Connection, Edge, EdgeChange, Node, NodeChange, Viewport, addEdge as rfAddEdge } from '@xyflow/react';
+import { 
+  Connection, 
+  Edge, 
+  EdgeChange, 
+  Node, 
+  NodeChange, 
+  Viewport, 
+  addEdge as rfAddEdge,
+  applyNodeChanges,
+  applyEdgeChanges
+} from '@xyflow/react';
 import { useCanvasStore } from '../store/canvasStore';
 import { ContextMenuState, UseCanvasReturn } from '../types';
 
@@ -27,7 +37,47 @@ export const useCanvas = (): UseCanvasReturn => {
   // Node operations
   const addNode = useCallback(
     (node: Node) => {
-      setNodes((nodes) => [...nodes, node]);
+      // Ensure node has all required properties for proper initialization and compatibility
+      const initializedNode: Node = {
+        ...node,
+        id: node.id || `node-${Date.now()}`,
+        position: node.position || { x: 0, y: 0 },
+        type: node.type || 'note',
+        
+        // Explicit UI properties for better React Flow compatibility
+        draggable: node.draggable !== undefined ? node.draggable : true,
+        selectable: node.selectable !== undefined ? node.selectable : true,
+        connectable: node.connectable !== undefined ? node.connectable : true,
+        selected: false, // Default to not selected
+        
+        // Explicit dimensions at node level for XYFlow compatibility
+        width: typeof node.width === 'number' ? node.width : 
+               (typeof node.data?.width === 'number' ? node.data.width : 250),
+        height: typeof node.height === 'number' ? node.height : 
+                (typeof node.data?.height === 'number' ? node.data.height : 150),
+        
+        // Ensure data has all necessary properties
+        data: {
+          ...node.data,
+          width: typeof node.data?.width === 'number' ? node.data.width : 
+                 (typeof node.width === 'number' ? node.width : 250),
+          height: typeof node.data?.height === 'number' ? node.data.height : 
+                  (typeof node.height === 'number' ? node.height : 150),
+          // Store original dimensions to allow for resetting if needed
+          initialWidth: typeof node.data?.initialWidth === 'number' ? node.data.initialWidth :
+                       (typeof node.data?.width === 'number' ? node.data.width : 
+                        (typeof node.width === 'number' ? node.width : 250)),
+          initialHeight: typeof node.data?.initialHeight === 'number' ? node.data.initialHeight :
+                        (typeof node.data?.height === 'number' ? node.data.height : 
+                         (typeof node.height === 'number' ? node.height : 150)),
+        },
+      };
+      
+      // Use setTimeout to ensure the node is added after the current render cycle
+      // This helps avoid React Flow initialization issues
+      setTimeout(() => {
+        setNodes((nodes) => [...nodes, initializedNode]);
+      }, 0);
     },
     [setNodes]
   );
@@ -58,43 +108,10 @@ export const useCanvas = (): UseCanvasReturn => {
     [setNodes, setEdges]
   );
 
+  // Use the React Flow provided utility functions to handle node changes
   const onNodesChange = useCallback(
     (changes: NodeChange[]) => {
-      setNodes((nodes) => 
-        changes.reduce((acc, change) => {
-          // Process node changes based on type
-          if (change.type === 'remove') {
-            return acc.filter((node) => node.id !== change.id);
-          } else if (change.type === 'position' && change.position && change.positionAbsolute) {
-            return acc.map((node) => 
-              node.id === change.id
-                ? { 
-                    ...node, 
-                    position: change.position || node.position,
-                    positionAbsolute: change.positionAbsolute 
-                  }
-                : node
-            );
-          } else if (change.type === 'select') {
-            return acc.map((node) => 
-              node.id === change.id 
-                ? { ...node, selected: change.selected } 
-                : node
-            );
-          } else if (change.type === 'dimensions' && change.dimensions) {
-            return acc.map((node) => 
-              node.id === change.id && change.dimensions 
-                ? { 
-                    ...node, 
-                    width: change.dimensions?.width, 
-                    height: change.dimensions?.height 
-                  } 
-                : node
-            );
-          }
-          return acc;
-        }, nodes)
-      );
+      setNodes((nds) => applyNodeChanges(changes, nds));
     },
     [setNodes]
   );
@@ -127,22 +144,10 @@ export const useCanvas = (): UseCanvasReturn => {
     [setEdges]
   );
 
+  // Use the React Flow provided utility functions to handle edge changes
   const onEdgesChange = useCallback(
     (changes: EdgeChange[]) => {
-      setEdges((edges) => 
-        changes.reduce((acc, change) => {
-          if (change.type === 'remove') {
-            return acc.filter((edge) => edge.id !== change.id);
-          } else if (change.type === 'select') {
-            return acc.map((edge) => 
-              edge.id === change.id 
-                ? { ...edge, selected: change.selected } 
-                : edge
-            );
-          }
-          return acc;
-        }, edges)
-      );
+      setEdges((eds) => applyEdgeChanges(changes, eds));
     },
     [setEdges]
   );
