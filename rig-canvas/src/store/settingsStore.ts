@@ -1,5 +1,4 @@
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { createStore } from './createStore';
 
 /**
  * Typography settings for the writing experience
@@ -160,7 +159,30 @@ const DEFAULT_SETTINGS: UserSettings = {
 };
 
 /**
- * Deep set a value in a nested object using a dot path
+ * Store state type
+ */
+interface SettingsState {
+  settings: UserSettings;
+}
+
+/**
+ * Store actions type
+ */
+interface SettingsActions {
+  /**
+   * Update a specific setting using a dot path
+   * @example updateSetting('typography.lineWidth', 80)
+   */
+  updateSetting: (path: string, value: any) => void;
+  
+  /**
+   * Reset all settings to defaults
+   */
+  resetSettings: () => void;
+}
+
+/**
+ * Helper function: Deep set a value in a nested object using a dot path
  */
 const setNestedValue = (obj: any, path: string, value: any): any => {
   const clone = { ...obj };
@@ -179,36 +201,32 @@ const setNestedValue = (obj: any, path: string, value: any): any => {
   return clone;
 };
 
+// Initial state
+const initialState: SettingsState = {
+  settings: DEFAULT_SETTINGS
+};
+
+// Actions
+const actions = (set: (fn: (state: SettingsState) => SettingsState) => void) => ({
+  updateSetting: (path: string, value: any) => 
+    set((state) => ({
+      settings: setNestedValue(state.settings, path, value),
+    })),
+  
+  resetSettings: () => 
+    set(() => ({
+      settings: DEFAULT_SETTINGS,
+    })),
+});
+
 /**
  * Settings store for managing user preferences
  */
-interface SettingsStore {
-  settings: UserSettings;
-  updateSetting: (path: string, value: any) => void;
-  resetSettings: () => void;
-}
-
-export const useSettingsStore = create<SettingsStore>()(
-  persist(
-    (set) => ({
-      settings: DEFAULT_SETTINGS,
-      
-      /**
-       * Update a specific setting using a dot path
-       * @example updateSetting('typography.lineWidth', 80)
-       */
-      updateSetting: (path, value) => 
-        set((state) => ({
-          settings: setNestedValue(state.settings, path, value),
-        })),
-      
-      /**
-       * Reset all settings to defaults
-       */
-      resetSettings: () => set({ settings: DEFAULT_SETTINGS }),
-    }),
-    {
-      name: 'rig-canvas-settings',
-    }
-  )
+export const useSettingsStore = createStore<SettingsState, SettingsActions>(
+  initialState,
+  actions,
+  {
+    name: 'rig-canvas-settings',
+    persist: true
+  }
 );

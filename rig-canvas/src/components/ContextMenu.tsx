@@ -29,7 +29,7 @@ import {
   Palette,
   StretchHorizontal
 } from 'lucide-react';
-import { useCanvasStore } from '../store/canvasStore';
+import { useCanvasStore } from '../features/canvas';
 import { useReactFlow } from '@xyflow/react';
 
 /**

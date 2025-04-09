@@ -4,24 +4,23 @@ import {
   Bold, Italic, Heading1, Heading2, List, ListOrdered, 
   Quote, Code, Link, ChevronDown, Target, 
   Edit3, ChevronsUp, Eye, Save, Clock,
-  Send, MessageSquare, User, Bot
+  MessageSquare, Send, User, Bot
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
-import { FileData } from '../types';
-import { useFileSystem } from '../hooks/useFileSystem';
-import { useSettingsStore } from '../store/settingsStore';
-import { useUIVisibility } from '../context/UIVisibilityContext';
-import { eventBus } from '../utils/eventBus';
-import { applyMarkdownFormat } from '../utils/markdownUtils';
-import { TypographyContainer } from './Typography';
-import FocusMode from './FocusMode';
+import { FileData } from '../../../types';
+import { useFileSystem } from '../';
+import { useSettingsStore } from '../../../store/settingsStore';
+import { useUIVisibility } from '../../../context/UIVisibilityContext';
+import { eventBus } from '../../../utils/eventBus';
+import { applyMarkdownFormat } from '../../../utils/markdownUtils';
+import { TypographyContainer } from '../../../components/Typography';
+import { FileViewerProps } from '../types';
+import { AIAssistant, ChatMessage } from '../../../features/ai-assistant';
 
-interface FileViewerProps {
-  file: FileData | null;
-  onClose: () => void;
-}
+// Import from the focus-mode feature
+import { FocusMode } from '../../../features/focus-mode';
 
 // Writing mode types
 const WRITING_MODES = [
@@ -30,14 +29,6 @@ const WRITING_MODES = [
   { id: 'editing', name: 'Editing', icon: <ChevronsUp size={16} /> },
   { id: 'reviewing', name: 'Reviewing', icon: <Eye size={16} /> }
 ];
-
-// Message type for AI co-writer chat
-interface ChatMessage {
-  id: string;
-  sender: 'user' | 'ai';
-  text: string;
-  timestamp: Date;
-}
 
 // Format button component
 const FormatButton = ({ onClick, title, children }: { 
@@ -54,7 +45,7 @@ const FormatButton = ({ onClick, title, children }: {
   </button>
 );
 
-const FileViewer: React.FC<FileViewerProps> = ({ file, onClose }) => {
+export const FileViewer: React.FC<FileViewerProps> = ({ file, onClose }) => {
   const [content, setContent] = useState('');
   const [wordCount, setWordCount] = useState(0);
   const [showSettings, setShowSettings] = useState(false);
@@ -226,75 +217,15 @@ const FileViewer: React.FC<FileViewerProps> = ({ file, onClose }) => {
     }
   }, [chatMessages]);
 
-  // Render AI Co-writer panel
+  // Render AI Co-writer panel using our new AIAssistant component
   const renderCowriterPanel = () => (
-    <div className="w-72 bg-bg-tertiary border-l border-border-primary flex flex-col h-full">
-      <div className="flex items-center justify-between p-3 border-b border-border-primary">
-        <h3 className="text-sm font-medium text-text-primary flex items-center gap-2">
-          <Bot size={16} /> AI Co-writer
-        </h3>
-        <button
-          onClick={() => setShowCowriter(false)}
-          className="p-1 rounded hover:bg-bg-primary text-text-secondary hover:text-text-primary"
-          title="Close"
-        >
-          <X size={14} />
-        </button>
-      </div>
-      
-      {/* Chat messages */}
-      <div 
-        ref={chatContainerRef}
-        className="flex-1 overflow-y-auto p-3 bg-bg-secondary"
-      >
-        {chatMessages.map(message => (
-          <div 
-            key={message.id} 
-            className={`mb-3 max-w-[90%] ${message.sender === 'user' ? 'ml-auto' : 'mr-auto'}`}
-          >
-            <div 
-              className={`rounded-lg p-2 inline-block ${
-                message.sender === 'user' 
-                  ? 'bg-accent-primary text-white rounded-tr-none' 
-                  : 'bg-bg-tertiary text-text-primary rounded-tl-none'
-              }`}
-            >
-              <div className="text-xs mb-1 flex items-center gap-1">
-                {message.sender === 'user' ? <User size={12} /> : <Bot size={12} />}
-                {message.sender === 'user' ? 'You' : 'AI Co-writer'}
-              </div>
-              <p className="text-sm whitespace-pre-wrap">{message.text}</p>
-            </div>
-          </div>
-        ))}
-      </div>
-      
-      {/* Message input */}
-      <div className="p-3 border-t border-border-primary">
-        <div className="flex gap-2">
-          <input 
-            type="text"
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                sendMessage();
-              }
-            }}
-            placeholder="Ask your AI co-writer..."
-            className="flex-1 p-2 rounded bg-bg-primary border border-border-primary text-text-primary text-sm"
-          />
-          <button
-            onClick={sendMessage}
-            disabled={!newMessage.trim()}
-            className={`p-2 rounded ${newMessage.trim() ? 'bg-accent-primary text-white' : 'bg-bg-primary text-text-tertiary'}`}
-          >
-            <Send size={16} />
-          </button>
-        </div>
-      </div>
-    </div>
+    <AIAssistant
+      initialVisible={showCowriter}
+      initialMessages={chatMessages}
+      onVisibilityChange={setShowCowriter}
+      width="18rem"
+      title="AI Co-writer"
+    />
   );
 
   // Format toolbar for editing mode
@@ -384,7 +315,7 @@ const FileViewer: React.FC<FileViewerProps> = ({ file, onClose }) => {
     <>
       {isFocusMode && (
         <FocusMode
-          content={content}
+          initialContent={content}
           onSave={handleFocusModeSave}
           onClose={handleFocusModeClose}
         />
@@ -566,5 +497,3 @@ const FileViewer: React.FC<FileViewerProps> = ({ file, onClose }) => {
     </>
   );
 };
-
-export default FileViewer;

@@ -1,28 +1,42 @@
-import React, { useState, useCallback, useEffect } from 'react';
-import CanvasWithProvider from './components/Canvas';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import Sidebar from './components/Sidebar';
-import FileViewer from './components/FileViewer';
+import { FileViewer } from './features/file-explorer';
 import CommandPalette from './components/CommandPalette';
 import { UIVisibilityProvider } from './context/UIVisibilityContext';
-import { useCanvasPersistence } from './hooks/useCanvasPersistence';
+import { CanvasWithProvider } from './features/canvas';
 import { useSettingsStore } from './store/settingsStore';
 import { FileData } from './types';
+import { ServiceProvider } from './services/ServiceProvider';
 
 // Import styles
 import './styles/typography.css';
 
 function App() {
-  const { 
-    isLoading, 
-    error, 
-    currentCanvasId, 
-    loadCanvas 
-  } = useCanvasPersistence();
-  
   const { settings } = useSettingsStore();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [selectedFile, setSelectedFile] = useState<FileData | null>(null);
   const [viewMode, setViewMode] = useState<'canvas' | 'file'>('canvas');
+  const [isServiceInitialized, setServiceInitialized] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [currentCanvasId, setCurrentCanvasId] = useState('default-canvas');
+  
+  // Initialize service provider
+  useEffect(() => {
+    const initializeServices = async () => {
+      try {
+        await ServiceProvider.initialize();
+        setServiceInitialized(true);
+        setIsLoading(false);
+      } catch (error) {
+        console.error('Failed to initialize services:', error);
+        setError('Failed to initialize application services');
+        setIsLoading(false);
+      }
+    };
+    
+    initializeServices();
+  }, []);
   
   // Always use dark mode
   useEffect(() => {
@@ -58,8 +72,8 @@ function App() {
   
   // Handle canvas selection
   const handleCanvasSelect = useCallback((canvasId: string) => {
-    loadCanvas(canvasId);
-  }, [loadCanvas]);
+    setCurrentCanvasId(canvasId);
+  }, []);
   
   // Toggle sidebar
   const toggleSidebar = useCallback(() => {
@@ -83,14 +97,23 @@ function App() {
           
           {isLoading ? (
             <div className="flex items-center justify-center h-full">
-              <div className="text-xl text-text-secondary">Loading canvas...</div>
+              <div className="text-xl text-text-secondary">Loading application...</div>
             </div>
           ) : error ? (
             <div className="flex items-center justify-center h-full">
               <div className="text-xl text-red-500">{error}</div>
             </div>
           ) : viewMode === 'canvas' ? (
-            <CanvasWithProvider onFileDrop={handleFileDrop} />
+            isServiceInitialized ? (
+              <CanvasWithProvider 
+                canvasId={currentCanvasId}
+                onFileDrop={handleFileDrop} 
+              />
+            ) : (
+              <div className="flex items-center justify-center h-full">
+                <div className="text-xl text-text-secondary">Services not initialized</div>
+              </div>
+            )
           ) : (
             <FileViewer file={selectedFile} onClose={handleCloseFileViewer} />
           )}

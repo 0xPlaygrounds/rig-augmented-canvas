@@ -8,15 +8,13 @@
  * - Multiple connection points for edges
  */
 
-import React, { useState, useCallback, memo, useEffect, useRef } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { Handle, Position, NodeProps, NodeResizer } from '@xyflow/react';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
 import { Edit, Save, Trash2, Maximize2 } from 'lucide-react';
 import { NoteData } from '../types';
-import { useCanvasStore } from '../store/canvasStore';
-import { applyMarkdownFormat } from '../utils/markdownUtils';
-import FocusMode from './FocusMode';
+import { useCanvasStore } from '../features/canvas';
+import { FocusMode } from '../features/focus-mode';
+import { MarkdownEditor } from '../features/markdown-editor';
 import '../styles/nodeStyles.css';
 
 // Define the component with proper typing
@@ -29,8 +27,8 @@ const NoteNode: React.FC<NodeProps> = ({
   // Cast data to NoteData to access properties safely
   const nodeData = data as NoteData;
   const { updateNode, removeNode } = useCanvasStore();
-  const [isEditing, setIsEditing] = useState(false);
   const [content, setContent] = useState(nodeData.content || '');
+  const [isEditing, setIsEditing] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
   
   // State to track dimensions during resize
@@ -51,21 +49,21 @@ const NoteNode: React.FC<NodeProps> = ({
     });
   }, [nodeData.width, nodeData.height]);
 
-  // Handle content change
-  const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setContent(e.target.value);
-  };
-
   // Toggle edit mode
   const toggleEdit = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
     setIsEditing(!isEditing);
-    
-    // Save content when exiting edit mode
-    if (isEditing) {
-      updateNode(id, { data: { ...nodeData, content } });
-    }
-  }, [id, isEditing, content, nodeData, updateNode]);
+  }, [isEditing]);
+
+  // Handle content change
+  const handleContentChange = useCallback((newContent: string) => {
+    setContent(newContent);
+  }, []);
+
+  // Handle content save
+  const handleContentSave = useCallback(() => {
+    updateNode(id, { data: { ...nodeData, content } });
+  }, [id, content, nodeData, updateNode]);
 
   // Delete node
   const handleDelete = useCallback((e: React.MouseEvent) => {
@@ -149,9 +147,11 @@ const NoteNode: React.FC<NodeProps> = ({
       {/* Render focus mode if active */}
       {isFocused && (
         <FocusMode
-          content={content}
+          initialContent={content}
           onSave={handleFocusModeSave}
           onClose={handleFocusClose}
+          initialMode="drafting"
+          enablePomodoro={true}
         />
       )}
       
@@ -213,22 +213,19 @@ const NoteNode: React.FC<NodeProps> = ({
           </button>
         </div>
         
-        {/* Content display/edit */}
-        {isEditing ? (
-          <textarea
-            value={content}
+        {/* Markdown Editor */}
+        <div className="h-[calc(100%-40px)]" onClick={(e) => e.stopPropagation()}>
+          <MarkdownEditor
+            initialContent={content}
             onChange={handleContentChange}
-            className="w-full h-[calc(100%-40px)] p-2 bg-bg-secondary text-text-primary border border-border-primary rounded outline-none focus:border-accent-primary resize-none"
-            autoFocus
-            onClick={(e) => e.stopPropagation()}
+            onSave={handleContentSave}
+            minHeight={Math.max(nodeDimensions.height - 70, 50)}
+            showToolbar={isEditing}
+            showStatusBar={isEditing}
+            readOnly={!isEditing}
+            autoFocus={isEditing}
           />
-        ) : (
-          <div className="prose prose-invert prose-sm max-w-none overflow-auto h-[calc(100%-40px)]">
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>
-              {content || 'Empty note'}
-            </ReactMarkdown>
-          </div>
-        )}
+        </div>
       </div>
       
       <Handle

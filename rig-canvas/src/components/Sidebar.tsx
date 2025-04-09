@@ -24,12 +24,11 @@ import {
 } from 'lucide-react';
 
 // Components
-import FileExplorer from './FileExplorer';
+import { FileExplorer } from '../features/file-explorer';
 
 // Hooks
-import { useCanvasPersistence } from '../hooks/useCanvasPersistence';
-import { useFileSystem } from '../hooks/useFileSystem';
-import { useCanvasStore } from '../store/canvasStore';
+import { useCanvasPersistence, useCanvasStore } from '../features/canvas';
+import { useFileSystem } from '../features/file-explorer';
 
 // Types
 import { FileData, CanvasData } from '../types';
@@ -147,8 +146,8 @@ const Sidebar: React.FC<SidebarProps> = ({ onFileSelect, onFileDrop, onCanvasSel
     // Find the selected node (if any)
     const selectedNode = nodes.find(node => node.selected);
     
-    if (selectedNode) {
-      const noteContent = selectedNode.data.content || '';
+    if (selectedNode && selectedNode.data) {
+      const noteContent = typeof selectedNode.data.content === 'string' ? selectedNode.data.content : '';
       
       // Create a new file in the folder
       await addFile(

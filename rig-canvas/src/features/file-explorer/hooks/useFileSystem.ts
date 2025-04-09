@@ -10,15 +10,22 @@ import {
   moveFile,
   updateFolderName,
   createRootFolder
-} from '../utils/indexedDB';
-import { FileSystemData, FolderData, FileData, FileType } from '../types';
+} from '../../../utils/indexedDB';
+import { FileSystemData, FolderData, FileData, FileType } from '../../../types';
+import { UseFileSystemReturn } from '../types';
 
-export const useFileSystem = () => {
+/**
+ * A hook for interacting with the file system
+ * Provides methods for creating, updating, and deleting files and folders
+ */
+export const useFileSystem = (): UseFileSystemReturn => {
   const [fileSystem, setFileSystem] = useState<FileSystemData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Load file system data
+  /**
+   * Load file system data
+   */
   const loadFileSystem = useCallback(async () => {
     try {
       setIsLoading(true);
@@ -35,7 +42,11 @@ export const useFileSystem = () => {
     }
   }, []);
 
-  // Create a new folder
+  /**
+   * Create a new folder
+   * @param parentFolderId - The ID of the parent folder
+   * @param name - The name of the new folder
+   */
   const addFolder = useCallback(async (parentFolderId: string, name: string) => {
     try {
       const newFolder = await createFolder(parentFolderId, name);
@@ -48,7 +59,14 @@ export const useFileSystem = () => {
     }
   }, [loadFileSystem]);
 
-  // Create a new file
+  /**
+   * Create a new file
+   * @param folderId - The ID of the parent folder
+   * @param name - The name of the new file
+   * @param type - The type of the new file
+   * @param content - The content of the new file (optional)
+   * @param url - The URL of the new file (optional, for images, audio, etc.)
+   */
   const addFile = useCallback(async (
     folderId: string,
     name: string,
@@ -67,15 +85,15 @@ export const useFileSystem = () => {
     }
   }, [loadFileSystem]);
 
-  // Update a file
+  /**
+   * Update a file
+   * @param fileId - The ID of the file to update
+   * @param updates - Partial updates to apply to the file
+   */
   const updateFileContent = useCallback(async (fileId: string, updates: Partial<FileData>) => {
-    console.log('updateFileContent called with fileId:', fileId);
-    console.log('updates:', updates);
-    
     try {
       // Get the current file to verify it exists
       const currentFile = await getFileById(fileId);
-      console.log('Current file before update:', currentFile);
       
       if (!currentFile) {
         console.error('File not found with ID:', fileId);
@@ -84,14 +102,9 @@ export const useFileSystem = () => {
       }
       
       const updatedFile = await updateFile(fileId, updates);
-      console.log('Updated file result:', updatedFile);
       
       // Reload the file system to reflect changes
       await loadFileSystem();
-      
-      // Get the file again to verify it was updated
-      const verifyFile = await getFileById(fileId);
-      console.log('File after update:', verifyFile);
       
       return updatedFile;
     } catch (err) {
@@ -101,7 +114,10 @@ export const useFileSystem = () => {
     }
   }, [loadFileSystem]);
 
-  // Delete a file
+  /**
+   * Delete a file
+   * @param fileId - The ID of the file to delete
+   */
   const removeFile = useCallback(async (fileId: string) => {
     try {
       const success = await deleteFile(fileId);
@@ -114,7 +130,10 @@ export const useFileSystem = () => {
     }
   }, [loadFileSystem]);
 
-  // Delete a folder
+  /**
+   * Delete a folder
+   * @param folderId - The ID of the folder to delete
+   */
   const removeFolder = useCallback(async (folderId: string) => {
     try {
       const success = await deleteFolder(folderId);
@@ -127,7 +146,11 @@ export const useFileSystem = () => {
     }
   }, [loadFileSystem]);
   
-  // Rename a folder (including root folder)
+  /**
+   * Rename a folder
+   * @param folderId - The ID of the folder to rename
+   * @param newName - The new name for the folder
+   */
   const renameFolder = useCallback(async (folderId: string, newName: string) => {
     try {
       const updatedFolder = await updateFolderName(folderId, newName);
@@ -140,7 +163,10 @@ export const useFileSystem = () => {
     }
   }, [loadFileSystem]);
   
-  // Add a new root folder
+  /**
+   * Add a new root folder
+   * @param name - The name of the new root folder
+   */
   const addRootFolder = useCallback(async (name: string) => {
     try {
       const newRootFolder = await createRootFolder(name);
@@ -153,7 +179,10 @@ export const useFileSystem = () => {
     }
   }, [loadFileSystem]);
 
-  // Get a file by ID
+  /**
+   * Get a file by ID
+   * @param fileId - The ID of the file to retrieve
+   */
   const getFile = useCallback(async (fileId: string) => {
     try {
       return await getFileById(fileId);
@@ -164,7 +193,11 @@ export const useFileSystem = () => {
     }
   }, []);
 
-  // Move a file to a different folder
+  /**
+   * Move a file to a different folder
+   * @param fileId - The ID of the file to move
+   * @param targetFolderId - The ID of the target folder
+   */
   const moveFileToFolder = useCallback(async (fileId: string, targetFolderId: string) => {
     try {
       const success = await moveFile(fileId, targetFolderId);
