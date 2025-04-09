@@ -37,6 +37,8 @@ export const useCanvas = (): UseCanvasReturn => {
   // Node operations
   const addNode = useCallback(
     (node: Node) => {
+      console.log('[DEBUG][useCanvas] Adding new node, input:', node);
+      
       // Ensure node has all required properties for proper initialization and compatibility
       const initializedNode: Node = {
         ...node,
@@ -73,10 +75,14 @@ export const useCanvas = (): UseCanvasReturn => {
         },
       };
       
+      // Log the fully initialized node
+      console.log('[DEBUG][useCanvas] Node after initialization:', initializedNode);
+      
       // Use setTimeout to ensure the node is added after the current render cycle
       // This helps avoid React Flow initialization issues
       setTimeout(() => {
         setNodes((nodes) => [...nodes, initializedNode]);
+        console.log('[DEBUG][useCanvas] Node added to state');
       }, 0);
     },
     [setNodes]

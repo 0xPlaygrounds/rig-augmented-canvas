@@ -1,9 +1,10 @@
-/* Node resizer customizations */
+/* Node resizer customizations - enhanced version */
 .node-resizer-line {
   border-width: 2px !important;
   transition: all 0.15s cubic-bezier(0.17, 0.67, 0.83, 0.67) !important;
   z-index: 1000 !important;
   opacity: 0.8 !important;
+  border-color: var(--accent-primary) !important;
 }
 
 .node-resizer-handle {
@@ -13,6 +14,15 @@
   box-shadow: 0 0 3px rgba(0, 0, 0, 0.3) !important;
   z-index: 1001 !important; /* Make sure handles are above lines */
   pointer-events: all !important; /* Ensure handles capture mouse events */
+  background-color: var(--accent-primary) !important;
+  border: 2px solid white !important;
+  border-radius: 50% !important;
+}
+
+/* XY Flow specific resizer styling */
+.xy-flow__resize-control {
+  z-index: 1001 !important;
+  pointer-events: all !important;
 }
 
 /* Improve the XYFlow resizer visibility */

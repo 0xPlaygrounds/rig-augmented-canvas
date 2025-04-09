@@ -181,10 +181,16 @@ export const Canvas = ({
 
   // Process node types with defaults - keeping this outside component to avoid re-creation
   const processedNodeTypes = useMemo(
-    () => ({
-      note: NoteNode,  // Register the NoteNode component for 'note' type
-      ...nodeTypes,    // User-provided node types
-    }),
+    () => {
+      console.log('[DEBUG][Canvas] Registering node types:', {
+        defaultNodeType: 'note',
+        customNodeTypes: Object.keys(nodeTypes)
+      });
+      return {
+        note: NoteNode,  // Register the NoteNode component for 'note' type
+        ...nodeTypes,    // User-provided node types
+      };
+    },
     [nodeTypes]
   );
   
@@ -381,7 +387,19 @@ export const Canvas = ({
         edgesFocusable={false}
         disableKeyboardA11y={false}
         nodeClickDistance={5}  // More responsive node clicking
-        proOptions={{ hideAttribution: true }}
+        proOptions={{ 
+          hideAttribution: true
+        }}
+        
+        // Resize handling configurations
+        nodeExtent={[[-Infinity, -Infinity], [Infinity, Infinity]]} // Allow unlimited node movement
+        
+        // Enhanced resize options
+        fitViewOptions={{
+          padding: 0.2,
+          includeHiddenNodes: false,
+          duration: 500
+        }}
         
         // Improved interaction to help with resizing
         autoPanOnNodeDrag={true}

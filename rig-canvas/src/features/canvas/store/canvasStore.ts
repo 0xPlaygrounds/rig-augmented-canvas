@@ -118,13 +118,19 @@ export const useCanvasStore = createStore<CanvasState, Omit<CanvasStoreState, ke
     
     updateNode: (id, data) => 
       set((state) => {
+        console.log(`[DEBUG][canvasStore] Updating node ${id} with data:`, data);
+        
         const nodeIndex = state.nodes.findIndex(node => node.id === id);
         
         // If node is not found, return unchanged state
-        if (nodeIndex === -1) return state;
+        if (nodeIndex === -1) {
+          console.warn(`[DEBUG][canvasStore] Node ${id} not found in state`);
+          return state;
+        }
         
         // Get the node to be updated
         const nodeToUpdate = state.nodes[nodeIndex];
+        console.log(`[DEBUG][canvasStore] Original node before update:`, nodeToUpdate);
         
         // Create updated node with new data
         const updatedNode = { 
@@ -134,12 +140,16 @@ export const useCanvasStore = createStore<CanvasState, Omit<CanvasStoreState, ke
         
         // Explicitly handle width and height for resize operations
         if (data && 'width' in data && typeof data.width === 'number') {
+          console.log(`[DEBUG][canvasStore] Setting node width to ${data.width}`);
           updatedNode.width = data.width;
         }
         
         if (data && 'height' in data && typeof data.height === 'number') {
+          console.log(`[DEBUG][canvasStore] Setting node height to ${data.height}`);
           updatedNode.height = data.height;
         }
+        
+        console.log(`[DEBUG][canvasStore] Updated node after changes:`, updatedNode);
         
         // Create new nodes array with updated node
         const updatedNodes = [...state.nodes];

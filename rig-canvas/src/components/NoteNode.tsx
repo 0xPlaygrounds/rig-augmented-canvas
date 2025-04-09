@@ -15,7 +15,8 @@ import {
   NodeProps, 
   NodeResizer, 
   useUpdateNodeInternals,
-  useNodesInitialized
+  useNodesInitialized,
+  useReactFlow
 } from '@xyflow/react';
 import { Edit, Save, Trash2, Maximize2 } from 'lucide-react';
 import { NoteData } from '../types';
@@ -38,8 +39,9 @@ const NoteNode: React.FC<NodeProps> = ({
   const [isEditing, setIsEditing] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
   
-  // Use React Flow's updateNodeInternals hook to inform React Flow about node changes
+  // Use React Flow's hooks to interact with the flow instance
   const updateNodeInternals = useUpdateNodeInternals();
+  const reactFlowInstance = useReactFlow();
   
   // State to track dimensions during resize
   const [nodeDimensions, setNodeDimensions] = useState({
@@ -183,51 +185,146 @@ const NoteNode: React.FC<NodeProps> = ({
     // Use dimensions passed directly from the resizer component
     const { width, height } = params;
     
+    // DEBUG: Log resize event
+    console.log(`[DEBUG][Node ${id}] RESIZE EVENT:`, { width, height, event });
+    
     // Update local state for React rendering
     setNodeDimensions({ width, height });
     
     // Important: Set a flag to avoid redundant updates during resize operations
     prevDimensionsRef.current = { width, height };
     
+    // Force immediate DOM update for visual feedback
+    if (nodeRef.current) {
+      nodeRef.current.style.width = `${width}px`;
+      nodeRef.current.style.height = `${height}px`;
+    }
+    
+    // CRITICAL: Directly update the node in ReactFlow instance
+    // This is a more direct approach that bypasses React Flow's normal update mechanism
+    const nodes = reactFlowInstance.getNodes();
+    const nodeIndex = nodes.findIndex(node => node.id === id);
+    
+    if (nodeIndex !== -1) {
+      const updatedNodes = [...nodes];
+      updatedNodes[nodeIndex] = {
+        ...updatedNodes[nodeIndex],
+        width,
+        height,
+        data: {
+          ...updatedNodes[nodeIndex].data,
+          width,
+          height
+        }
+      };
+      
+      // Set the nodes directly in ReactFlow, bypassing React's update cycle
+      reactFlowInstance.setNodes(updatedNodes);
+    }
+    
     // Update React Flow about the change - don't debounce during active resize
     updateNodeInternals(id);
-  }, [id, updateNodeInternals]);
+    
+    // DEBUG: Log after updating node internals
+    console.log(`[DEBUG][Node ${id}] After updateNodeInternals during resize`);
+  }, [id, updateNodeInternals, reactFlowInstance]);
 
   // Handle resize end - this is where we commit the final size to our store
   const onResizeEnd = useCallback((event: any, params: { width: number, height: number }) => {
     const { width, height } = params;
     
+    // DEBUG: Log resize end
+    console.log(`[DEBUG][Node ${id}] RESIZE END:`, { width, height, event });
+    
     // First update local state
     setNodeDimensions({ width, height });
     
+    // Force immediate DOM update for visual feedback
+    if (nodeRef.current) {
+      nodeRef.current.style.width = `${width}px`;
+      nodeRef.current.style.height = `${height}px`;
+    }
+    
+    // CRITICAL: Directly update the node in ReactFlow instance again for final size
+    const nodes = reactFlowInstance.getNodes();
+    const nodeIndex = nodes.findIndex(node => node.id === id);
+    
+    if (nodeIndex !== -1) {
+      const updatedNodes = [...nodes];
+      updatedNodes[nodeIndex] = {
+        ...updatedNodes[nodeIndex],
+        width,
+        height,
+        data: {
+          ...updatedNodes[nodeIndex].data,
+          width,
+          height
+        }
+      };
+      
+      // Set the nodes directly in ReactFlow, bypassing React's update cycle
+      reactFlowInstance.setNodes(updatedNodes);
+    }
+    
     // Then update the node data in the store
-    updateNode(id, { 
-      data: { 
-        ...nodeData, 
-        width, 
-        height 
-      } 
-    });
+    console.log(`[DEBUG][Node ${id}] Updating node data with new dimensions:`, { width, height });
     
-    // Make sure React Flow knows about the new dimensions
-    updateNodeInternals(id);
-    
-    // One more update after a brief delay to ensure connections are updated properly
-    setTimeout(() => updateNodeInternals(id), 50);
-  }, [id, nodeData, updateNode, updateNodeInternals]);
+    // Add a brief delay before updating the store to ensure DOM updates have happened
+    setTimeout(() => {
+      updateNode(id, { 
+        data: { 
+          ...nodeData, 
+          width, 
+          height 
+        } 
+      });
+      
+      // Make sure React Flow knows about the new dimensions
+      updateNodeInternals(id);
+      console.log(`[DEBUG][Node ${id}] updateNodeInternals after resize`);
+      
+      // Additional update for edge connections
+      setTimeout(() => {
+        updateNodeInternals(id);
+        console.log(`[DEBUG][Node ${id}] Final updateNodeInternals after resize`);
+      }, 100);
+    }, 10);
+  }, [id, nodeData, updateNode, updateNodeInternals, reactFlowInstance]);
 
-  // Style for the node - simplify to avoid conflicts
+  // Create a standard style object for React
   const nodeStyle = {
     width: `${nodeDimensions.width}px`,
     height: `${nodeDimensions.height}px`,
+    minWidth: `${nodeDimensions.width}px`,
+    minHeight: `${nodeDimensions.height}px`,
     backgroundColor: nodeData.color || 'var(--bg-secondary)',
     transition: 'none', // Disable transitions during resize
     // Promote to GPU rendering for smoother resizing
     transform: 'translate3d(0,0,0)',
     // Remove any potential interference with the resizer
     position: 'relative' as const,
-    overflow: 'hidden' as const
+    overflow: 'hidden' as const,
+    // Add these to force size to be respected even with CSS conflicts
+    boxSizing: 'border-box' as const,
+    maxWidth: 'none',
+    maxHeight: 'none',
   };
+  
+  // Force inline styles using direct DOM manipulation
+  useEffect(() => {
+    if (nodeRef.current) {
+      // Apply important styles directly to DOM for maximum override capability
+      const style = nodeRef.current.style;
+      style.setProperty('width', `${nodeDimensions.width}px`, 'important');
+      style.setProperty('height', `${nodeDimensions.height}px`, 'important');
+      style.setProperty('min-width', `${nodeDimensions.width}px`, 'important');
+      style.setProperty('min-height', `${nodeDimensions.height}px`, 'important');
+      style.setProperty('transition', 'none', 'important');
+      style.setProperty('box-sizing', 'border-box', 'important');
+      style.setProperty('max-width', 'none', 'important');
+      style.setProperty('max-height', 'none', 'important');
+    }
+  }, [nodeDimensions.width, nodeDimensions.height]);
 
   // Handle focus mode save
   const handleFocusModeSave = useCallback((newContent: string) => {
@@ -261,18 +358,48 @@ const NoteNode: React.FC<NodeProps> = ({
         />
       )}
       
-      {/* Resize handles - only visible when selected */}
+      {/* Resize handles with forced visibility and aggressive styling */}
       <NodeResizer 
         minWidth={100} 
         minHeight={50}
         maxWidth={1200}
         maxHeight={800}
-        isVisible={selected}
-        onResize={onResize}
+        isVisible={selected} 
+        onResize={(event, params) => {
+          // Directly manipulate the DOM during resize for immediate feedback
+          if (nodeRef.current) {
+            nodeRef.current.style.width = `${params.width}px`;
+            nodeRef.current.style.height = `${params.height}px`;
+          }
+          onResize(event, params);
+        }}
         onResizeEnd={onResizeEnd}
+        
+        // Use stronger styling to ensure visibility
         lineClassName="border-accent-primary node-resizer-line"
         handleClassName="bg-accent-primary border-2 border-white hover:scale-110 node-resizer-handle"
-        keepAspectRatio={false} // Set explicitly to false to allow free resizing
+        
+        // Explicitly set styles as inline props to override any potential CSS conflicts
+        handleStyle={{ 
+          backgroundColor: "var(--accent-primary)",
+          width: "12px",
+          height: "12px",
+          borderRadius: "50%",
+          border: "2px solid white",
+          zIndex: 1001,
+          position: "absolute",
+          pointerEvents: "all"
+        }}
+        lineStyle={{ 
+          borderColor: "var(--accent-primary)",
+          borderWidth: "2px",
+          zIndex: 1000,
+          position: "absolute",
+          pointerEvents: "none"
+        }}
+        
+        // Disable aspect ratio lock for free resizing
+        keepAspectRatio={false}
       />
       
       {/* Connection handles */}
