@@ -15,15 +15,17 @@ import {
   NodeProps, 
   NodeResizer, 
   useUpdateNodeInternals,
-  useNodesInitialized,
-  useReactFlow
+  useNodesInitialized
 } from '@xyflow/react';
 import { Edit, Save, Trash2, Maximize2 } from 'lucide-react';
 import { NoteData } from '../types';
-import { useCanvasStore } from '../features/canvas';
+import { useCanvasStore, useNodeResize } from '../features/canvas';
 import { FocusMode } from '../features/focus-mode';
 import { MarkdownEditor } from '../features/markdown-editor';
 import '../styles/nodeStyles.css';
+
+// Debug flag - controlled from one place
+const DEBUG = import.meta.env.DEV;
 
 // Define the component with proper typing
 const NoteNode: React.FC<NodeProps> = ({ 
@@ -39,23 +41,36 @@ const NoteNode: React.FC<NodeProps> = ({
   const [isEditing, setIsEditing] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
   
-  // Use React Flow's hooks to interact with the flow instance
+  // Use React Flow's updateNodeInternals hook
   const updateNodeInternals = useUpdateNodeInternals();
-  const reactFlowInstance = useReactFlow();
+  
+  // Default dimensions if not provided - used for initial values
+  const initialWidth = nodeData.width || 250;
+  const initialHeight = nodeData.height || 150;
   
   // State to track dimensions during resize
   const [nodeDimensions, setNodeDimensions] = useState({
-    width: nodeData.width || 250,
-    height: nodeData.height || 150
+    width: initialWidth,
+    height: initialHeight
   });
   
-  // Default dimensions if not provided - used for initial values
-  const width = nodeData.width || 250;
-  const height = nodeData.height || 150;
-
-  // Check if all nodes are initialized
-  const nodesInitialized = useNodesInitialized();
-
+  // Node element reference
+  const nodeRef = useRef<HTMLDivElement>(null);
+  
+  // Use our custom resize hook for handling resize operations
+  const { onResize, onResizeEnd, updateNodeElement } = useNodeResize({
+    nodeId: id,
+    nodeData: nodeData,
+    initialDimensions: { width: initialWidth, height: initialHeight }
+  });
+  
+  // Update the hook's reference to our DOM node when it changes
+  useEffect(() => {
+    if (nodeRef.current) {
+      updateNodeElement(nodeRef.current);
+    }
+  }, [updateNodeElement]);
+  
   // Reference to track if the node has been properly initialized
   const isInitializedRef = useRef(false);
   
@@ -65,7 +80,6 @@ const NoteNode: React.FC<NodeProps> = ({
     updateNodeInternals(id);
     
     // Multiple updates with increasing delays to ensure React Flow has time to initialize the node
-    // Use more frequent updates with longer total duration
     const timeoutIds = [25, 50, 100, 200, 300, 500, 800, 1000, 1500].map(delay => 
       setTimeout(() => {
         updateNodeInternals(id);
@@ -95,7 +109,7 @@ const NoteNode: React.FC<NodeProps> = ({
     }
   }, [selected, id, updateNodeInternals]);
 
-  // Update dimensions when node data changes - with fixed dependency array
+  // Update dimensions when node data changes
   useEffect(() => {
     // When dimensions change, update both local state and node internals
     const width = nodeData.width || 250;
@@ -112,13 +126,11 @@ const NoteNode: React.FC<NodeProps> = ({
       const timerId = setTimeout(() => updateNodeInternals(id), 100);
       return () => clearTimeout(timerId);
     }
-    
   }, [nodeData.width, nodeData.height, id, updateNodeInternals, nodeDimensions.width, nodeDimensions.height]);
   
   // Separate effect for store updates to prevent infinite loops
   useEffect(() => {
     // Only update the store for significant changes or initialization
-    // Don't put isInitializedRef.current in the dependency array
     if (nodeData) {
       const width = nodeData.width || 250;
       const height = nodeData.height || 150;
@@ -175,122 +187,6 @@ const NoteNode: React.FC<NodeProps> = ({
     setIsFocused(!isFocused);
   }, [isFocused]);
 
-  // Track previous dimensions to calculate the magnitude of change
-  const prevDimensionsRef = useRef({ width, height });
-  
-  // Handle resize during drag for real-time updates
-  const nodeRef = useRef<HTMLDivElement>(null);
-  
-  const onResize = useCallback((event: any, params: { width: number, height: number }) => {
-    // Use dimensions passed directly from the resizer component
-    const { width, height } = params;
-    
-    // DEBUG: Log resize event
-    console.log(`[DEBUG][Node ${id}] RESIZE EVENT:`, { width, height, event });
-    
-    // Update local state for React rendering
-    setNodeDimensions({ width, height });
-    
-    // Important: Set a flag to avoid redundant updates during resize operations
-    prevDimensionsRef.current = { width, height };
-    
-    // Force immediate DOM update for visual feedback
-    if (nodeRef.current) {
-      nodeRef.current.style.width = `${width}px`;
-      nodeRef.current.style.height = `${height}px`;
-    }
-    
-    // CRITICAL: Directly update the node in ReactFlow instance
-    // This is a more direct approach that bypasses React Flow's normal update mechanism
-    const nodes = reactFlowInstance.getNodes();
-    const nodeIndex = nodes.findIndex(node => node.id === id);
-    
-    if (nodeIndex !== -1) {
-      const updatedNodes = [...nodes];
-      updatedNodes[nodeIndex] = {
-        ...updatedNodes[nodeIndex],
-        width,
-        height,
-        data: {
-          ...updatedNodes[nodeIndex].data,
-          width,
-          height
-        }
-      };
-      
-      // Set the nodes directly in ReactFlow, bypassing React's update cycle
-      reactFlowInstance.setNodes(updatedNodes);
-    }
-    
-    // Update React Flow about the change - don't debounce during active resize
-    updateNodeInternals(id);
-    
-    // DEBUG: Log after updating node internals
-    console.log(`[DEBUG][Node ${id}] After updateNodeInternals during resize`);
-  }, [id, updateNodeInternals, reactFlowInstance]);
-
-  // Handle resize end - this is where we commit the final size to our store
-  const onResizeEnd = useCallback((event: any, params: { width: number, height: number }) => {
-    const { width, height } = params;
-    
-    // DEBUG: Log resize end
-    console.log(`[DEBUG][Node ${id}] RESIZE END:`, { width, height, event });
-    
-    // First update local state
-    setNodeDimensions({ width, height });
-    
-    // Force immediate DOM update for visual feedback
-    if (nodeRef.current) {
-      nodeRef.current.style.width = `${width}px`;
-      nodeRef.current.style.height = `${height}px`;
-    }
-    
-    // CRITICAL: Directly update the node in ReactFlow instance again for final size
-    const nodes = reactFlowInstance.getNodes();
-    const nodeIndex = nodes.findIndex(node => node.id === id);
-    
-    if (nodeIndex !== -1) {
-      const updatedNodes = [...nodes];
-      updatedNodes[nodeIndex] = {
-        ...updatedNodes[nodeIndex],
-        width,
-        height,
-        data: {
-          ...updatedNodes[nodeIndex].data,
-          width,
-          height
-        }
-      };
-      
-      // Set the nodes directly in ReactFlow, bypassing React's update cycle
-      reactFlowInstance.setNodes(updatedNodes);
-    }
-    
-    // Then update the node data in the store
-    console.log(`[DEBUG][Node ${id}] Updating node data with new dimensions:`, { width, height });
-    
-    // Add a brief delay before updating the store to ensure DOM updates have happened
-    setTimeout(() => {
-      updateNode(id, { 
-        data: { 
-          ...nodeData, 
-          width, 
-          height 
-        } 
-      });
-      
-      // Make sure React Flow knows about the new dimensions
-      updateNodeInternals(id);
-      console.log(`[DEBUG][Node ${id}] updateNodeInternals after resize`);
-      
-      // Additional update for edge connections
-      setTimeout(() => {
-        updateNodeInternals(id);
-        console.log(`[DEBUG][Node ${id}] Final updateNodeInternals after resize`);
-      }, 100);
-    }, 10);
-  }, [id, nodeData, updateNode, updateNodeInternals, reactFlowInstance]);
-
   // Create a standard style object for React
   const nodeStyle = {
     width: `${nodeDimensions.width}px`,
@@ -309,22 +205,6 @@ const NoteNode: React.FC<NodeProps> = ({
     maxWidth: 'none',
     maxHeight: 'none',
   };
-  
-  // Force inline styles using direct DOM manipulation
-  useEffect(() => {
-    if (nodeRef.current) {
-      // Apply important styles directly to DOM for maximum override capability
-      const style = nodeRef.current.style;
-      style.setProperty('width', `${nodeDimensions.width}px`, 'important');
-      style.setProperty('height', `${nodeDimensions.height}px`, 'important');
-      style.setProperty('min-width', `${nodeDimensions.width}px`, 'important');
-      style.setProperty('min-height', `${nodeDimensions.height}px`, 'important');
-      style.setProperty('transition', 'none', 'important');
-      style.setProperty('box-sizing', 'border-box', 'important');
-      style.setProperty('max-width', 'none', 'important');
-      style.setProperty('max-height', 'none', 'important');
-    }
-  }, [nodeDimensions.width, nodeDimensions.height]);
 
   // Handle focus mode save
   const handleFocusModeSave = useCallback((newContent: string) => {
@@ -344,6 +224,18 @@ const NoteNode: React.FC<NodeProps> = ({
   const handleFocusClose = useCallback(() => {
     setIsFocused(false);
   }, []);
+
+  // Handle resizer resize event
+  const handleResize = useCallback((event: any, params: { width: number, height: number }) => {
+    // Update local dimensions state
+    setNodeDimensions({ 
+      width: params.width, 
+      height: params.height 
+    });
+    
+    // Call the hook's resize handler
+    onResize(event, params);
+  }, [onResize]);
 
   return (
     <>
@@ -365,14 +257,7 @@ const NoteNode: React.FC<NodeProps> = ({
         maxWidth={1200}
         maxHeight={800}
         isVisible={selected} 
-        onResize={(event, params) => {
-          // Directly manipulate the DOM during resize for immediate feedback
-          if (nodeRef.current) {
-            nodeRef.current.style.width = `${params.width}px`;
-            nodeRef.current.style.height = `${params.height}px`;
-          }
-          onResize(event, params);
-        }}
+        onResize={handleResize}
         onResizeEnd={onResizeEnd}
         
         // Use stronger styling to ensure visibility
