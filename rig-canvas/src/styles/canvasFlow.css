@@ -300,18 +300,20 @@ html.dark {
   justify-content: center;
   width: 40px;
   height: 40px;
-  border-radius: var(--radius);
-  background-color: var(--secondary);
-  color: var(--secondary-foreground);
-  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background-color: #374151;
+  color: white;
+  border: 1px solid #4B5563;
   cursor: pointer;
-  transition: background-color 0.2s ease, transform 0.1s ease;
+  transition: background-color 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
   padding: 0;
+  box-shadow: var(--shadow-sm);
 }
 
 .help-icon:hover {
-  background-color: var(--accent);
-  color: var(--accent-foreground);
+  background-color: #4B5563;
+  color: white;
+  box-shadow: var(--shadow-md);
 }
 
 .help-icon:active {
@@ -444,6 +446,12 @@ html.dark {
   gap: 16px;
   align-items: center;
   z-index: 10; /* Ensure controls stay above other elements */
+  background-color: rgba(31, 41, 55, 0.85); /* Dark background with some transparency */
+  border: 1px solid #374151;
+  border-radius: var(--radius-md);
+  padding: 8px 12px;
+  box-shadow: var(--shadow-md);
+  backdrop-filter: blur(4px);
 }
 
 /* Theme Toggle styling */
@@ -453,10 +461,11 @@ html.dark {
   gap: 8px;
   padding: 4px;
   padding-right: 8px;
-  border-radius: var(--radius);
-  background-color: var(--secondary);
-  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background-color: #374151;
+  border: 1px solid #4B5563;
   margin-right: 4px;
+  box-shadow: var(--shadow-sm);
 }
 
 .theme-label {
@@ -467,10 +476,18 @@ html.dark {
   height: 20px;
 }
 
-.sun-icon, .moon-icon {
+.sun-icon {
   width: 16px;
   height: 16px;
-  color: var(--secondary-foreground);
+  color: #fbbf24; /* Yellow sun color */
+  filter: drop-shadow(0 0 2px rgba(251, 191, 36, 0.5));
+}
+
+.moon-icon {
+  width: 16px;
+  height: 16px;
+  color: #e2e8f0; /* Light gray moon color */
+  filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.3));
 }
 
 .theme-toggle-switch {
@@ -478,15 +495,16 @@ html.dark {
   width: 48px;
   height: 24px;
   border-radius: 12px;
-  background-color: var(--muted);
+  background-color: #1a2735;
   cursor: pointer;
   border: none;
   padding: 0;
-  transition: background-color 0.2s ease;
+  transition: background-color 0.3s ease;
+  overflow: hidden;
 }
 
 .theme-toggle-switch.dark {
-  background-color: var(--primary);
+  background-color: #4b5563;
 }
 
 .theme-toggle-slider {
@@ -496,14 +514,31 @@ html.dark {
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background-color: var(--background);
-  box-shadow: var(--shadow-sm);
-  transition: transform 0.2s ease, background-color 0.2s ease;
+  background-color: #fbbf24; /* Sun yellow color */
+  box-shadow: 0 0 2px rgba(0, 0, 0, 0.3), 0 0 10px rgba(251, 191, 36, 0.3);
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .theme-toggle-switch.dark .theme-toggle-slider {
   transform: translateX(24px);
-  background-color: var(--background);
+  background-color: #e2e8f0; /* Moon gray color */
+  box-shadow: 0 0 2px rgba(0, 0, 0, 0.3), 0 0 10px rgba(255, 255, 255, 0.2);
+}
+
+/* Add icon styles inside the slider */
+.theme-toggle-slider::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 16px;
+  height: 16px;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  opacity: 0.8;
+  transition: opacity 0.3s ease;
 }
 
 .theme-toggle-switch:focus-visible {
@@ -515,10 +550,10 @@ html.dark {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background-color: var(--primary);
-  color: var(--primary-foreground);
-  border: none;
-  border-radius: var(--radius);
+  background-color: #374151;
+  color: white;
+  border: 1px solid #4B5563;
+  border-radius: var(--radius-md);
   height: 40px;
   padding: 0 16px;
   font-size: 0.875rem;
@@ -530,7 +565,8 @@ html.dark {
 }
 
 .add-node-button:hover {
-  background-color: color-mix(in srgb, var(--primary) 90%, black);
+  background-color: #4B5563;
+  box-shadow: var(--shadow-md);
 }
 
 .add-node-button:active {

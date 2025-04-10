@@ -43,7 +43,7 @@ function ThemeToggle() {
 
   return (
     <div className="theme-toggle-wrapper" role="group" aria-label="Theme toggle">
-      <span className="theme-label" aria-hidden="true">
+      <span className="theme-label" aria-hidden="true" title="Light mode">
         <svg className="sun-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <circle cx="12" cy="12" r="4"></circle>
           <path d="M12 2v2"></path>
@@ -62,11 +62,14 @@ function ThemeToggle() {
         onClick={toggleTheme}
         aria-pressed={theme === 'dark'}
         aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+        title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
       >
-        <span className="theme-toggle-slider"></span>
+        <span className="theme-toggle-slider">
+          {/* The slider itself now has visual treatment via CSS */}
+        </span>
       </button>
 
-      <span className="theme-label" aria-hidden="true">
+      <span className="theme-label" aria-hidden="true" title="Dark mode">
         <svg className="moon-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
         </svg>
