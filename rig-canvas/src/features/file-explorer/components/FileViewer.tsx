@@ -1,10 +1,9 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { 
-  X, BookOpen, Type, BarChart, Maximize2, 
+  X, BookOpen, Maximize2, 
   Bold, Italic, Heading1, Heading2, List, ListOrdered, 
-  Quote, Code, Link, ChevronDown, Target, 
-  Edit3, ChevronsUp, Eye, Save, Clock,
-  MessageSquare, Send, User, Bot
+  Quote, Code, Link, Save,
+  MessageSquare, Send, User, Bot, Edit3
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -22,14 +21,6 @@ import { AIAssistant, ChatMessage } from '../../../features/ai-assistant';
 // Import from the focus-mode feature
 import { FocusMode } from '../../../features/focus-mode';
 
-// Writing mode types
-const WRITING_MODES = [
-  { id: 'brainstorming', name: 'Brainstorming', icon: <Target size={16} /> },
-  { id: 'drafting', name: 'Drafting', icon: <Edit3 size={16} /> },
-  { id: 'editing', name: 'Editing', icon: <ChevronsUp size={16} /> },
-  { id: 'reviewing', name: 'Reviewing', icon: <Eye size={16} /> }
-];
-
 // Format button component
 const FormatButton = ({ onClick, title, children }: { 
   onClick: () => void; 
@@ -38,7 +29,7 @@ const FormatButton = ({ onClick, title, children }: {
 }) => (
   <button
     onClick={onClick}
-    className="p-1 rounded hover:bg-bg-tertiary text-text-secondary hover:text-text-primary transition-colors"
+    className="file-viewer-format-button"
     title={title}
   >
     {children}
@@ -48,11 +39,9 @@ const FormatButton = ({ onClick, title, children }: {
 export const FileViewer: React.FC<FileViewerProps> = ({ file, onClose }) => {
   const [content, setContent] = useState('');
   const [wordCount, setWordCount] = useState(0);
-  const [showSettings, setShowSettings] = useState(false);
   const [isFocusMode, setIsFocusMode] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [selectionStats, setSelectionStats] = useState({ start: 0, end: 0, selected: 0 });
-  const [currentWritingMode, setCurrentWritingMode] = useState('drafting');
   const [writingGoal, setWritingGoal] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   
@@ -72,7 +61,7 @@ export const FileViewer: React.FC<FileViewerProps> = ({ file, onClose }) => {
   // Get hooks
   const { updateFileContent, getFile } = useFileSystem();
   const { settings, updateSetting } = useSettingsStore();
-  const { isReadingMode, toggleReadingMode, estimatedReadingTime } = useUIVisibility();
+  const { isReadingMode, toggleReadingMode } = useUIVisibility();
   
   // Calculate word count
   useEffect(() => {
@@ -166,13 +155,6 @@ export const FileViewer: React.FC<FileViewerProps> = ({ file, onClose }) => {
     }, 0);
   }, [content]);
 
-  // Update writing mode
-  const changeWritingMode = useCallback((mode: string) => {
-    setCurrentWritingMode(mode);
-    updateSetting('focus.writingMode', mode);
-    eventBus.publish('focus:session:start', mode, writingGoal);
-  }, [updateSetting, writingGoal]);
-
   // Chat message handlers
   const sendMessage = useCallback(() => {
     if (!newMessage.trim()) return;
@@ -230,25 +212,28 @@ export const FileViewer: React.FC<FileViewerProps> = ({ file, onClose }) => {
 
   // Format toolbar for editing mode
   const renderFormatToolbar = () => (
-    <div className="flex gap-1 p-2 border-b border-border-primary bg-bg-tertiary overflow-x-auto">
+    <div className="file-viewer-format-toolbar">
       <FormatButton onClick={() => handleFormatClick('**')} title="Bold">
         <Bold size={16} />
       </FormatButton>
       <FormatButton onClick={() => handleFormatClick('*')} title="Italic">
         <Italic size={16} />
       </FormatButton>
+      <div className="file-viewer-divider"></div>
       <FormatButton onClick={() => handleFormatClick('# ')} title="Heading 1">
         <Heading1 size={16} />
       </FormatButton>
       <FormatButton onClick={() => handleFormatClick('## ')} title="Heading 2">
         <Heading2 size={16} />
       </FormatButton>
+      <div className="file-viewer-divider"></div>
       <FormatButton onClick={() => handleFormatClick('- ')} title="Bullet List">
         <List size={16} />
       </FormatButton>
       <FormatButton onClick={() => handleFormatClick('1. ')} title="Numbered List">
         <ListOrdered size={16} />
       </FormatButton>
+      <div className="file-viewer-divider"></div>
       <FormatButton onClick={() => handleFormatClick('> ')} title="Quote">
         <Quote size={16} />
       </FormatButton>
@@ -263,24 +248,20 @@ export const FileViewer: React.FC<FileViewerProps> = ({ file, onClose }) => {
 
   // Render edit mode view (editor + co-writer)
   const renderEditMode = () => (
-    <div className="flex flex-col flex-1 overflow-hidden">
+    <div className="file-viewer-editor">
       {renderFormatToolbar()}
       
-      <div className="flex flex-1 overflow-hidden">
-        <div className="flex-1 overflow-auto bg-bg-primary">
-          <div className="w-full h-full flex justify-center" style={{ paddingLeft: '16px' }}>
+      <div className="file-viewer-content">
+        <div className="file-viewer-editor">
+          <div className="flex justify-center w-full h-full">
             <textarea
               ref={textareaRef}
               value={content}
               onChange={handleContentChange}
               onSelect={handleSelect}
-              className="w-full h-full p-4 bg-bg-primary text-text-primary border-none resize-none outline-none font-mono"
+              className="file-viewer-editor-textarea"
               style={{ 
-                width: '100%',
                 maxWidth: `min(100%, ${settings.typography.lineWidth * 0.6}rem)`,
-                lineHeight: '1.6',
-                overflowWrap: 'break-word',
-                wordWrap: 'break-word'
               }}
               placeholder="Start writing here..."
             />
@@ -294,13 +275,11 @@ export const FileViewer: React.FC<FileViewerProps> = ({ file, onClose }) => {
 
   // Render read mode view
   const renderReadMode = () => (
-    <div className="flex flex-1 overflow-hidden">
-      <div className="flex-1 overflow-auto">
-        <div className="p-4 h-full bg-bg-secondary">
-          <div className="w-full" style={{ 
-            maxWidth: '100%', 
-            overflowWrap: 'break-word', 
-            paddingLeft: '16px' 
+    <div className="file-viewer-content">
+      <div className="file-viewer-preview">
+        <div className="flex justify-center w-full">
+          <div style={{ 
+            maxWidth: `min(100%, ${settings.typography.lineWidth * 0.6}rem)`,
           }}>
             <TypographyContainer 
               content={content} 
@@ -331,74 +310,20 @@ export const FileViewer: React.FC<FileViewerProps> = ({ file, onClose }) => {
         />
       )}
       
-      <div className="flex flex-col h-full bg-bg-secondary">
+      <div className="file-viewer">
         {/* Header */}
-        <div className="flex justify-between items-center p-3 border-b border-border-primary bg-bg-tertiary">
-          {/* Title or writing mode selector */}
-          {isEditing ? (
-            <div className="flex items-center overflow-hidden flex-grow mr-4">
-              <div className="mr-3 flex-shrink-0">
-                <div style={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  gap: '8px', 
-                  background: '#1f2937', 
-                  padding: '6px 12px', 
-                  borderRadius: '6px',
-                  border: '1px solid #374151',
-                  position: 'relative'
-                }}>
-                  {WRITING_MODES.find(m => m.id === currentWritingMode)?.icon}
-                  <select 
-                    value={currentWritingMode}
-                    onChange={(e) => changeWritingMode(e.target.value)}
-                    style={{
-                      background: 'transparent',
-                      border: 'none',
-                      color: '#f3f4f6',
-                      fontSize: '15px',
-                      fontWeight: 500,
-                      cursor: 'pointer',
-                      padding: '0',
-                      appearance: 'none',
-                      marginRight: '24px',
-                      position: 'relative'
-                    }}
-                  >
-                    {WRITING_MODES.map(mode => (
-                      <option key={mode.id} value={mode.id}>{mode.name} Mode</option>
-                    ))}
-                  </select>
-                  <ChevronDown size={14} style={{ position: 'absolute', right: '12px', color: '#9ca3af' }} />
-                </div>
-              </div>
-              <div className="text-sm text-text-tertiary truncate">
-                {currentWritingMode === 'brainstorming' && 'Free-form idea generation without judgment'}
-                {currentWritingMode === 'drafting' && 'Focus on getting your thoughts down quickly'}
-                {currentWritingMode === 'editing' && 'Refine and improve your existing content'}
-                {currentWritingMode === 'reviewing' && 'Final review and polish before completion'}
-              </div>
-            </div>
-          ) : (
-            <h2 className="text-lg font-medium text-text-primary overflow-hidden text-ellipsis whitespace-nowrap flex-grow mr-4">{file.name}</h2>
-          )}
+        <div className="file-viewer-header">
+          {/* File name */}
+          <div className="file-viewer-title">
+            {!isEditing && <h2>{file.name}</h2>}
+          </div>
           
           {/* Toolbar buttons */}
-          <div className="flex items-center space-x-2">
-            {(file.type === 'note' || file.type === 'markdown') && !isEditing && (
-              <button
-                onClick={() => setShowSettings(!showSettings)}
-                className={`p-1 rounded hover:bg-bg-primary ${showSettings ? 'text-accent-primary' : 'text-text-secondary'} hover:text-text-primary transition-colors`}
-                title="Typography Settings"
-              >
-                <Type size={18} />
-              </button>
-            )}
-            
+          <div className="file-viewer-toolbar">
             {(file.type === 'note' || file.type === 'markdown') && !isEditing && (
               <button
                 onClick={toggleReadingMode}
-                className={`p-1 rounded hover:bg-bg-primary ${isReadingMode ? 'text-accent-primary' : 'text-text-secondary'} hover:text-text-primary transition-colors`}
+                className={`file-viewer-toolbar-button ${isReadingMode ? 'active' : ''}`}
                 title={isReadingMode ? "Exit Reading Mode" : "Enter Reading Mode"}
               >
                 <BookOpen size={18} />
@@ -407,19 +332,9 @@ export const FileViewer: React.FC<FileViewerProps> = ({ file, onClose }) => {
             
             {(file.type === 'note' || file.type === 'markdown') && (
               <button
-                onClick={() => setShowCowriter(!showCowriter)}
-                className={`p-1 rounded hover:bg-bg-primary ${showCowriter ? 'text-accent-primary' : 'text-text-secondary'} hover:text-text-primary transition-colors`}
-                title={showCowriter ? "Hide AI Co-writer" : "Show AI Co-writer"}
-              >
-                <MessageSquare size={18} />
-              </button>
-            )}
-            
-            {(file.type === 'note' || file.type === 'markdown') && (
-              <button
                 onClick={isEditing ? handleSave : toggleEdit}
-                className="p-1 rounded hover:bg-bg-primary text-text-secondary hover:text-text-primary transition-colors"
-                title={isEditing ? "Save" : "Edit"}
+                className={`file-viewer-toolbar-button ${isEditing ? 'active' : ''}`}
+                title={isEditing ? "Save" : "Edit Mode"}
               >
                 {isEditing ? <Save size={18} /> : <Edit3 size={18} />}
               </button>
@@ -427,8 +342,18 @@ export const FileViewer: React.FC<FileViewerProps> = ({ file, onClose }) => {
             
             {(file.type === 'note' || file.type === 'markdown') && (
               <button
+                onClick={() => setShowCowriter(!showCowriter)}
+                className={`file-viewer-toolbar-button ${showCowriter ? 'active' : ''}`}
+                title={showCowriter ? "Hide AI Co-writer" : "AI Co-writer Mode"}
+              >
+                <MessageSquare size={18} />
+              </button>
+            )}
+            
+            {(file.type === 'note' || file.type === 'markdown') && (
+              <button
                 onClick={enterFocusMode}
-                className="p-1 rounded hover:bg-bg-primary text-text-secondary hover:text-text-primary transition-colors"
+                className="file-viewer-toolbar-button"
                 title="Focus Mode"
               >
                 <Maximize2 size={18} />
@@ -437,70 +362,16 @@ export const FileViewer: React.FC<FileViewerProps> = ({ file, onClose }) => {
             
             <button
               onClick={onClose}
-              className="p-1 rounded hover:bg-bg-primary text-text-secondary hover:text-text-primary transition-colors"
+              className="file-viewer-toolbar-button"
               title="Close"
             >
               <X size={18} />
             </button>
           </div>
         </div>
-
-        {/* Typography settings panel */}
-        {showSettings && !isEditing && (file.type === 'note' || file.type === 'markdown') && (
-          <div className="border-b border-border-primary bg-bg-tertiary p-3">
-            <div className="flex flex-col">
-              <h3 className="text-sm font-medium mb-2 text-text-primary">Typography Settings</h3>
-              
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs text-text-secondary mb-1">
-                    Line Width: {settings.typography.lineWidth} chars
-                  </label>
-                  <input 
-                    type="range" 
-                    min="40" 
-                    max="120" 
-                    value={settings.typography.lineWidth} 
-                    onChange={(e) => updateSetting('typography.lineWidth', parseInt(e.target.value))}
-                    className="w-full"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-xs text-text-secondary mb-1">
-                    Paragraph Spacing: {settings.typography.paragraphSpacing}rem
-                  </label>
-                  <input 
-                    type="range" 
-                    min="1" 
-                    max="3" 
-                    step="0.1" 
-                    value={settings.typography.paragraphSpacing} 
-                    onChange={(e) => updateSetting('typography.paragraphSpacing', parseFloat(e.target.value))}
-                    className="w-full"
-                  />
-                </div>
-              </div>
-              
-              <div className="mt-4 p-3 bg-bg-primary rounded border border-border-primary">
-                <h4 className="text-sm font-medium mb-2 text-text-primary">Document Stats</h4>
-                <ul className="grid gap-2 text-sm">
-                  <li className="flex justify-between">
-                    <span>Words</span>
-                    <span>{wordCount}</span>
-                  </li>
-                  <li className="flex justify-between">
-                    <span>Reading Time</span>
-                    <span>{estimatedReadingTime} min</span>
-                  </li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        )}
         
         {/* Main content area */}
-        <div className="flex-grow flex overflow-hidden">
+        <div className="file-viewer-content">
           {isEditing ? renderEditMode() : renderReadMode()}
         </div>
       </div>

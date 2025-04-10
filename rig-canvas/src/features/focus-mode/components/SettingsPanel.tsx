@@ -87,37 +87,17 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
   };
 
   return (
-    <div 
-      className="settings-panel"
-      style={{
-        width: '280px',
-        borderRight: '1px solid #374151',
-        background: '#1f2937',
-        padding: '20px',
-        overflow: 'auto'
-      }}
-    >
-      <h3 style={{ 
-        margin: '0 0 20px 0', 
-        color: '#f3f4f6', 
-        fontSize: '16px',
-        borderBottom: '1px solid #374151',
-        paddingBottom: '10px'
-      }}>
+    <div>
+      <h3 className="focus-mode-settings-title">
         Writing Settings
       </h3>
       
-      <div className="setting-group" style={{ marginBottom: '24px' }}>
-        <div style={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          alignItems: 'center', 
-          marginBottom: '8px' 
-        }}>
-          <label style={{ color: '#e5e7eb', fontSize: '14px', fontWeight: 500 }}>
+      <div className="focus-mode-setting-group">
+        <div className="focus-mode-setting-label">
+          <span className="focus-mode-setting-name">
             Line Width
-          </label>
-          <span style={{ color: '#9ca3af', fontSize: '13px' }}>
+          </span>
+          <span className="focus-mode-setting-value">
             {settings.typography.lineWidth} chars
           </span>
         </div>
@@ -127,34 +107,20 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
           max="120" 
           value={settings.typography.lineWidth} 
           onChange={handleLineWidthChange}
-          style={{ 
-            width: '100%',
-            accentColor: '#3b82f6'
-          }}
+          className="focus-mode-setting-slider"
         />
-        <div style={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          fontSize: '12px', 
-          color: '#9ca3af',
-          marginTop: '4px'
-        }}>
+        <div className="focus-mode-setting-range">
           <span>Narrow</span>
           <span>Wide</span>
         </div>
       </div>
       
-      <div className="setting-group" style={{ marginBottom: '24px' }}>
-        <div style={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          alignItems: 'center', 
-          marginBottom: '8px' 
-        }}>
-          <label style={{ color: '#e5e7eb', fontSize: '14px', fontWeight: 500 }}>
+      <div className="focus-mode-setting-group">
+        <div className="focus-mode-setting-label">
+          <span className="focus-mode-setting-name">
             Paragraph Spacing
-          </label>
-          <span style={{ color: '#9ca3af', fontSize: '13px' }}>
+          </span>
+          <span className="focus-mode-setting-value">
             {settings.typography.paragraphSpacing}rem
           </span>
         </div>
@@ -165,31 +131,16 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
           step="0.1" 
           value={settings.typography.paragraphSpacing} 
           onChange={handleParagraphSpacingChange}
-          style={{ 
-            width: '100%',
-            accentColor: '#3b82f6'
-          }}
+          className="focus-mode-setting-slider"
         />
-        <div style={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          fontSize: '12px', 
-          color: '#9ca3af',
-          marginTop: '4px'
-        }}>
+        <div className="focus-mode-setting-range">
           <span>Compact</span>
           <span>Spacious</span>
         </div>
       </div>
       
-      <div className="setting-group" style={{ marginBottom: '24px' }}>
-        <label style={{ 
-          display: 'block', 
-          marginBottom: '8px', 
-          color: '#e5e7eb', 
-          fontSize: '14px',
-          fontWeight: 500
-        }}>
+      <div className="focus-mode-setting-group">
+        <label className="focus-mode-setting-name">
           Writing Goal
         </label>
         <input 
@@ -197,96 +148,40 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
           value={writingGoal} 
           onChange={(e) => setWritingGoal(e.target.value)}
           placeholder="What's your goal for this session?"
-          style={{
-            width: '100%',
-            padding: '8px 12px',
-            background: '#111827',
-            border: '1px solid #374151',
-            borderRadius: '6px',
-            color: '#f3f4f6',
-            fontSize: '14px'
-          }}
+          className="focus-mode-input"
         />
-        <div style={{ fontSize: '12px', color: '#9ca3af', marginTop: '6px' }}>
+        <div className="focus-mode-hint">
           Setting a clear goal helps focus your writing session
         </div>
       </div>
       
-      <div className="document-stats" style={{ 
-        marginTop: '24px',
-        background: '#111827',
-        padding: '16px',
-        borderRadius: '6px',
-        border: '1px solid #374151'
-      }}>
-        <h3 style={{ 
-          margin: '0 0 12px 0', 
-          color: '#f3f4f6', 
-          fontSize: '15px', 
-          display: 'flex', 
-          alignItems: 'center', 
-          gap: '6px' 
-        }}>
+      <div className="focus-mode-panel">
+        <h3 className="focus-mode-panel-title">
           <BarChart size={16} /> Document Stats
         </h3>
         
-        <ul style={{ 
-          margin: 0, 
-          padding: 0, 
-          listStyle: 'none', 
-          color: '#d1d5db', 
-          fontSize: '14px',
-          display: 'grid',
-          gap: '8px'
-        }}>
-          <li style={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
-            padding: '4px 0',
-            borderBottom: '1px solid #1f2937'
-          }}>
-            <span>Words</span>
-            <span className="font-medium">{wordCount}</span>
+        <ul>
+          <li className="focus-mode-stat">
+            <span className="focus-mode-stat-label">Words</span>
+            <span className="focus-mode-stat-value">{wordCount}</span>
           </li>
-          <li style={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
-            padding: '4px 0',
-            borderBottom: '1px solid #1f2937'
-          }}>
-            <span>Characters</span>
-            <span className="font-medium">{content.length}</span>
+          <li className="focus-mode-stat">
+            <span className="focus-mode-stat-label">Characters</span>
+            <span className="focus-mode-stat-value">{content.length}</span>
           </li>
-          <li style={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
-            padding: '4px 0',
-            borderBottom: '1px solid #1f2937'
-          }}>
-            <span>Reading Time</span>
-            <span className="font-medium">{estimatedReadingTime} min</span>
+          <li className="focus-mode-stat">
+            <span className="focus-mode-stat-label">Reading Time</span>
+            <span className="focus-mode-stat-value">{estimatedReadingTime} min</span>
           </li>
           {stats.wordsWritten > 0 && (
-            <li style={{ 
-              display: 'flex', 
-              justifyContent: 'space-between', 
-              padding: '4px 0',
-              borderBottom: '1px solid #1f2937'
-            }}>
-              <span>Words Written</span>
-              <span className="font-medium">{stats.wordsWritten}</span>
+            <li className="focus-mode-stat">
+              <span className="focus-mode-stat-label">Words Written</span>
+              <span className="focus-mode-stat-value">{stats.wordsWritten}</span>
             </li>
           )}
         </ul>
         
-        <div style={{ 
-          marginTop: '16px', 
-          fontSize: '13px', 
-          color: '#9ca3af',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '6px'
-        }}>
+        <div className="focus-mode-hint" style={{ marginTop: '16px', display: 'flex', alignItems: 'center', gap: '6px' }}>
           <Clock size={14} />
           <span>Stats update as you type</span>
         </div>
@@ -294,23 +189,12 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
       
       {/* Pomodoro Timer (only in brainstorming mode) */}
       {writingMode === 'brainstorming' && (
-        <div style={{
-          padding: '12px',
-          background: '#111827',
-          borderRadius: '6px',
-          border: '1px solid #374151',
-          marginTop: '16px'
-        }}>
-          <div style={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
-            alignItems: 'center',
-            marginBottom: '8px'
-          }}>
-            <h4 style={{ margin: 0, fontSize: '14px', color: '#e5e7eb' }}>
+        <div className="focus-mode-panel">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+            <h4 className="focus-mode-panel-title" style={{ margin: 0 }}>
               Focus Timer
             </h4>
-            <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#e5e7eb' }}>
+            <div style={{ fontSize: '18px', fontWeight: 'bold' }}>
               {String(pomodoro.minutes).padStart(2, '0')}:{String(pomodoro.seconds).padStart(2, '0')}
             </div>
           </div>
@@ -318,14 +202,12 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
             {!pomodoro.active ? (
               <button 
                 onClick={startPomodoro}
-                style={{
-                  flex: 1,
-                  padding: '6px 12px',
-                  background: '#3b82f6',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer'
+                className="focus-mode-button"
+                style={{ 
+                  flex: 1, 
+                  backgroundColor: 'var(--accent-primary)', 
+                  color: 'white', 
+                  border: 'none' 
                 }}
               >
                 Start Focus Session
@@ -333,14 +215,12 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
             ) : (
               <button 
                 onClick={stopPomodoro}
-                style={{
-                  flex: 1,
-                  padding: '6px 12px',
-                  background: '#ef4444',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer'
+                className="focus-mode-button"
+                style={{ 
+                  flex: 1, 
+                  backgroundColor: 'var(--accent-destructive)', 
+                  color: 'white', 
+                  border: 'none' 
                 }}
               >
                 Stop Timer
@@ -352,24 +232,14 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
       
       {/* Word Frequency Analysis (only in editing mode) */}
       {writingMode === 'editing' && frequentWords.length > 0 && (
-        <div className="word-frequency-panel" style={{
-          padding: '12px',
-          background: '#111827',
-          borderRadius: '6px',
-          border: '1px solid #374151',
-          marginTop: '16px'
-        }}>
-          <h4 style={{ margin: '0 0 8px 0', fontSize: '14px', color: '#e5e7eb' }}>
+        <div className="focus-mode-panel">
+          <h4 className="focus-mode-panel-title" style={{ margin: '0 0 8px 0' }}>
             Frequently Used Words
           </h4>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
             {frequentWords.map(([word, count]) => (
-              <div key={word} style={{
-                padding: '4px 8px',
-                background: '#1f2937',
-                borderRadius: '4px',
-                fontSize: '12px',
-                color: count > 3 ? '#ef4444' : '#9ca3af'
+              <div key={word} className="focus-mode-tag" style={{
+                color: count > 3 ? 'var(--accent-destructive)' : 'var(--foreground-secondary)'
               }}>
                 {word} ({count})
               </div>
@@ -380,31 +250,23 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
       
       {/* Text-to-Speech (only in reviewing mode) */}
       {writingMode === 'reviewing' && (
-        <div style={{
-          padding: '12px',
-          background: '#111827',
-          borderRadius: '6px',
-          border: '1px solid #374151',
-          marginTop: '16px'
-        }}>
-          <h4 style={{ margin: '0 0 8px 0', fontSize: '14px', color: '#e5e7eb' }}>
+        <div className="focus-mode-panel">
+          <h4 className="focus-mode-panel-title" style={{ margin: '0 0 8px 0' }}>
             Listen to Your Text
           </h4>
-          <p style={{ margin: '0 0 12px 0', fontSize: '12px', color: '#9ca3af' }}>
+          <p className="focus-mode-hint" style={{ margin: '0 0 12px 0' }}>
             Hearing your text read aloud helps catch awkward phrasing and errors.
           </p>
           <div style={{ display: 'flex', gap: '8px' }}>
             {!tts.isSpeaking ? (
               <button 
                 onClick={speakText}
-                style={{
-                  flex: 1,
-                  padding: '6px 12px',
-                  background: '#3b82f6',
-                  color: 'white',
+                className="focus-mode-button"
+                style={{ 
+                  flex: 1, 
+                  backgroundColor: 'var(--accent-primary)', 
+                  color: 'white', 
                   border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -416,14 +278,12 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
             ) : (
               <button 
                 onClick={stopSpeaking}
-                style={{
-                  flex: 1,
-                  padding: '6px 12px',
-                  background: '#ef4444',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer'
+                className="focus-mode-button"
+                style={{ 
+                  flex: 1, 
+                  backgroundColor: 'var(--accent-destructive)', 
+                  color: 'white', 
+                  border: 'none' 
                 }}
               >
                 Stop Reading
@@ -433,18 +293,10 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
         </div>
       )}
       
-      <div style={{ 
-        marginTop: '24px', 
-        padding: '12px', 
-        background: '#111827', 
-        borderRadius: '6px',
-        border: '1px solid #374151',
-        fontSize: '13px',
-        color: '#9ca3af'
-      }}>
+      <div className="focus-mode-panel" style={{ marginTop: '24px' }}>
         <div style={{ marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
           <Search size={14} />
-          <span style={{ color: '#e5e7eb' }}>Writing Mode Tips</span>
+          <span style={{ color: 'var(--foreground-primary)' }}>Writing Mode Tips</span>
         </div>
         {writingMode === 'brainstorming' && (
           <p style={{ margin: '0' }}>In brainstorming mode, focus on quantity over quality. Write down all ideas without judgment.</p>

@@ -7,7 +7,6 @@ import { FocusModeToolbar } from './FocusModeToolbar';
 import { FocusModeHeader } from './FocusModeHeader';
 import { SettingsPanel } from './SettingsPanel';
 import { MarkdownEditor } from '../../markdown-editor';
-import { TypographyContainer } from '../../../components/Typography';
 
 /**
  * Enhanced focus mode editor with typography controls
@@ -18,17 +17,6 @@ import { TypographyContainer } from '../../../components/Typography';
  * - UI transitions
  */
 export const FocusMode: React.FC<FocusModeOptions> = (options) => {
-  const {
-    initialContent,
-    onSave,
-    onClose,
-    initialMode,
-    initialGoal,
-    enablePomodoro,
-    themes,
-    typography,
-  } = options;
-  
   const {
     // Content
     content,
@@ -81,38 +69,14 @@ export const FocusMode: React.FC<FocusModeOptions> = (options) => {
   // The actual modal content
   const modalContent = (
     <div 
-      className="focus-mode-overlay"
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        background: 'rgba(0, 0, 0, 0.85)',
-        backdropFilter: 'blur(10px)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 10000,
-        width: '100vw',
-        height: '100vh',
-      }}
+      className={`focus-mode-overlay focus-mode-${writingMode}`} 
       onClick={handleClose}
     >
       {/* Modal container */}
       <div 
         className="focus-mode-container"
         style={{
-          width: '95%',
-          maxWidth: '1200px',
-          height: '90%',
-          background: currentTheme.background,
-          borderRadius: '8px',
-          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.5)',
-          display: 'flex',
-          flexDirection: 'column',
-          overflow: 'hidden',
-          position: 'relative'
+          background: currentTheme.background
         }}
         onClick={(e) => e.stopPropagation()} // Prevent click from reaching the backdrop
       >
@@ -130,75 +94,44 @@ export const FocusMode: React.FC<FocusModeOptions> = (options) => {
         />
 
         {/* Main content area with sidebar if settings are shown */}
-        <div className="focus-mode-main" style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+        <div className="focus-mode-main">
           {/* Settings panel */}
           {showSettingsPanel && (
-            <SettingsPanel 
-              wordCount={wordCount}
-              writingMode={writingMode}
-              writingGoal={writingGoal}
-              setWritingGoal={setWritingGoal}
-              stats={stats}
-              pomodoro={pomodoro}
-              startPomodoro={startPomodoro}
-              stopPomodoro={stopPomodoro}
-              tts={tts}
-              speakText={speakText}
-              stopSpeaking={stopSpeaking}
-              content={content}
-            />
+            <div className="focus-mode-settings">
+              <SettingsPanel 
+                wordCount={wordCount}
+                writingMode={writingMode}
+                writingGoal={writingGoal}
+                setWritingGoal={setWritingGoal}
+                stats={stats}
+                pomodoro={pomodoro}
+                startPomodoro={startPomodoro}
+                stopPomodoro={stopPomodoro}
+                tts={tts}
+                speakText={speakText}
+                stopSpeaking={stopSpeaking}
+                content={content}
+              />
+            </div>
           )}
           
           {/* Main editor/reader area */}
-          <div 
-            className="editor-area"
-            style={{
-              flex: 1,
-              display: 'flex',
-              flexDirection: 'column',
-              overflow: 'hidden'
-            }}
-          >
+          <div className="focus-mode-editor">
             {/* Format toolbar (only in edit mode) */}
-            {!isReadingMode && (
-              <FocusModeToolbar 
-                handleFormatClick={(format) => {
-                  if (textareaRef.current) {
-                    const textarea = textareaRef.current;
-                    const { selectionStart, selectionEnd } = textarea;
-                    
-                    // This would be implemented with the markdown editor formatting util
-                    // Let's use the MarkdownToolbar from the markdown-editor feature
-                    // For now we're just referencing this
-                  }
-                }}
-                currentWritingMode={writingMode}
-              />
-            )}
-            
-            {/* Content area */}
-            <div
-              className="content-area"
-              style={{
-                flex: 1,
-                padding: '20px',
-                overflowY: 'auto',
-                background: '#111827',
-                position: 'relative',
-                display: 'flex',
-                justifyContent: 'center'
+            <FocusModeToolbar 
+              handleFormatClick={(format) => {
+                if (textareaRef.current) {
+                  const textarea = textareaRef.current;
+                  // Placeholder for formatting functionality
+                }
               }}
-            >
-              {isReadingMode ? (
-                <TypographyContainer content={content} className="reading-view">
+              currentWritingMode={writingMode}
+            />
+            
+            {isReadingMode ? (
+              <div className="focus-mode-reading">
+                <div className="reading-view">
                   <div 
-                    style={{
-                      padding: '20px',
-                      background: '#1f2937',
-                      borderRadius: '8px',
-                      boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-                      border: '1px solid #374151'
-                    }}
                     dangerouslySetInnerHTML={{ 
                       __html: content
                         .replace(/\n/g, '<br />')
@@ -207,44 +140,20 @@ export const FocusMode: React.FC<FocusModeOptions> = (options) => {
                         .replace(/`(.*?)`/g, '<code>$1</code>')
                     }} 
                   />
-                </TypographyContainer>
-              ) : (
-                <textarea
-                  ref={textareaRef}
-                  value={content}
-                  onChange={handleContentChange}
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                    padding: '20px',
-                    border: '1px solid #374151',
-                    borderRadius: '8px',
-                    fontSize: '16px',
-                    lineHeight: '1.6',
-                    resize: 'none',
-                    outline: 'none',
-                    boxSizing: 'border-box',
-                    backgroundColor: '#1f2937',
-                    color: '#f3f4f6',
-                    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
-                  }}
-                  placeholder="Write your note here..."
-                />
-              )}
-            </div>
+                </div>
+              </div>
+            ) : (
+              <textarea
+                ref={textareaRef}
+                value={content}
+                onChange={handleContentChange}
+                className="focus-mode-editor-area"
+                placeholder="Write your note here..."
+              />
+            )}
             
             {/* Footer */}
-            <div
-              style={{
-                borderTop: '1px solid #374151',
-                padding: '12px 16px',
-                display: 'flex',
-                justifyContent: 'space-between',
-                background: '#111827',
-                fontSize: '14px',
-                color: '#9ca3af'
-              }}
-            >
+            <div className="focus-mode-footer">
               <div className="word-count">
                 {wordCount} words
               </div>
@@ -258,24 +167,10 @@ export const FocusMode: React.FC<FocusModeOptions> = (options) => {
         {/* Save button */}
         <button
           onClick={handleSave}
-          style={{
-            position: 'absolute',
-            bottom: '20px',
-            right: '20px',
-            width: '56px',
-            height: '56px',
-            borderRadius: '28px',
-            background: currentTheme.accent,
-            border: 'none',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-            cursor: 'pointer'
-          }}
+          className="focus-mode-save-button"
           title="Save (Ctrl+S)"
         >
-          <Check size={24} color="white" />
+          <Check size={24} />
         </button>
       </div>
     </div>

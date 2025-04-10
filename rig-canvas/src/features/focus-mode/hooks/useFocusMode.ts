@@ -88,7 +88,7 @@ export const useFocusMode = (options: FocusModeOptions) => {
   // Content state
   const [content, setContent] = useState(initialContent);
   const [isReadingMode, setIsReadingMode] = useState(false);
-  const [showSettingsPanel, setShowSettingsPanel] = useState(false);
+  const [showSettingsPanel, setShowSettingsPanel] = useState(true);
   const previousContentRef = useRef(initialContent);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   

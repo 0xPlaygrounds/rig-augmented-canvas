@@ -24,18 +24,7 @@ const FormatButton: React.FC<{
         e.stopPropagation();
         onClick();
       }}
-      style={{
-        background: 'none',
-        border: 'none',
-        cursor: 'pointer',
-        padding: '6px',
-        borderRadius: '4px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        color: '#d1d5db',
-        transition: 'all 0.2s ease',
-      }}
+      className="focus-mode-format-button"
       title={title}
     >
       {children}
@@ -52,18 +41,8 @@ export const FocusModeToolbar: React.FC<FocusModeToolbarProps> = ({
   currentWritingMode
 }) => {
   return (
-    <div
-      className="format-toolbar"
-      style={{
-        display: 'flex',
-        gap: '4px',
-        padding: '12px 16px',
-        borderBottom: '1px solid #374151',
-        background: '#1f2937',
-        overflowX: 'auto'
-      }}
-    >
-      <div style={{ display: 'flex', alignItems: 'center' }}>
+    <div className="focus-mode-toolbar">
+      <div className="focus-mode-toolbar-group">
         <FormatButton onClick={() => handleFormatClick('**')} title="Bold (Ctrl+B)">
           <Bold size={16} />
         </FormatButton>
@@ -71,7 +50,7 @@ export const FocusModeToolbar: React.FC<FocusModeToolbarProps> = ({
           <Italic size={16} />
         </FormatButton>
         
-        <div style={{ width: '1px', height: '24px', background: '#4b5563', margin: '0 8px' }}></div>
+        <div className="focus-mode-toolbar-divider"></div>
         
         <FormatButton onClick={() => handleFormatClick('# ')} title="Heading 1">
           <Heading1 size={16} />
@@ -80,7 +59,7 @@ export const FocusModeToolbar: React.FC<FocusModeToolbarProps> = ({
           <Heading2 size={16} />
         </FormatButton>
         
-        <div style={{ width: '1px', height: '24px', background: '#4b5563', margin: '0 8px' }}></div>
+        <div className="focus-mode-toolbar-divider"></div>
         
         <FormatButton onClick={() => handleFormatClick('- ')} title="Bullet List">
           <List size={16} />
@@ -89,7 +68,7 @@ export const FocusModeToolbar: React.FC<FocusModeToolbarProps> = ({
           <ListOrdered size={16} />
         </FormatButton>
         
-        <div style={{ width: '1px', height: '24px', background: '#4b5563', margin: '0 8px' }}></div>
+        <div className="focus-mode-toolbar-divider"></div>
         
         <FormatButton onClick={() => handleFormatClick('> ')} title="Quote">
           <Quote size={16} />
@@ -102,14 +81,7 @@ export const FocusModeToolbar: React.FC<FocusModeToolbarProps> = ({
         </FormatButton>
       </div>
       
-      <div style={{ 
-        marginLeft: 'auto', 
-        display: 'flex', 
-        alignItems: 'center', 
-        gap: '8px',
-        color: '#9ca3af',
-        fontSize: '13px'
-      }}>
+      <div className="focus-mode-mode-hint">
         {currentWritingMode === 'brainstorming' && 'Brainstorming: Just get ideas down'}
         {currentWritingMode === 'drafting' && 'Drafting: Focus on content, not perfection'}
         {currentWritingMode === 'editing' && 'Editing: Refine and improve your work'}

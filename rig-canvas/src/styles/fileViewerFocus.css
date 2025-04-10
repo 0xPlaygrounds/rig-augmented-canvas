@@ -1,0 +1,549 @@
+/* ==================================
+   FileViewer & Focus Mode Component Styles
+   Based on Rig Canvas Design System
+   ================================== */
+
+/* ---- FileViewer Styles ---- */
+
+.file-viewer {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background-color: var(--background-secondary);
+  color: var(--foreground-primary);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.file-viewer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-3);
+  border-bottom: 1px solid var(--border-primary);
+  background-color: var(--background-tertiary);
+}
+
+.file-viewer-title {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-medium);
+  color: var(--foreground-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.file-viewer-toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+}
+
+.file-viewer-toolbar-button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: var(--spacing-1);
+  border-radius: var(--radius-md);
+  background: transparent;
+  border: none;
+  color: var(--foreground-secondary);
+  transition: all var(--transition-fast);
+}
+
+.file-viewer-toolbar-button:hover {
+  background-color: var(--background-primary);
+  color: var(--foreground-primary);
+}
+
+.file-viewer-toolbar-button.active {
+  color: var(--accent-primary);
+}
+
+.file-viewer-format-toolbar {
+  display: flex;
+  gap: var(--spacing-1);
+  padding: var(--spacing-2);
+  border-bottom: 1px solid var(--border-primary);
+  background-color: var(--background-tertiary);
+  overflow-x: auto;
+}
+
+.file-viewer-format-button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: var(--spacing-1);
+  border-radius: var(--radius-md);
+  background: transparent;
+  border: none;
+  color: var(--foreground-secondary);
+  transition: all var(--transition-fast);
+}
+
+.file-viewer-format-button:hover {
+  background-color: var(--background-primary);
+  color: var(--foreground-primary);
+}
+
+.file-viewer-divider {
+  width: 1px;
+  height: 24px;
+  background-color: var(--border-primary);
+  margin: 0 var(--spacing-1);
+}
+
+.file-viewer-content {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+}
+
+.file-viewer-editor {
+  flex: 1;
+  overflow: auto;
+  background-color: var(--background-primary);
+}
+
+.file-viewer-editor-textarea {
+  width: 100%;
+  height: 100%;
+  padding: var(--spacing-4);
+  background-color: var(--background-primary);
+  color: var(--foreground-primary);
+  border: none;
+  resize: none;
+  outline: none;
+  font-family: var(--font-mono);
+  line-height: 1.6;
+}
+
+.file-viewer-preview {
+  flex: 1;
+  overflow: auto;
+  padding: var(--spacing-4);
+  background-color: var(--background-secondary);
+}
+
+.file-viewer-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-2) var(--spacing-4);
+  border-top: 1px solid var(--border-primary);
+  background-color: var(--background-tertiary);
+  font-size: var(--font-size-sm);
+  color: var(--foreground-secondary);
+}
+
+/* ---- Focus Mode Styles ---- */
+
+.focus-mode-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: var(--z-modal);
+  width: 100vw;
+  height: 100vh;
+}
+
+.focus-mode-container {
+  width: 95%;
+  max-width: 1200px;
+  height: 90%;
+  background: var(--background-primary);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xl);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+  border: 1px solid var(--border-primary);
+}
+
+.focus-mode-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-4);
+  border-bottom: 1px solid var(--border-primary);
+  background-color: var(--background-secondary);
+}
+
+.focus-mode-title {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+}
+
+.focus-mode-selector {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  background-color: var(--background-tertiary);
+  padding: var(--spacing-1) var(--spacing-3);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-primary);
+  position: relative;
+}
+
+.focus-mode-selector select {
+  background: transparent;
+  border: none;
+  color: var(--foreground-primary);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  padding: var(--spacing-1) var(--spacing-3) var(--spacing-1) 0;
+  appearance: none;
+  width: auto;
+}
+
+.focus-mode-description {
+  margin-left: var(--spacing-4);
+  font-size: var(--font-size-sm);
+  color: var(--foreground-secondary);
+}
+
+.focus-mode-controls {
+  display: flex;
+  gap: var(--spacing-2);
+}
+
+.focus-mode-button {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-1);
+  padding: var(--spacing-1) var(--spacing-3);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-primary);
+  background-color: var(--background-tertiary);
+  color: var(--foreground-secondary);
+  font-size: var(--font-size-sm);
+  transition: all var(--transition-fast);
+  cursor: pointer;
+}
+
+.focus-mode-button:hover {
+  background-color: var(--background-primary);
+  color: var(--foreground-primary);
+}
+
+.focus-mode-button.active {
+  background-color: var(--accent-primary);
+  color: white;
+  border-color: var(--accent-primary);
+}
+
+.focus-mode-main {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.focus-mode-settings {
+  width: 280px;
+  border-right: 1px solid var(--border-primary);
+  background-color: var(--background-secondary);
+  padding: var(--spacing-5);
+  overflow: auto;
+}
+
+.focus-mode-settings-title {
+  margin: 0 0 var(--spacing-5) 0;
+  color: var(--foreground-primary);
+  font-size: var(--font-size-base);
+  border-bottom: 1px solid var(--border-primary);
+  padding-bottom: var(--spacing-2);
+}
+
+.focus-mode-setting-group {
+  margin-bottom: var(--spacing-6);
+}
+
+.focus-mode-setting-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-2);
+}
+
+.focus-mode-setting-name {
+  color: var(--foreground-primary);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+}
+
+.focus-mode-setting-value {
+  color: var(--foreground-secondary);
+  font-size: var(--font-size-xs);
+}
+
+.focus-mode-setting-slider {
+  width: 100%;
+  accent-color: var(--accent-primary);
+}
+
+.focus-mode-setting-range {
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--font-size-xs);
+  color: var(--foreground-secondary);
+  margin-top: var(--spacing-1);
+}
+
+.focus-mode-input {
+  width: 100%;
+  padding: var(--spacing-2) var(--spacing-3);
+  background-color: var(--background-primary);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-md);
+  color: var(--foreground-primary);
+  font-size: var(--font-size-sm);
+  transition: all var(--transition-fast);
+}
+
+.focus-mode-input:focus {
+  border-color: var(--accent-primary);
+  outline: none;
+  box-shadow: var(--shadow-outline);
+}
+
+.focus-mode-hint {
+  font-size: var(--font-size-xs);
+  color: var(--foreground-secondary);
+  margin-top: var(--spacing-1);
+}
+
+.focus-mode-panel {
+  margin-top: var(--spacing-4);
+  background-color: var(--background-primary);
+  padding: var(--spacing-4);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-primary);
+}
+
+.focus-mode-panel-title {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-1);
+  margin: 0 0 var(--spacing-3) 0;
+  color: var(--foreground-primary);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+}
+
+.focus-mode-stat {
+  display: flex;
+  justify-content: space-between;
+  padding: var(--spacing-1) 0;
+  border-bottom: 1px solid var(--border-primary);
+}
+
+.focus-mode-stat-label {
+  color: var(--foreground-secondary);
+}
+
+.focus-mode-stat-value {
+  color: var(--foreground-primary);
+  font-weight: var(--font-weight-medium);
+}
+
+.focus-mode-tag {
+  padding: 4px 8px;
+  background-color: var(--background-tertiary);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-xs);
+  display: inline-block;
+}
+
+.focus-mode-toolbar {
+  display: flex;
+  gap: var(--spacing-1);
+  padding: var(--spacing-3) var(--spacing-4);
+  border-bottom: 1px solid var(--border-primary);
+  background-color: var(--background-secondary);
+  overflow-x: auto;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  box-shadow: var(--shadow-sm);
+  border-top-left-radius: var(--radius-md);
+  border-top-right-radius: var(--radius-md);
+}
+
+/* Hide toolbar in reading mode */
+:root:has(.focus-mode-reading) .focus-mode-toolbar {
+  display: none;
+}
+
+.focus-mode-toolbar-group {
+  display: flex;
+  align-items: center;
+}
+
+.focus-mode-toolbar-divider {
+  width: 1px;
+  height: 24px;
+  background-color: var(--border-primary);
+  margin: 0 var(--spacing-2);
+}
+
+.focus-mode-format-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: var(--spacing-1);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--foreground-secondary);
+  transition: all var(--transition-fast);
+}
+
+.focus-mode-format-button:hover {
+  background-color: var(--background-tertiary);
+  color: var(--foreground-primary);
+}
+
+.focus-mode-mode-hint {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  color: var(--foreground-secondary);
+  font-size: var(--font-size-xs);
+}
+
+.focus-mode-editor {
+  flex: 1;
+  padding: var(--spacing-4);
+  overflow-y: auto;
+  background-color: var(--background-primary);
+  position: relative;
+  display: flex;
+  justify-content: center;
+  padding-top: calc(var(--spacing-4) + 56px); /* Added extra padding to account for the toolbar */
+}
+
+.focus-mode-editor-area {
+  width: 100%;
+  height: 100%;
+  padding: var(--spacing-5);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-md);
+  background-color: var(--background-secondary);
+  color: var(--foreground-primary);
+  font-size: var(--font-size-base);
+  line-height: 1.6;
+  resize: none;
+  outline: none;
+  box-sizing: border-box;
+  box-shadow: var(--shadow-md);
+  font-family: var(--font-mono);
+}
+
+.focus-mode-reading {
+  width: 100%;
+  padding: var(--spacing-5);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-md);
+  background-color: var(--background-secondary);
+  box-shadow: var(--shadow-md);
+  margin-top: calc(var(--spacing-2) - 56px); /* Adjust to account for the hidden toolbar */
+}
+
+/* Reset padding for editor container in reading mode */
+:root:has(.focus-mode-reading) .focus-mode-editor {
+  padding-top: var(--spacing-4); /* Reset to normal padding in reading mode */
+}
+
+.focus-mode-footer {
+  border-top: 1px solid var(--border-primary);
+  padding: var(--spacing-3) var(--spacing-4);
+  display: flex;
+  justify-content: space-between;
+  background-color: var(--background-secondary);
+  font-size: var(--font-size-xs);
+  color: var(--foreground-secondary);
+}
+
+.focus-mode-save-button {
+  position: absolute;
+  bottom: var(--spacing-5);
+  right: var(--spacing-5);
+  width: 56px;
+  height: 56px;
+  border-radius: 28px;
+  background-color: var(--accent-primary);
+  color: white;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.focus-mode-save-button:hover {
+  background-color: var(--accent-hover);
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-2px);
+}
+
+/* Mode-specific theme variables */
+.focus-mode-brainstorming {
+  --focus-accent-color: var(--accent-primary);
+}
+
+.focus-mode-drafting {
+  --focus-accent-color: var(--accent-primary);
+}
+
+.focus-mode-editing {
+  --focus-accent-color: var(--accent-success);
+}
+
+.focus-mode-reviewing {
+  --focus-accent-color: var(--accent-warning);
+}
+
+.light-mode .focus-mode-overlay {
+  background: rgba(255, 255, 255, 0.7);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .focus-mode-container {
+    width: 100%;
+    height: 100%;
+    border-radius: 0;
+  }
+  
+  .focus-mode-main {
+    flex-direction: column;
+  }
+  
+  .focus-mode-settings {
+    width: 100%;
+    height: 300px;
+    border-right: none;
+    border-bottom: 1px solid var(--border-primary);
+  }
+  
+  .file-viewer-format-toolbar,
+  .focus-mode-toolbar {
+    flex-wrap: wrap;
+  }
+}

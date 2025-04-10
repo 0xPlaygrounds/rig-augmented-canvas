@@ -26,27 +26,9 @@ export const FocusModeHeader: React.FC<FocusModeHeaderProps> = ({
   WRITING_MODES,
 }) => {
   return (
-    <div 
-      className="focus-mode-header"
-      style={{
-        borderBottom: '1px solid #374151',
-        padding: '16px',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        background: '#111827'
-      }}
-    >
-      <div className="focus-mode-title" style={{ display: 'flex', alignItems: 'center' }}>
-        <div style={{ 
-          display: 'flex', 
-          alignItems: 'center', 
-          gap: '8px', 
-          background: '#1f2937', 
-          padding: '6px 12px', 
-          borderRadius: '6px',
-          border: '1px solid #374151'
-        }}>
+    <div className="focus-mode-header">
+      <div className="focus-mode-title">
+        <div className="focus-mode-selector">
           {/* Dynamically render the icon based on writing mode */}
           {writingMode === 'brainstorming' && <Target size={16} />}
           {writingMode === 'drafting' && <Edit3 size={16} />}
@@ -55,48 +37,23 @@ export const FocusModeHeader: React.FC<FocusModeHeaderProps> = ({
           <select 
             value={writingMode}
             onChange={(e) => changeWritingMode(e.target.value as WritingMode)}
-            style={{
-              background: 'transparent',
-              border: 'none',
-              color: '#f3f4f6',
-              fontSize: '15px',
-              fontWeight: 500,
-              cursor: 'pointer',
-              padding: '0',
-              appearance: 'none',
-              marginRight: '24px',
-              position: 'relative'
-            }}
           >
             {WRITING_MODES.map(mode => (
               <option key={mode.id} value={mode.id}>{mode.name} Mode</option>
             ))}
           </select>
-          <ChevronDown size={14} style={{ position: 'absolute', marginLeft: '130px', color: '#9ca3af' }} />
+          <ChevronDown size={14} />
         </div>
         
-        <div style={{ marginLeft: '16px', fontSize: '14px', color: '#9ca3af' }}>
+        <div className="focus-mode-description">
           {currentModeInfo.description}
         </div>
       </div>
       
-      <div className="focus-mode-controls" style={{ display: 'flex', gap: '8px' }}>
+      <div className="focus-mode-controls">
         <button
           onClick={toggleReadingMode}
-          className={`mode-toggle-btn ${isReadingMode ? 'active' : ''}`}
-          style={{
-            background: isReadingMode ? 'var(--accent-primary)' : '#1f2937',
-            border: '1px solid #374151',
-            borderRadius: '6px',
-            padding: '6px 12px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-            color: isReadingMode ? '#ffffff' : '#e5e7eb',
-            fontSize: '14px',
-            cursor: 'pointer',
-            transition: 'all 0.2s ease'
-          }}
+          className={`focus-mode-button ${isReadingMode ? 'active' : ''}`}
           title="Toggle Reading Mode (Ctrl+R)"
         >
           <BookOpen size={16} />
@@ -105,20 +62,7 @@ export const FocusModeHeader: React.FC<FocusModeHeaderProps> = ({
         
         <button
           onClick={() => setShowSettingsPanel(!showSettingsPanel)}
-          className={`settings-btn ${showSettingsPanel ? 'active' : ''}`}
-          style={{
-            background: showSettingsPanel ? 'var(--accent-primary)' : '#1f2937',
-            border: '1px solid #374151',
-            borderRadius: '6px',
-            padding: '6px 12px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-            color: showSettingsPanel ? '#ffffff' : '#e5e7eb',
-            fontSize: '14px',
-            cursor: 'pointer',
-            transition: 'all 0.2s ease'
-          }}
+          className={`focus-mode-button ${showSettingsPanel ? 'active' : ''}`}
           title="Toggle Settings (Ctrl+,)"
         >
           <Type size={16} />
@@ -127,17 +71,7 @@ export const FocusModeHeader: React.FC<FocusModeHeaderProps> = ({
         
         <button
           onClick={onClose}
-          style={{
-            background: '#1f2937',
-            border: '1px solid #374151',
-            borderRadius: '6px',
-            cursor: 'pointer',
-            padding: '6px 12px',
-            display: 'flex',
-            alignItems: 'center',
-            color: '#e5e7eb',
-            transition: 'all 0.2s ease'
-          }}
+          className="focus-mode-button"
           title="Close (Esc)"
         >
           <X size={16} />
