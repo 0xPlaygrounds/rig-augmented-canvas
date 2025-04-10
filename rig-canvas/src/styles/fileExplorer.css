@@ -1,0 +1,130 @@
+/* FileExplorer styles that match canvas nodes */
+
+/* Folder styling */
+.folder-item {
+  transition: all 0.2s ease;
+  border-radius: 0.375rem;
+}
+
+.folder-item:hover {
+  background-color: var(--bg-tertiary);
+}
+
+.folder-item-header {
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.375rem;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.folder-item-active {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--accent-primary);
+}
+
+.folder-item-icon {
+  color: var(--accent-primary);
+  margin-right: 0.5rem;
+}
+
+.folder-chevron {
+  color: var(--text-tertiary);
+  margin-right: 0.25rem;
+  transition: transform 0.2s ease;
+}
+
+.folder-chevron-expanded {
+  transform: rotate(90deg);
+}
+
+/* File styling */
+.file-item {
+  padding: 0.5rem 0.75rem;
+  margin: 0.5rem 0;
+  border-radius: 0.375rem;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--node-border);
+}
+
+.file-item:hover {
+  border-color: var(--node-border-selected);
+  background-color: var(--bg-tertiary);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.file-item-active {
+  border-color: var(--accent-primary);
+  background-color: var(--bg-tertiary);
+}
+
+.file-item-icon {
+  color: var(--accent-primary);
+  margin-right: 0.5rem;
+}
+
+/* Button styling */
+.explorer-action-btn {
+  padding: 0.375rem;
+  border-radius: 0.375rem;
+  color: var(--text-tertiary);
+  transition: all 0.2s ease;
+}
+
+.explorer-action-btn:hover {
+  color: var(--accent-primary);
+  background-color: var(--bg-tertiary);
+  transform: scale(1.05);
+}
+
+.explorer-add-btn {
+  color: var(--accent-primary);
+  padding: 0.375rem;
+  border-radius: 0.375rem;
+  transition: all 0.2s ease;
+}
+
+.explorer-add-btn:hover {
+  background-color: var(--bg-tertiary);
+  transform: scale(1.05);
+}
+
+/* Input fields */
+.explorer-input {
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--node-border);
+  border-radius: 0.375rem;
+  padding: 0.375rem 0.75rem;
+  color: var(--text-primary);
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.explorer-input:focus {
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+/* File explorer header */
+.explorer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  background-color: var(--bg-secondary);
+  border-bottom: 1px solid var(--node-border);
+}
+
+/* Content containers */
+.explorer-content {
+  padding: 0.75rem;
+}
+
+/* Transition for all elements */
+.file-explorer * {
+  transition: all 0.2s ease;
+}

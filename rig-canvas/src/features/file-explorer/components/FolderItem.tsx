@@ -84,18 +84,18 @@ export const FolderItem: React.FC<FolderItemProps> = ({
   onFileUpload
 }) => {
   return (
-    <div key={folder.id} className="select-none">
+    <div key={folder.id} className="folder-item select-none mb-2">
       <div 
-        className={`flex items-center py-1 px-2 hover:bg-bg-tertiary group ${level > 0 ? 'ml-4' : ''}`}
+        className={`folder-item-header group ${level > 0 ? 'ml-4' : ''} ${isExpanded ? 'folder-item-active' : ''}`}
         onClick={() => onToggle(folder.id)}
         onDragOver={onDragOver}
         onDrop={(e) => onDrop(e, folder.id)}
       >
-        <div className="mr-1 text-text-tertiary">
-          {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+        <div className={`folder-chevron ${isExpanded ? 'folder-chevron-expanded' : ''}`}>
+          {isExpanded ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
         </div>
         
-        <Folder size={16} className="text-accent-primary mr-2" />
+        <Folder size={18} className="folder-item-icon" />
         
         {isEditing ? (
           <div className="flex items-center flex-grow">
@@ -104,7 +104,7 @@ export const FolderItem: React.FC<FolderItemProps> = ({
               value={editName}
               onChange={(e) => onEditNameChange(e.target.value)}
               onClick={(e) => e.stopPropagation()}
-              className="bg-bg-secondary border border-border-secondary rounded px-2 py-1 text-sm flex-grow text-text-primary focus:outline-none focus:ring-1 focus:ring-accent-primary"
+              className="explorer-input flex-grow text-sm"
               autoFocus
             />
             <button
@@ -125,24 +125,24 @@ export const FolderItem: React.FC<FolderItemProps> = ({
         )}
         
         {!isEditing && (
-          <div className="flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
             <button
               onClick={(e) => { e.stopPropagation(); onNewFolder(folder.id); }}
-              className="p-1 rounded hover:bg-bg-primary text-text-tertiary hover:text-text-secondary transition-colors"
+              className="explorer-action-btn"
               title="New Folder"
             >
-              <FolderPlus size={16} />
+              <FolderPlus size={15} />
             </button>
             
             <button
               onClick={(e) => { e.stopPropagation(); onNewNote(folder.id); }}
-              className="p-1 rounded hover:bg-bg-primary text-text-tertiary hover:text-text-secondary transition-colors"
+              className="explorer-action-btn"
               title="New Note"
             >
-              <FilePlus size={16} />
+              <FilePlus size={15} />
             </button>
             
-            <label className="p-1 rounded hover:bg-bg-primary text-text-tertiary hover:text-text-secondary transition-colors cursor-pointer" title="Upload File">
+            <label className="explorer-action-btn cursor-pointer" title="Upload File">
               <input
                 type="file"
                 className="hidden"
@@ -150,33 +150,33 @@ export const FolderItem: React.FC<FolderItemProps> = ({
                 onChange={(e) => onFileUpload(e, folder.id)}
                 onClick={(e) => e.stopPropagation()}
               />
-              <Upload size={16} />
+              <Upload size={15} />
             </label>
             
             <button
               onClick={(e) => { e.stopPropagation(); onEditFolder(folder); }}
-              className="p-1 rounded hover:bg-bg-primary text-text-tertiary hover:text-text-secondary transition-colors"
+              className="explorer-action-btn"
               title="Rename Folder"
             >
-              <Edit size={16} />
+              <Edit size={15} />
             </button>
             
             {folder.id !== 'root' && (
               <button
                 onClick={(e) => { e.stopPropagation(); onRemoveFolder(folder.id); }}
-                className="p-1 rounded hover:bg-bg-primary text-text-tertiary hover:text-text-secondary transition-colors"
+                className="explorer-action-btn hover:text-red-500"
                 title="Delete Folder"
               >
-                <Trash2 size={16} />
+                <Trash2 size={15} />
               </button>
             )}
             
             <button
               onClick={(e) => { e.stopPropagation(); onSaveNote(folder.id); }}
-              className="p-1 rounded hover:bg-bg-primary text-text-tertiary hover:text-text-secondary transition-colors"
+              className="explorer-action-btn hover:text-accent-primary"
               title="Save Note Here"
             >
-              <Save size={16} />
+              <Save size={15} />
             </button>
           </div>
         )}
@@ -193,7 +193,7 @@ export const FolderItem: React.FC<FolderItemProps> = ({
                 type="text"
                 value={newNoteName}
                 onChange={(e) => onNewNoteNameChange(e.target.value)}
-                className="bg-bg-secondary border border-border-secondary rounded px-2 py-1 text-sm flex-grow text-text-primary focus:outline-none focus:ring-1 focus:ring-accent-primary"
+                className="explorer-input flex-grow text-sm"
                 placeholder="New Note.md"
                 autoFocus
               />
@@ -221,21 +221,21 @@ export const FolderItem: React.FC<FolderItemProps> = ({
                 type="text"
                 value={newFolderName}
                 onChange={(e) => onNewFolderNameChange(e.target.value)}
-                className="bg-bg-secondary border border-border-secondary rounded px-2 py-1 text-sm flex-grow text-text-primary focus:outline-none focus:ring-1 focus:ring-accent-primary"
+                className="explorer-input flex-grow text-sm"
                 placeholder="New Folder"
                 autoFocus
               />
               <button
                 onClick={onCreateNewFolder}
-                className="ml-1 text-accent-primary hover:text-accent-hover"
+                className="ml-2 explorer-action-btn text-accent-primary hover:text-accent-hover"
               >
-                <Save size={14} />
+                <Save size={15} />
               </button>
               <button
                 onClick={onCancelNewFolder}
-                className="ml-1 text-red-500 hover:text-red-700"
+                className="ml-1 explorer-action-btn text-text-tertiary hover:text-red-500"
               >
-                <X size={14} />
+                <X size={15} />
               </button>
             </div>
           )}

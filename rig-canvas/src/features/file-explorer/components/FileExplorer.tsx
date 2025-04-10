@@ -322,22 +322,22 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
 
   return (
     <div 
-      className="h-full overflow-auto bg-bg-secondary border-r border-border-primary"
+      className="h-full overflow-auto bg-node-bg file-explorer"
       onDragOver={handleDragOver}
       onDrop={handleDrop}
     >
-      <div className="p-3 font-medium text-text-primary border-b border-border-primary flex justify-between items-center">
-        <span>Files</span>
+      <div className="explorer-header">
+        <span className="font-medium text-text-primary text-sm">Your Files</span>
         <button
           onClick={handleAddRootFolder}
-          className="p-1 rounded hover:bg-bg-primary text-text-tertiary hover:text-text-secondary transition-colors"
+          className="explorer-add-btn hover:text-accent-hover"
           title="Add Root Folder"
         >
-          <PlusCircle size={16} />
+          <PlusCircle size={18} />
         </button>
       </div>
       
-      <div className="p-2">
+      <div className="explorer-content">
         {creatingRootFolder && (
           <div className="flex items-center py-1 px-2 mb-2">
             <div className="mr-2 text-accent-primary">
