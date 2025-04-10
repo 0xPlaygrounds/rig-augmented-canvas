@@ -1,0 +1,806 @@
+:root {
+  /* Base colors */
+  --background: hsl(0 0% 100%);
+  --foreground: hsl(222.2 47.4% 11.2%);
+  
+  /* Muted backgrounds */
+  --muted: hsl(210 40% 96.1%);
+  --muted-foreground: hsl(215.4 16.3% 46.9%);
+  
+  /* Card backgrounds */
+  --card: hsl(0 0% 100%);
+  --card-foreground: hsl(222.2 47.4% 11.2%);
+  
+  /* Popover backgrounds */
+  --popover: hsl(0 0% 100%);
+  --popover-foreground: hsl(222.2 47.4% 11.2%);
+  
+  /* Borders */
+  --border: hsl(214.3 31.8% 91.4%);
+  
+  /* Input elements */
+  --input: hsl(214.3 31.8% 91.4%);
+  
+  /* Primary action colors */
+  --primary: hsl(222.2 47.4% 11.2%);
+  --primary-foreground: hsl(210 40% 98%);
+  
+  /* Secondary action colors */
+  --secondary: hsl(210 40% 96.1%);
+  --secondary-foreground: hsl(222.2 47.4% 11.2%);
+  
+  /* Accents */
+  --accent: hsl(210 40% 96.1%);
+  --accent-foreground: hsl(222.2 47.4% 11.2%);
+  
+  /* Destructive actions */
+  --destructive: hsl(0 100% 50%);
+  --destructive-foreground: hsl(210 40% 98%);
+  
+  /* Ring focus */
+  --ring: hsl(215 20.2% 65.1%);
+  
+  /* Border radius */
+  --radius: 0.5rem;
+  
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+}
+
+/* Dark mode variables */
+.dark {
+  --background: hsl(224 71% 4%);
+  --foreground: hsl(213 31% 91%);
+  
+  --muted: hsl(223 47% 11%);
+  --muted-foreground: hsl(215.4 16.3% 56.9%);
+  
+  --card: hsl(224 71% 4%);
+  --card-foreground: hsl(213 31% 91%);
+  
+  --popover: hsl(224 71% 4%);
+  --popover-foreground: hsl(215 20.2% 65.1%);
+  
+  --border: hsl(216 34% 17%);
+  --input: hsl(216 34% 17%);
+  
+  --primary: hsl(210 40% 98%);
+  --primary-foreground: hsl(222.2 47.4% 1.2%);
+  
+  --secondary: hsl(222.2 47.4% 11.2%);
+  --secondary-foreground: hsl(210 40% 98%);
+  
+  --accent: hsl(216 34% 17%);
+  --accent-foreground: hsl(210 40% 98%);
+  
+  --destructive: hsl(0 63% 31%);
+  --destructive-foreground: hsl(210 40% 98%);
+  
+  --ring: hsl(216 34% 17%);
+}
+
+/* App-specific variables */
+:root {
+  /* Canvas flow specific colors */
+  --handle-color: var(--primary);
+  --canvas-dots-color: var(--muted-foreground);
+}
+
+/* Default body styling */
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Theme toggle classes */
+html.light {
+  color-scheme: light;
+}
+
+html.dark {
+  color-scheme: dark;
+}
+
+.app {
+  width: 100vw;
+  height: 100vh;
+  background-color: var(--background);
+  color: var(--foreground);
+}
+
+.canvas-flow-wrapper {
+  width: 100%;
+  height: 100%;
+}
+
+/* Fix for the node selection outline issue */
+.react-flow__node {
+  border-radius: var(--radius);
+  box-shadow: none !important; /* Remove the default outline */
+}
+
+/* Only show outline when specifically selected */
+.react-flow__node.selected, 
+.react-flow__node-selected {
+  box-shadow: 0 0 0 1.5px var(--primary) !important;
+  border-color: var(--primary) !important;
+}
+
+/* Ensure node handles are in front of resize controls */
+.react-flow__handle {
+  z-index: 5 !important;
+}
+
+/* Resize control styling */
+.react-flow__resize-control {
+  z-index: 4;
+}
+
+/* Background styling */
+.react-flow__background {
+  background-color: var(--background);
+}
+
+.react-flow__background-pattern {
+  color: var(--canvas-dots-color);
+}
+
+/* Handle styling */
+.react-flow__handle {
+  width: 8px;
+  height: 8px;
+  background-color: var(--primary);
+  border: 1px solid var(--border);
+  opacity: 0.6;
+  transition: opacity 0.2s, transform 0.2s, background-color 0.2s;
+  border-radius: calc(var(--radius) / 2);
+}
+
+.react-flow__handle:hover {
+  background-color: var(--accent);
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+/* Make handles more visible for selected nodes */
+.note-node.selected .react-flow__handle {
+  opacity: 1;
+}
+
+/* Position the left and right handles correctly */
+.react-flow__handle-left {
+  left: -4px;
+}
+
+.react-flow__handle-right {
+  right: -4px;
+}
+
+.react-flow__handle-top {
+  top: -4px;
+}
+
+.react-flow__handle-bottom {
+  bottom: -4px;
+}
+
+/* Controls styling */
+.react-flow__controls {
+  background-color: var(--card);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--border);
+}
+
+.react-flow__controls-button {
+  background-color: var(--card);
+  border-bottom: 1px solid var(--border);
+  color: var(--foreground);
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.react-flow__controls-button:hover {
+  background-color: var(--accent);
+  color: var(--accent-foreground);
+}
+
+.react-flow__controls-button:last-child {
+  border-bottom: none;
+}
+
+.react-flow__controls-button svg {
+  fill: var(--foreground);
+  transition: fill 0.2s;
+}
+
+.react-flow__controls-button:hover svg {
+  fill: var(--accent-foreground);
+}
+
+/* Note Node - using Card pattern */
+.note-node {
+  background: var(--card);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  padding: 0;
+  box-shadow: var(--shadow-md);
+  /* Ensure the node exactly matches its content size */
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Basic node styling */
+.react-flow__node-note {
+  will-change: transform;
+}
+
+.note-node.selected {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 1px var(--primary), var(--shadow-md);
+}
+
+.note-node-header {
+  padding: 10px;
+  border-bottom: 1px solid var(--border);
+  background-color: var(--secondary);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-radius: calc(var(--radius) - 1px) calc(var(--radius) - 1px) 0 0;
+  position: relative;
+}
+
+.note-node-title {
+  font-weight: 600;
+  margin: 0;
+  color: var(--secondary-foreground);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+
+.note-node-controls {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+}
+
+.note-node-delete, .note-node-size {
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: var(--muted-foreground);
+  font-size: 16px;
+  line-height: 1;
+  border-radius: 9999px;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.note-node-delete:hover, .note-node-size:hover {
+  background-color: var(--accent);
+  color: var(--accent-foreground);
+}
+
+.note-node-delete:hover {
+  color: var(--destructive);
+}
+
+/* Note Size Menu Styling */
+.note-size-menu {
+  position: absolute;
+  left: 100%; /* Position at the right edge of the node */
+  top: 0;
+  background-color: var(--popover);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-md);
+  z-index: 100;
+  width: 180px;
+  overflow: hidden;
+  margin-left: 8px; /* Small gap from the node */
+  animation: slideIn 150ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.note-size-menu-header {
+  padding: 8px 12px;
+  font-weight: 600;
+  font-size: 0.75rem;
+  border-bottom: 1px solid var(--border);
+  color: var(--popover-foreground);
+  background-color: var(--popover);
+}
+
+.note-size-menu-options {
+  display: flex;
+  flex-direction: column;
+}
+
+.note-size-menu-option {
+  padding: 8px 12px;
+  text-align: left;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  color: var(--popover-foreground);
+  font-size: 0.75rem;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.note-size-menu-option:last-child {
+  border-bottom: none;
+}
+
+.note-size-menu-option:hover {
+  background-color: var(--accent);
+  color: var(--accent-foreground);
+}
+
+.note-node-content {
+  padding: 10px;
+  height: calc(100% - 42px);
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+}
+
+.note-textarea {
+  width: 100%;
+  height: 100%;
+  border: none;
+  border-radius: calc(var(--radius) / 2);
+  resize: none;
+  padding: 8px;
+  outline: none;
+  font-family: inherit;
+  background-color: var(--muted);
+  color: var(--foreground);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  box-sizing: border-box;
+}
+
+.note-textarea:focus {
+  background-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--ring);
+}
+
+/* Help icon styling */
+.help-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius);
+  background-color: var(--secondary);
+  color: var(--secondary-foreground);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+  padding: 0;
+}
+
+.help-icon:hover {
+  background-color: var(--accent);
+  color: var(--accent-foreground);
+}
+
+.help-icon:active {
+  transform: translateY(1px);
+}
+
+.help-icon:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--background), 0 0 0 4px var(--ring);
+}
+
+/* Modal help dialog */
+.help-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0s linear 0.3s;
+}
+
+.help-modal-overlay.visible {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 0.3s ease, visibility 0s linear;
+}
+
+.help-modal {
+  background-color: var(--card);
+  color: var(--card-foreground);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-xl);
+  width: 90%;
+  max-width: 600px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  transform: translateY(20px);
+  transition: transform 0.3s ease;
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.help-modal-overlay.visible .help-modal {
+  transform: translateY(0);
+}
+
+.help-modal-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: var(--secondary);
+}
+
+.help-modal-header h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--secondary-foreground);
+}
+
+.close-modal-button {
+  background: none;
+  border: none;
+  color: var(--muted-foreground);
+  width: 32px;
+  height: 32px;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.close-modal-button:hover {
+  background-color: var(--accent);
+  color: var(--accent-foreground);
+}
+
+.help-modal-content {
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.help-modal-content h3 {
+  color: var(--card-foreground);
+  font-size: 1.125rem;
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+.help-modal-content h3:first-child {
+  margin-top: 0;
+}
+
+.help-modal-content p {
+  margin: 0.75rem 0;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--muted-foreground);
+}
+
+.help-modal-content ul {
+  margin: 0.75rem 0;
+  padding-left: 1.5rem;
+}
+
+.help-modal-content li {
+  margin: 0.375rem 0;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--muted-foreground);
+}
+
+/* Top controls panel with help icon, add node and theme toggle */
+.top-controls {
+  display: flex;
+  flex-direction: row;
+  gap: 16px;
+  align-items: center;
+  z-index: 10; /* Ensure controls stay above other elements */
+}
+
+/* Theme Toggle styling */
+.theme-toggle-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px;
+  padding-right: 8px;
+  border-radius: var(--radius);
+  background-color: var(--secondary);
+  border: 1px solid var(--border);
+  margin-right: 4px;
+}
+
+.theme-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+}
+
+.sun-icon, .moon-icon {
+  width: 16px;
+  height: 16px;
+  color: var(--secondary-foreground);
+}
+
+.theme-toggle-switch {
+  position: relative;
+  width: 48px;
+  height: 24px;
+  border-radius: 12px;
+  background-color: var(--muted);
+  cursor: pointer;
+  border: none;
+  padding: 0;
+  transition: background-color 0.2s ease;
+}
+
+.theme-toggle-switch.dark {
+  background-color: var(--primary);
+}
+
+.theme-toggle-slider {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background-color: var(--background);
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.theme-toggle-switch.dark .theme-toggle-slider {
+  transform: translateX(24px);
+  background-color: var(--background);
+}
+
+.theme-toggle-switch:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--background), 0 0 0 4px var(--ring);
+}
+
+.add-node-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--primary);
+  color: var(--primary-foreground);
+  border: none;
+  border-radius: var(--radius);
+  height: 40px;
+  padding: 0 16px;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: background-color 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
+}
+
+.add-node-button:hover {
+  background-color: color-mix(in srgb, var(--primary) 90%, black);
+}
+
+.add-node-button:active {
+  transform: translateY(1px);
+}
+
+.add-node-button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--background), 0 0 0 4px var(--ring);
+}
+
+/* Context Menu - using Popover pattern */
+.context-menu {
+  background-color: var(--popover);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  min-width: 180px;
+  animation: slideIn 150ms cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 50;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.context-menu-option {
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
+  color: var(--popover-foreground);
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  outline: none;
+}
+
+.context-menu-option:hover {
+  background-color: var(--accent);
+  color: var(--accent-foreground);
+}
+
+.context-menu-option:focus-visible {
+  background-color: var(--accent);
+  color: var(--accent-foreground);
+}
+
+.context-menu-option-danger {
+  color: var(--destructive);
+}
+
+.context-menu-option-danger:hover {
+  background-color: var(--destructive);
+  color: var(--destructive-foreground);
+}
+
+.context-menu-header {
+  padding: 10px 16px;
+  font-weight: 600;
+  color: var(--popover-foreground);
+  background-color: var(--popover);
+  border-bottom: 1px solid var(--border);
+  font-size: 0.875rem;
+}
+
+.context-menu-section {
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.context-menu-section:last-child {
+  border-bottom: none;
+}
+
+.context-menu-section-title {
+  padding: 4px 12px;
+  font-size: 0.75rem;
+  color: var(--muted-foreground);
+  font-weight: 500;
+}
+
+.context-menu-color-options {
+  display: flex;
+  padding: 6px 12px;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+}
+
+.context-menu-color-options + .context-menu-color-options {
+  padding-top: 0;
+}
+
+.context-menu-color-option {
+  width: 24px;
+  height: 24px;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: transform 0.1s, box-shadow 0.2s;
+  border: 2px solid var(--border);
+  position: relative;
+}
+
+.context-menu-color-option:hover {
+  transform: scale(1.1);
+  box-shadow: var(--shadow-sm);
+  z-index: 1;
+}
+
+.context-menu-color-option:active {
+  transform: scale(0.95);
+}
+
+.context-menu-color-option:focus-visible {
+  box-shadow: 0 0 0 2px var(--background), 0 0 0 4px var(--ring);
+}
+
+/* Edge context menu specific styling */
+.edge-context-menu {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+/* Edge styling */
+.react-flow__edge-path {
+  stroke: var(--primary);
+  stroke-width: 1.5;
+  transition: stroke 0.2s, stroke-width 0.2s;
+}
+
+.react-flow__edge.selected .react-flow__edge-path,
+.react-flow__edge:focus .react-flow__edge-path,
+.react-flow__edge:focus-visible .react-flow__edge-path {
+  stroke: var(--primary);
+  stroke-width: 2;
+}
+
+/* Edge interaction path (invisible wider path for easier selection) */
+.react-flow__edge-interaction {
+  stroke: transparent;
+  stroke-opacity: 0;
+  cursor: pointer;
+}
+
+/* Edge text styling */
+.react-flow__edge-text {
+  font-size: 0.75rem;
+  fill: var(--foreground);
+}
+
+.react-flow__edge-textbg {
+  fill: var(--popover);
+}
+
+/* Minimap styling */
+.react-flow__minimap {
+  background-color: var(--card);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-md);
+}
+
+.react-flow__minimap-mask {
+  fill: var(--muted);
+  fill-opacity: 0.6;
+}
+
+.react-flow__minimap-node {
+  fill: var(--accent);
+  stroke: var(--border);
+  stroke-width: 1;
+}
+
+.react-flow__minimap-node.selected {
+  fill: var(--primary);
+  stroke: var(--primary);
+  stroke-width: 2;
+}

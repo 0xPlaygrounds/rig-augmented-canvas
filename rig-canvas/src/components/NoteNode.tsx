@@ -1,290 +1,149 @@
+import React, { useState, useCallback, useRef, useEffect } from 'react';
+import { Handle, Position, NodeProps, NodeResizer, useUpdateNodeInternals } from '@xyflow/react';
+
 /**
- * NoteNode Component
+ * Note Node Component
  * 
- * Represents a note node in the canvas. Supports:
- * - Markdown content editing and rendering
- * - Resizing, focus mode, and quick editing
- * - File linking for persistence
- * - Multiple connection points for edges
+ * A customizable node component that represents a note in the canvas
+ * with editing capabilities and resize functionality.
  */
+export type NoteNodeData = {
+  label?: string;
+  text: string;
+  onChange?: (text: string) => void;
+  width?: number;
+  height?: number;
+  initialWidth?: number;
+  initialHeight?: number;
+};
 
-import React, { useState, useCallback, useEffect, useRef, useLayoutEffect } from 'react';
-import { 
-  Handle, 
-  Position, 
-  NodeProps, 
-  NodeResizer, 
-  useUpdateNodeInternals,
-  useNodesInitialized
-} from '@xyflow/react';
-import { Edit, Save, Trash2, Maximize2 } from 'lucide-react';
-import { NoteData } from '../types';
-import { useCanvasStore, useNodeResize } from '../features/canvas';
-import { FocusMode } from '../features/focus-mode';
-import { MarkdownEditor } from '../features/markdown-editor';
-import '../styles/nodeStyles.css';
-
-// Debug flag - controlled from one place
-const DEBUG = import.meta.env.DEV;
-
-// Define the component with proper typing
-const NoteNode: React.FC<NodeProps> = ({ 
+const NoteNode = ({ 
   id, 
   data, 
-  selected,
-  isConnectable 
-}) => {
-  // Cast data to NoteData to access properties safely
-  const nodeData = data as NoteData;
-  const { updateNode, removeNode } = useCanvasStore();
-  const [content, setContent] = useState(nodeData.content || '');
-  const [isEditing, setIsEditing] = useState(false);
-  const [isFocused, setIsFocused] = useState(false);
-  
-  // Use React Flow's updateNodeInternals hook
+  selected, 
+  isConnectable = true 
+}: NodeProps) => {
+  // Cast data to our expected type
+  const nodeData = data as NoteNodeData;
   const updateNodeInternals = useUpdateNodeInternals();
   
-  // Default dimensions if not provided - used for initial values
-  const initialWidth = nodeData.width || 250;
-  const initialHeight = nodeData.height || 150;
-  
-  // State to track dimensions during resize
-  const [nodeDimensions, setNodeDimensions] = useState({
-    width: initialWidth,
-    height: initialHeight
-  });
-  
-  // Node element reference
-  const nodeRef = useRef<HTMLDivElement>(null);
-  
-  // Use our custom resize hook for handling resize operations
-  const { onResize, onResizeEnd, updateNodeElement } = useNodeResize({
-    nodeId: id,
-    nodeData: nodeData,
-    initialDimensions: { width: initialWidth, height: initialHeight }
-  });
-  
-  // Update the hook's reference to our DOM node when it changes
+  // Update node internals when mounting or selection changes
   useEffect(() => {
-    if (nodeRef.current) {
-      updateNodeElement(nodeRef.current);
-    }
-  }, [updateNodeElement]);
-  
-  // Reference to track if the node has been properly initialized
-  const isInitializedRef = useRef(false);
-  
-  // Initial setup with more aggressive updating to ensure node is properly measured
-  useLayoutEffect(() => {
-    // Use layout effect to ensure dimensions are set before any DOM updates
     updateNodeInternals(id);
-    
-    // Multiple updates with increasing delays to ensure React Flow has time to initialize the node
-    const timeoutIds = [25, 50, 100, 200, 300, 500, 800, 1000, 1500].map(delay => 
-      setTimeout(() => {
-        updateNodeInternals(id);
-        if (delay >= 500) {
-          isInitializedRef.current = true;
-        }
-      }, delay)
+    const timeoutIds = [50, 100, 200].map(delay => 
+      setTimeout(() => updateNodeInternals(id), delay)
     );
-    
     return () => timeoutIds.forEach(clearTimeout);
-  }, [id, updateNodeInternals]);
-  
-  // Force update node internals whenever selected state changes
-  useEffect(() => {
-    // More aggressive updates when selected to ensure visibility
-    updateNodeInternals(id);
-    
-    // If selected, update multiple times to ensure visibility
-    if (selected) {
-      const timeoutIds = [50, 200].map(delay => 
-        setTimeout(() => {
-          updateNodeInternals(id);
-        }, delay)
-      );
-      
-      return () => timeoutIds.forEach(clearTimeout);
-    }
-  }, [selected, id, updateNodeInternals]);
+  }, [id, selected, updateNodeInternals]);
 
-  // Update dimensions when node data changes
+  // Handle custom resize events
   useEffect(() => {
-    // When dimensions change, update both local state and node internals
-    const width = nodeData.width || 250;
-    const height = nodeData.height || 150;
-    
-    // Prevent infinite loop by only updating when dimensions actually change
-    if (width !== nodeDimensions.width || height !== nodeDimensions.height) {
-      setNodeDimensions({ width, height });
-      
-      // Initial update of node internals
-      updateNodeInternals(id);
-      
-      // One delayed update is enough
-      const timerId = setTimeout(() => updateNodeInternals(id), 100);
-      return () => clearTimeout(timerId);
-    }
-  }, [nodeData.width, nodeData.height, id, updateNodeInternals, nodeDimensions.width, nodeDimensions.height]);
-  
-  // Separate effect for store updates to prevent infinite loops
-  useEffect(() => {
-    // Only update the store for significant changes or initialization
-    if (nodeData) {
-      const width = nodeData.width || 250;
-      const height = nodeData.height || 150;
-      
-      // Only update if needed and not too frequently, and after initialization
-      if (isInitializedRef.current && 
-          (Math.abs(width - nodeDimensions.width) > 10 || 
-           Math.abs(height - nodeDimensions.height) > 10)) {
-        
-        // Debounce updates to prevent too many state changes
-        const timerId = setTimeout(() => {
-          updateNode(id, { 
-            data: { 
-              ...nodeData, 
-              width: nodeDimensions.width, 
-              height: nodeDimensions.height 
-            } 
-          });
-        }, 200);
-        
-        return () => clearTimeout(timerId);
+    const handleNodeResize = (event: CustomEvent) => {
+      const detail = event.detail;
+      if (detail && detail.id === id) {
+        const nodeElement = document.querySelector(`[data-id="${id}"]`);
+        if (nodeElement) {
+          nodeElement.setAttribute('style', `
+            width: ${detail.width}px !important;
+            height: ${detail.height}px !important;
+            min-width: ${detail.width}px !important;
+            min-height: ${detail.height}px !important;
+          `);
+          updateNodeInternals(id);
+        }
       }
+    };
+    
+    document.addEventListener('node-resize', handleNodeResize as EventListener);
+    return () => {
+      document.removeEventListener('node-resize', handleNodeResize as EventListener);
+    };
+  }, [id, updateNodeInternals]);
+
+  const [isEditing, setIsEditing] = useState(false);
+  const [text, setText] = useState(nodeData.text || '');
+  const [showSizeMenu, setShowSizeMenu] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const nodeRef = useRef<HTMLDivElement>(null);
+
+  // Handle text changes
+  const handleTextChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const newText = e.target.value;
+    setText(newText);
+    if (nodeData.onChange) {
+      nodeData.onChange(newText);
     }
-  }, [id, updateNode, nodeData, nodeDimensions.width, nodeDimensions.height]);
+  }, [nodeData.onChange]);
 
   // Toggle edit mode
-  const toggleEdit = useCallback((e: React.MouseEvent) => {
+  const toggleEditMode = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
     setIsEditing(!isEditing);
-  }, [isEditing]);
-
-  // Handle content change
-  const handleContentChange = useCallback((newContent: string) => {
-    setContent(newContent);
-  }, []);
-
-  // Handle content save
-  const handleContentSave = useCallback(() => {
-    updateNode(id, { data: { ...nodeData, content } });
     
-    // Update node internals when content changes
-    updateNodeInternals(id);
-  }, [id, content, nodeData, updateNode, updateNodeInternals]);
+    if (!isEditing && textareaRef.current) {
+      setTimeout(() => {
+        if (textareaRef.current) {
+          textareaRef.current.focus();
+        }
+      }, 10);
+    }
+    
+    if (isEditing && nodeData.onChange) {
+      nodeData.onChange(text);
+    }
+  }, [isEditing, text, nodeData.onChange]);
 
-  // Delete node
+  // Handle delete button
   const handleDelete = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
-    removeNode(id);
-  }, [id, removeNode]);
+    console.log('Delete node:', id);
+  }, [id]);
 
-  // Toggle focus mode
-  const toggleFocus = useCallback((e: React.MouseEvent) => {
+  // Handle size menu toggle
+  const handleSizeMenuToggle = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
-    setIsFocused(!isFocused);
-  }, [isFocused]);
+    setShowSizeMenu(!showSizeMenu);
+  }, [showSizeMenu]);
 
-  // Create a standard style object for React
-  const nodeStyle = {
-    width: `${nodeDimensions.width}px`,
-    height: `${nodeDimensions.height}px`,
-    minWidth: `${nodeDimensions.width}px`,
-    minHeight: `${nodeDimensions.height}px`,
-    backgroundColor: nodeData.color || 'var(--bg-secondary)',
-    transition: 'none', // Disable transitions during resize
-    // Promote to GPU rendering for smoother resizing
-    transform: 'translate3d(0,0,0)',
-    // Remove any potential interference with the resizer
-    position: 'relative' as const,
-    overflow: 'hidden' as const,
-    // Add these to force size to be respected even with CSS conflicts
-    boxSizing: 'border-box' as const,
-    maxWidth: 'none',
-    maxHeight: 'none',
-  };
+  // Size presets
+  const sizePresets = [
+    { name: 'Small', width: 200, height: 100 },
+    { name: 'Medium', width: 250, height: 150 },
+    { name: 'Large', width: 300, height: 200 },
+    { name: 'Wide', width: 350, height: 120 },
+    { name: 'Tall', width: 200, height: 250 }
+  ];
 
-  // Handle focus mode save
-  const handleFocusModeSave = useCallback((newContent: string) => {
-    setContent(newContent);
-    updateNode(id, { 
-      data: { 
-        ...nodeData, 
-        content: newContent 
-      } 
-    });
+  // Apply resize based on preset
+  const applySize = useCallback((width: number, height: number) => {
+    if (nodeData.onChange) {
+      nodeData.onChange(text);
+    }
     
-    // Update node internals after content change
-    updateNodeInternals(id);
-  }, [id, nodeData, updateNode, updateNodeInternals]);
-  
-  // Handle focus mode close
-  const handleFocusClose = useCallback(() => {
-    setIsFocused(false);
-  }, []);
-
-  // Handle resizer resize event
-  const handleResize = useCallback((event: any, params: { width: number, height: number }) => {
-    // Update local dimensions state
-    setNodeDimensions({ 
-      width: params.width, 
-      height: params.height 
+    // Completely different approach - no direct DOM manipulation
+    // Instead, dispatch a specialized resize event with exact dimensions
+    const event = new CustomEvent('node-resize-preset', {
+      detail: {
+        id,
+        width,
+        height
+      }
     });
+    document.dispatchEvent(event);
     
-    // Call the hook's resize handler
-    onResize(event, params);
-  }, [onResize]);
+    // Close the size menu
+    setShowSizeMenu(false);
+  }, [id, nodeData, text]);
 
   return (
     <>
-      {/* Render focus mode if active */}
-      {isFocused && (
-        <FocusMode
-          initialContent={content}
-          onSave={handleFocusModeSave}
-          onClose={handleFocusClose}
-          initialMode="drafting"
-          enablePomodoro={true}
-        />
-      )}
-      
-      {/* Resize handles with forced visibility and aggressive styling */}
+      {/* Node resizer */}
       <NodeResizer 
-        minWidth={100} 
+        minWidth={100}
         minHeight={50}
-        maxWidth={1200}
-        maxHeight={800}
-        isVisible={selected} 
-        onResize={handleResize}
-        onResizeEnd={onResizeEnd}
-        
-        // Use stronger styling to ensure visibility
+        isVisible={selected}
         lineClassName="border-accent-primary node-resizer-line"
         handleClassName="bg-accent-primary border-2 border-white hover:scale-110 node-resizer-handle"
-        
-        // Explicitly set styles as inline props to override any potential CSS conflicts
-        handleStyle={{ 
-          backgroundColor: "var(--accent-primary)",
-          width: "12px",
-          height: "12px",
-          borderRadius: "50%",
-          border: "2px solid white",
-          zIndex: 1001,
-          position: "absolute",
-          pointerEvents: "all"
-        }}
-        lineStyle={{ 
-          borderColor: "var(--accent-primary)",
-          borderWidth: "2px",
-          zIndex: 1000,
-          position: "absolute",
-          pointerEvents: "none"
-        }}
-        
-        // Disable aspect ratio lock for free resizing
-        keepAspectRatio={false}
       />
       
       {/* Connection handles */}
@@ -292,70 +151,94 @@ const NoteNode: React.FC<NodeProps> = ({
         type="target"
         position={Position.Top}
         isConnectable={isConnectable}
-        className="node-handle"
       />
       
-      <div 
-        ref={nodeRef}
-        className={`note-content p-3 overflow-auto bg-bg-secondary rounded-md border ${
-          selected ? 'border-accent-primary' : 'border-border-primary'
-        }`}
-        style={nodeStyle}
-        onClick={(e) => isEditing && e.stopPropagation()}
-        onDoubleClick={(e) => {
-          // Only enter focus mode on double-click if not already editing
-          if (!isEditing) {
-            e.stopPropagation();
-            setIsFocused(true);
-          }
-        }}
-      >
-        {/* Toolbar */}
-        <div className="note-toolbar flex justify-end mb-2 gap-1">
-          <button
-            onClick={toggleEdit}
-            className="p-1 rounded hover:bg-bg-tertiary text-text-tertiary hover:text-accent-primary transition-colors"
-            title={isEditing ? "Save" : "Edit"}
-          >
-            {isEditing ? <Save size={16} /> : <Edit size={16} />}
-          </button>
-          <button
-            onClick={toggleFocus}
-            className="p-1 rounded hover:bg-bg-tertiary text-text-tertiary hover:text-accent-primary transition-colors"
-            title="Focus Mode"
-          >
-            <Maximize2 size={16} />
-          </button>
-          <button
-            onClick={handleDelete}
-            className="p-1 rounded hover:bg-bg-tertiary text-text-tertiary hover:text-red-500 transition-colors"
-            title="Delete"
-          >
-            <Trash2 size={16} />
-          </button>
+      {/* Note container */}
+      <div className={`note-node ${selected ? 'selected' : ''}`} ref={nodeRef}>
+        {/* Node header */}
+        <div className="note-node-header">
+          <h3 className="note-node-title">{nodeData.label || `Note ${id}`}</h3>
+          <div className="note-node-controls">
+            <button 
+              className="note-node-size"
+              onClick={handleSizeMenuToggle}
+              title="Resize"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M15 3h6v6"></path>
+                <path d="M9 21H3v-6"></path>
+                <path d="M21 3l-7 7"></path>
+                <path d="M3 21l7-7"></path>
+              </svg>
+            </button>
+            <button 
+              className="note-node-delete"
+              onClick={handleDelete}
+              title="Delete"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 6h18"></path>
+                <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+              </svg>
+            </button>
+          </div>
         </div>
         
-        {/* Markdown Editor */}
-        <div className="h-[calc(100%-40px)]" onClick={(e) => e.stopPropagation()}>
-          <MarkdownEditor
-            initialContent={content}
-            onChange={handleContentChange}
-            onSave={handleContentSave}
-            minHeight={Math.max(nodeDimensions.height - 70, 50)}
-            showToolbar={isEditing}
-            showStatusBar={isEditing}
-            readOnly={!isEditing}
-            autoFocus={isEditing}
-          />
+        {/* Note content */}
+        <div className="note-node-content">
+          {isEditing ? (
+            <textarea
+              ref={textareaRef}
+              className="note-textarea"
+              value={text}
+              onChange={handleTextChange}
+              onClick={(e) => e.stopPropagation()}
+              onDoubleClick={(e) => e.stopPropagation()}
+            />
+          ) : (
+            <div 
+              className="note-textarea" 
+              style={{ 
+                overflow: 'auto', 
+                cursor: 'pointer',
+                whiteSpace: 'pre-wrap',
+                backgroundColor: 'var(--muted)',
+              }}
+              onClick={toggleEditMode}
+            >
+              {text || 'Double-click to edit'}
+            </div>
+          )}
         </div>
       </div>
       
+      {/* Bottom handle for connections */}
       <Handle
         type="source"
         position={Position.Bottom}
         isConnectable={isConnectable}
-        className="node-handle"
       />
+      
+      {/* Size menu - absolutely positioned to the right edge of the node */}
+      {showSizeMenu && (
+        <div className="note-size-menu">
+          <div className="note-size-menu-header">
+            Note Size
+          </div>
+          <div className="note-size-menu-options">
+            {sizePresets.map((preset) => (
+              <button 
+                key={preset.name}
+                className="note-size-menu-option"
+                onClick={() => applySize(preset.width, preset.height)}
+              >
+                {preset.name} ({preset.width}×{preset.height})
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
     </>
   );
 };

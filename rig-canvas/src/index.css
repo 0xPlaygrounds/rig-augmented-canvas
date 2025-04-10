@@ -1,6 +1,7 @@
 /* Import custom styles */
 @import './styles/markdown.css';
 @import './styles/controls.css';
+@import './styles/canvasFlow.css';
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
 
 @tailwind base;

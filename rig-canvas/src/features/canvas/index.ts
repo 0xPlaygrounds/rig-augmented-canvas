@@ -1,5 +1,11 @@
-// Export components
-export { Canvas, CanvasWithProvider, default } from './components/Canvas';
+// Export components 
+import { Canvas, CanvasWithProvider, default as CanvasDefault } from './components/CanvasAdapter';
+export { Canvas, CanvasWithProvider };
+export default CanvasDefault;
+
+// Export NoteNode component
+export { default as NoteNode } from '../../components/NoteNode';
+export type { NoteNodeData } from '../../components/NoteNode';
 
 // Export hooks
 export { useCanvas } from './hooks/useCanvas';
