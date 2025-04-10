@@ -43,10 +43,20 @@ interface SidebarProps {
   onFileDrop: (file: FileData) => void;
   /** Callback when a canvas is selected */
   onCanvasSelect: (canvasId: string) => void;
+  /** Callback when the sidebar is toggled (collapsed/expanded) */
+  onToggle?: () => void;
+  /** Whether the sidebar is in collapsed state (narrow) */
+  isCollapsed?: boolean;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ onFileSelect, onFileDrop, onCanvasSelect }) => {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+const Sidebar: React.FC<SidebarProps> = ({ 
+  onFileSelect, 
+  onFileDrop, 
+  onCanvasSelect, 
+  onToggle,
+  isCollapsed = false
+}) => {
+  // Use the provided isCollapsed prop
   const [sidebarWidth, setSidebarWidth] = useState(256); // Default width: 256px
   const minWidth = 200;
   const maxWidth = 500;
@@ -70,7 +80,11 @@ const Sidebar: React.FC<SidebarProps> = ({ onFileSelect, onFileDrop, onCanvasSel
    * Toggles the sidebar between collapsed and expanded states
    */
   const toggleCollapse = () => {
-    setIsCollapsed(!isCollapsed);
+    // Call the external toggle callback if provided
+    if (onToggle) {
+      onToggle();
+    }
+    // Note: The collapsed state is now controlled by the parent component
   };
   
   /**
@@ -171,7 +185,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onFileSelect, onFileDrop, onCanvasSel
 
   if (isCollapsed) {
     return (
-      <div className="h-full flex flex-col bg-bg-secondary border-r border-border-primary w-sidebar-collapsed">
+      <div className="h-full flex flex-col bg-bg-secondary border-r border-border-primary w-sidebar-collapsed transition-all duration-300 shadow-lg">
         <button
           onClick={toggleCollapse}
           className="p-2 hover:bg-bg-tertiary text-text-secondary flex justify-center transition-colors"
@@ -184,7 +198,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onFileSelect, onFileDrop, onCanvasSel
   }
   
   return (
-    <div className="h-full flex flex-col bg-bg-secondary border-r border-border-primary relative" style={{ width: `${sidebarWidth}px` }}>
+    <div className="h-full flex flex-col bg-bg-secondary border-r border-border-primary relative shadow-lg transition-all duration-300" style={{ width: `${sidebarWidth}px` }}>
       <div className="flex justify-between items-center p-3 border-b border-border-primary">
         <div className="font-semibold text-text-primary flex items-center gap-2">
           <div className="w-6 h-6 bg-gradient-to-br from-accent-primary to-purple-500 rounded-md flex items-center justify-center text-white">

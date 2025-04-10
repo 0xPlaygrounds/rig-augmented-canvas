@@ -79,7 +79,14 @@ body.resizing * {
 .file,
 .folder-header,
 .control-button {
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
+}
+
+/* Sidebar positioning and transition */
+.sidebar {
+  z-index: 100;
+  pointer-events: auto;
+  will-change: transform;
 }
 
 /* Connection Handles */

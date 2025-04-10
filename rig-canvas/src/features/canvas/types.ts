@@ -66,6 +66,7 @@ import { FileData } from '../../types';
 
 // Props for the Canvas component
 export interface CanvasProps {
+  canvasId?: string;
   className?: string;
   children?: ReactNode;
   toolbarContent?: ReactNode;

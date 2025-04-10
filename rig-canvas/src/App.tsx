@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import Sidebar from './components/Sidebar';
 import { FileViewer } from './features/file-explorer';
 import CommandPalette from './components/CommandPalette';
@@ -11,9 +11,13 @@ import { ServiceProvider } from './services/ServiceProvider';
 // Import styles
 import './styles/typography.css';
 
+// Types for sidebar state
+type SidebarState = 'expanded' | 'collapsed' | 'hidden';
+
 function App() {
   const { settings } = useSettingsStore();
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  // Sidebar can be in one of three states: 'expanded', 'collapsed', or 'hidden'
+  const [sidebarState, setSidebarState] = useState<SidebarState>('expanded');
   const [selectedFile, setSelectedFile] = useState<FileData | null>(null);
   const [viewMode, setViewMode] = useState<'canvas' | 'file'>('canvas');
   const [isServiceInitialized, setServiceInitialized] = useState(false);
@@ -75,25 +79,60 @@ function App() {
     setCurrentCanvasId(canvasId);
   }, []);
   
-  // Toggle sidebar
-  const toggleSidebar = useCallback(() => {
-    setIsSidebarOpen(prev => !prev);
+  // Sidebar state management
+  const toggleSidebarVisibility = useCallback(() => {
+    setSidebarState(prev => prev === 'hidden' ? 'expanded' : 'hidden');
   }, []);
+
+  const toggleSidebarCollapse = useCallback(() => {
+    setSidebarState(prev => prev === 'expanded' ? 'collapsed' : 'expanded');
+  }, []);
+  
+  // Show the sidebar if it's hidden
+  const showSidebar = useCallback(() => {
+    if (sidebarState === 'hidden') {
+      setSidebarState('expanded');
+    }
+  }, [sidebarState]);
+
+  // Helper to determine if sidebar is visible (either expanded or collapsed)
+  const isSidebarVisible = sidebarState !== 'hidden';
 
   return (
     <UIVisibilityProvider>
-      <div className={`min-h-screen flex ${settings.ui.fadeInUiElements ? 'fade-ui-enabled' : ''}`}>
-        {isSidebarOpen && (
-          <div className="h-screen sidebar">
-            <Sidebar 
-              onFileSelect={handleFileSelect} 
-              onFileDrop={handleFileDrop}
-              onCanvasSelect={handleCanvasSelect}
-            />
-          </div>
+      <div className={`min-h-screen ${settings.ui.fadeInUiElements ? 'fade-ui-enabled' : ''}`}>
+        {/* Dark overlay when sidebar is expanded */}
+        <div 
+          className={`absolute inset-0 bg-black/30 z-5 transition-opacity duration-300 ${sidebarState !== 'expanded' ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
+          onClick={toggleSidebarVisibility}
+        />
+        
+        {/* Sidebar container with absolute positioning */}
+        <div className={`h-screen sidebar absolute top-0 left-0 z-10 transition-all duration-300 ${sidebarState === 'hidden' ? 'invisible opacity-0' : 'visible opacity-100'}`}>
+          <Sidebar 
+            onFileSelect={handleFileSelect} 
+            onFileDrop={handleFileDrop}
+            onCanvasSelect={handleCanvasSelect}
+            onToggle={toggleSidebarCollapse}
+            isCollapsed={sidebarState === 'collapsed'}
+          />
+        </div>
+        
+        {/* Sidebar toggle button - only visible when sidebar is hidden */}
+        {sidebarState === 'hidden' && (
+          <button 
+            onClick={showSidebar}
+            className="absolute top-4 left-4 p-2 bg-bg-secondary rounded-full shadow-lg z-20 hover:bg-bg-tertiary transition-colors"
+            title="Open Sidebar"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-accent-primary">
+              <rect width="18" height="18" x="3" y="3" rx="2" ry="2"></rect>
+              <line x1="9" x2="9" y1="3" y2="21"></line>
+            </svg>
+          </button>
         )}
         
-        <div className="flex-grow h-screen relative">
+        <div className="w-full h-screen relative">
           
           {isLoading ? (
             <div className="flex items-center justify-center h-full">
