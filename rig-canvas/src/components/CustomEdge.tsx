@@ -9,10 +9,11 @@
 import React, { useState } from 'react';
 import { 
   EdgeProps, 
-  getBezierPath, 
+  getBezierPath,
   getSmoothStepPath, 
   getSimpleBezierPath, 
-  getStraightPath
+  getStraightPath,
+  EdgeLabelRenderer
 } from '@xyflow/react';
 
 /**
@@ -121,7 +122,8 @@ const CustomEdge: React.FC<EdgeProps> = ({
   }
   
   // Get the label from props or data
-  const edgeLabel = label || data?.label || '';
+  // Ensure we specifically check for data.label
+  const edgeLabel = label || (data && 'label' in data ? data.label : '');
 
   /**
    * Arrow configuration based on the edge direction
@@ -158,7 +160,7 @@ const CustomEdge: React.FC<EdgeProps> = ({
    * Used to represent special relationships like weak links or temporary connections
    */
   const isAnimated = data?.animated || false;
-  const dashArray = isAnimated ? '5, 5' : undefined;
+  const dashArray = isAnimated ? '5 5' : undefined;
   
   return (
     <>
@@ -216,43 +218,31 @@ const CustomEdge: React.FC<EdgeProps> = ({
         onMouseLeave={() => setIsHovered(false)}
       />
       
-      {/* Edge Label */}
+      {/* Edge Label using EdgeLabelRenderer for better display */}
       {edgeLabel && (
-        <g
-          transform={`translate(${labelX}, ${labelY})`}
-          className="react-flow__edge-label"
-          onMouseEnter={() => setIsHovered(true)}
-          onMouseLeave={() => setIsHovered(false)}
-        >
-          {labelShowBg && (
-            <rect
-              x={-labelBgPadding[0]}
-              y={-labelBgPadding[1]}
-              width={typeof edgeLabel === 'string' ? edgeLabel.length * 8 + labelBgPadding[0] * 2 : 100}
-              height={20 + labelBgPadding[1] * 2}
-              style={{
-                fill: 'var(--background-secondary)',
-                stroke: 'none',
-                ...labelBgStyle,
-              }}
-              rx={labelBgBorderRadius}
-              ry={labelBgBorderRadius}
-            />
-          )}
-          <text
+        <EdgeLabelRenderer>
+          <div
             style={{
-              fontFamily: 'var(--font-sans)',
-              fontSize: 12,
+              position: 'absolute',
+              transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
+              background: 'var(--background-secondary)',
+              color: 'var(--foreground-primary)',
+              padding: '4px 8px',
+              borderRadius: 'var(--radius-md)',
+              fontSize: 'var(--font-size-sm)',
+              fontWeight: 500,
+              border: '1px solid var(--border-primary)',
+              boxShadow: 'var(--shadow-sm)',
               pointerEvents: 'all',
-              fill: 'var(--foreground-primary)',
-              ...labelStyle,
+              whiteSpace: 'nowrap',
             }}
-            dominantBaseline="central"
-            textAnchor="middle"
+            className="nodrag nopan"
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
           >
-            {typeof edgeLabel === 'string' ? edgeLabel : ''}
-          </text>
-        </g>
+            {typeof edgeLabel === 'string' ? edgeLabel : 'Label'}
+          </div>
+        </EdgeLabelRenderer>
       )}
       
       {/* Invisible wider path for easier selection */}

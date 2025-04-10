@@ -185,11 +185,12 @@ const Sidebar: React.FC<SidebarProps> = ({
 
   if (isCollapsed) {
     return (
-      <div className="h-full flex flex-col bg-node-bg border-r border-node-border w-sidebar-collapsed transition-all duration-300 shadow-node">
+      <div className="h-full flex flex-col bg-background-secondary border-r border-border-primary w-12 transition-all duration-300 shadow-md">
         <button
           onClick={toggleCollapse}
-          className="p-3 hover:bg-bg-tertiary hover:text-accent-primary text-text-secondary flex justify-center items-center transition-all rounded-md m-2"
+          className="p-3 hover:bg-background-tertiary hover:text-accent-primary text-foreground-secondary flex justify-center items-center transition-all rounded-md m-2"
           title="Expand Sidebar"
+          aria-label="Expand Sidebar"
         >
           <ChevronRight size={20} />
         </button>
@@ -198,9 +199,9 @@ const Sidebar: React.FC<SidebarProps> = ({
   }
   
   return (
-    <div className="h-full flex flex-col bg-node-bg border-r border-node-border relative shadow-node transition-all duration-300" style={{ width: `${sidebarWidth}px` }}>
-      <div className="flex justify-between items-center p-3 border-b border-node-border bg-bg-secondary">
-        <div className="font-semibold text-text-primary flex items-center gap-2">
+    <div className="h-full flex flex-col bg-background-secondary border-r border-border-primary relative shadow-md transition-all duration-300" style={{ width: `${sidebarWidth}px` }}>
+      <div className="flex justify-between items-center p-3 border-b border-border-primary bg-background-secondary">
+        <div className="font-semibold text-foreground-primary flex items-center gap-2">
           <div className="w-7 h-7 bg-gradient-to-br from-accent-primary to-purple-500 rounded-md flex items-center justify-center text-white shadow-sm">
             R
           </div>
@@ -208,16 +209,19 @@ const Sidebar: React.FC<SidebarProps> = ({
         </div>
         <button
           onClick={toggleCollapse}
-          className="p-1.5 hover:bg-bg-tertiary text-text-secondary rounded-md transition-all hover:text-accent-primary"
+          className="p-1.5 hover:bg-background-tertiary text-foreground-secondary rounded-md transition-all hover:text-accent-primary"
           title="Collapse Sidebar"
+          aria-label="Collapse Sidebar"
         >
           <ChevronLeft size={18} />
         </button>
       </div>
       
-      {/* Resize handle - styled like node resizer */}
-      <div className="absolute top-0 right-0 bottom-0 w-1 cursor-ew-resize z-50 transition-all group hover:w-2 hover:bg-accent-primary/20"
-        style={{ transform: 'translateX(0)' }}
+      {/* Resize handle with improved usability */}
+      <div 
+        className="absolute top-0 right-0 bottom-0 w-2 cursor-ew-resize z-50 transition-colors"
+        style={{ transform: 'translateX(1px)' }}
+        title="Resize sidebar"
         onMouseDown={(e) => {
           e.preventDefault();
           const startX = e.clientX;
@@ -241,14 +245,16 @@ const Sidebar: React.FC<SidebarProps> = ({
           document.addEventListener('mousemove', handleMouseMove);
           document.addEventListener('mouseup', handleMouseUp);
         }}
-      />
+      >
+        <div className="h-full w-0.5 bg-border-primary hover:bg-accent-primary mx-auto"></div>
+      </div>
       
-      <div className="flex border-b border-node-border bg-bg-secondary">
+      <div className="flex border-b border-border-primary bg-background-secondary">
         <button
           className={`flex-1 py-2.5 px-4 font-medium text-sm relative ${
             activeTab === 'files' 
               ? 'text-accent-primary' 
-              : 'text-text-secondary hover:text-text-primary'
+              : 'text-foreground-secondary hover:text-foreground-primary'
           } transition-all`}
           onClick={() => setActiveTab('files')}
         >
@@ -261,7 +267,7 @@ const Sidebar: React.FC<SidebarProps> = ({
           className={`flex-1 py-2.5 px-4 font-medium text-sm relative ${
             activeTab === 'canvases' 
               ? 'text-accent-primary' 
-              : 'text-text-secondary hover:text-text-primary'
+              : 'text-foreground-secondary hover:text-foreground-primary'
           } transition-all`}
           onClick={() => setActiveTab('canvases')}
         >
@@ -282,14 +288,15 @@ const Sidebar: React.FC<SidebarProps> = ({
         </div>
       ) : (
         <div className="flex-grow overflow-auto">
-          <div className="flex justify-between items-center p-3 bg-bg-secondary border-b border-node-border">
-            <div className="font-medium text-text-primary flex items-center">
+          <div className="flex justify-between items-center p-3 bg-background-secondary border-b border-border-primary">
+            <div className="font-medium text-foreground-primary flex items-center">
               <span className="text-sm">Your Canvases</span>
             </div>
             <button
               onClick={handleNewCanvas}
-              className="p-1.5 hover:bg-bg-tertiary text-accent-primary rounded-md transition-all hover:scale-105"
+              className="explorer-add-btn"
               title="New Canvas"
+              aria-label="Create new canvas"
             >
               <Plus size={18} />
             </button>
@@ -297,28 +304,34 @@ const Sidebar: React.FC<SidebarProps> = ({
           
           <div className="p-3">
             {isCreatingCanvas && (
-              <div className="flex items-center py-3 px-4 mb-3 border border-node-border rounded-md shadow-sm bg-bg-secondary">
-                <FileText size={16} className="text-accent-primary mr-3" />
+              <div className="create-item-form mb-3">
+                <div className="create-item-icon">
+                  <FileText size={16} />
+                </div>
                 <input
                   type="text"
                   value={newCanvasName}
                   onChange={(e) => setNewCanvasName(e.target.value)}
-                  className="bg-bg-tertiary/30 border border-node-border rounded-md px-3 py-1.5 text-sm flex-grow text-text-primary focus:outline-none focus:ring-1 focus:ring-accent-primary"
+                  className="explorer-input flex-grow"
                   placeholder="Canvas name..."
                   autoFocus
                 />
-                <button
-                  onClick={createNewCanvas}
-                  className="ml-2 text-accent-primary hover:text-accent-hover p-1.5 hover:bg-bg-tertiary rounded-md transition-all"
-                >
-                  <Save size={16} />
-                </button>
-                <button
-                  onClick={cancelNewCanvas}
-                  className="ml-1 text-text-tertiary hover:text-text-secondary p-1.5 hover:bg-bg-tertiary rounded-md transition-all"
-                >
-                  <X size={16} />
-                </button>
+                <div className="create-item-actions">
+                  <button
+                    onClick={createNewCanvas}
+                    className="explorer-action-btn text-accent-success hover:text-accent-success"
+                    title="Create Canvas"
+                  >
+                    <Save size={16} />
+                  </button>
+                  <button
+                    onClick={cancelNewCanvas}
+                    className="explorer-action-btn text-accent-destructive hover:text-accent-destructive"
+                    title="Cancel"
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
               </div>
             )}
             
@@ -331,12 +344,12 @@ const Sidebar: React.FC<SidebarProps> = ({
                   key={canvas.id}
                   className={`flex items-center py-2.5 px-3 mb-3 rounded-md cursor-pointer group transition-all shadow-sm ${
                     isActive 
-                      ? 'bg-bg-secondary border border-accent-primary' 
-                      : 'bg-bg-secondary/40 border border-node-border hover:border-node-border-selected hover:bg-bg-secondary'
+                      ? 'bg-background-secondary border border-accent-primary' 
+                      : 'bg-background-secondary/40 border border-border-primary hover:border-border-secondary hover:bg-background-tertiary'
                   }`}
                   onClick={() => handleCanvasSelect(canvas.id)}
                 >
-                  <FileText size={18} className={`mr-3 ${isActive ? 'text-accent-primary' : 'text-text-secondary group-hover:text-accent-primary'}`} />
+                  <FileText size={18} className={`mr-3 ${isActive ? 'text-accent-primary' : 'text-foreground-secondary group-hover:text-accent-primary'}`} />
                   
                   {isEditing ? (
                     <div className="flex items-center flex-grow">
@@ -345,42 +358,46 @@ const Sidebar: React.FC<SidebarProps> = ({
                         value={editingCanvas.name}
                         onChange={(e) => setEditingCanvas({ ...editingCanvas, name: e.target.value })}
                         onClick={(e) => e.stopPropagation()}
-                        className="bg-bg-tertiary/30 border border-node-border rounded-md px-3 py-1.5 text-sm flex-grow text-text-primary focus:outline-none focus:ring-1 focus:ring-accent-primary"
+                        className="explorer-input flex-grow"
                         autoFocus
                       />
-                      <button
-                        onClick={(e) => { e.stopPropagation(); saveEditedCanvasName(); }}
-                        className="ml-2 text-accent-primary hover:text-accent-hover p-1.5 hover:bg-bg-tertiary rounded-md transition-all"
-                      >
-                        <Save size={16} />
-                      </button>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); cancelEditCanvasName(); }}
-                        className="ml-1 text-text-tertiary hover:text-text-secondary p-1.5 hover:bg-bg-tertiary rounded-md transition-all"
-                      >
-                        <X size={16} />
-                      </button>
+                      <div className="create-item-actions">
+                        <button
+                          onClick={(e) => { e.stopPropagation(); saveEditedCanvasName(); }}
+                          className="explorer-action-btn text-accent-success hover:text-accent-success"
+                          title="Save"
+                        >
+                          <Save size={16} />
+                        </button>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); cancelEditCanvasName(); }}
+                          className="explorer-action-btn text-accent-destructive hover:text-accent-destructive"
+                          title="Cancel"
+                        >
+                          <X size={16} />
+                        </button>
+                      </div>
                     </div>
                   ) : (
                     <>
-                      <span className="flex-grow truncate text-text-primary font-medium">{canvas.name}</span>
+                      <span className="flex-grow truncate text-foreground-primary font-medium">{canvas.name}</span>
                       
-                      <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="flex opacity-0 group-hover:opacity-100 transition-opacity">
                         <button
                           onClick={(e) => { e.stopPropagation(); handleEditCanvas(canvas); }}
-                          className="p-1.5 rounded-md hover:bg-bg-tertiary text-text-tertiary hover:text-text-primary transition-all"
+                          className="explorer-action-btn"
                           title="Rename Canvas"
                         >
-                          <Edit size={15} />
+                          <Edit size={16} />
                         </button>
                         
                         {!isActive && (
                           <button
                             onClick={(e) => { e.stopPropagation(); removeCanvas(canvas.id); }}
-                            className="p-1.5 rounded-md hover:bg-bg-tertiary text-text-tertiary hover:text-accent-primary transition-all"
+                            className="explorer-action-btn text-foreground-muted hover:text-accent-destructive"
                             title="Delete Canvas"
                           >
-                            <Trash2 size={15} />
+                            <Trash2 size={16} />
                           </button>
                         )}
                       </div>

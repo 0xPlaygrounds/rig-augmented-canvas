@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback } from 'react';
-import { PlusCircle } from 'lucide-react';
+import { PlusCircle, Folder, Save, X } from 'lucide-react';
 import { FolderData, FileData, FileType } from '../../../types';
 import { useFileSystem } from '../';
 import { FileExplorerProps } from '../types';
@@ -322,15 +322,15 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
 
   return (
     <div 
-      className="h-full overflow-auto bg-node-bg file-explorer"
+      className="file-explorer"
       onDragOver={handleDragOver}
       onDrop={handleDrop}
     >
       <div className="explorer-header">
-        <span className="font-medium text-text-primary text-sm">Your Files</span>
+        <span>Your Files</span>
         <button
           onClick={handleAddRootFolder}
-          className="explorer-add-btn hover:text-accent-hover"
+          className="explorer-add-btn"
           title="Add Root Folder"
         >
           <PlusCircle size={18} />
@@ -339,60 +339,34 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
       
       <div className="explorer-content">
         {creatingRootFolder && (
-          <div className="flex items-center py-1 px-2 mb-2">
-            <div className="mr-2 text-accent-primary">
-              <FolderItem
-                folder={fileSystem.rootFolder}
-                level={0}
-                isExpanded={false}
-                isEditing={false}
-                editName={''}
-                newFolderName={''}
-                newNoteName={''}
-                isCreatingFolder={false}
-                isCreatingNote={false}
-                editingFile={null}
-                onToggle={() => {}}
-                onEditFolder={() => {}}
-                onEditNameChange={() => {}}
-                onSaveEditedName={() => {}}
-                onCancelEdit={() => {}}
-                onRemoveFolder={() => {}}
-                onNewFolder={() => {}}
-                onNewFolderNameChange={() => {}}
-                onCreateNewFolder={() => {}}
-                onCancelNewFolder={() => {}}
-                onNewNote={() => {}}
-                onNewNoteNameChange={() => {}}
-                onCreateNewNote={() => {}}
-                onCancelNewNote={() => {}}
-                onFileClick={() => {}}
-                onEditFile={() => {}}
-                onEditFileNameChange={() => {}}
-                onSaveEditedFileName={() => {}}
-                onCancelEditFileName={() => {}}
-                onRemoveFile={() => {}}
-                onSaveNote={() => {}}
-                onDragStart={() => {}}
-                onDragOver={() => {}}
-                onDrop={() => {}}
-                onFileUpload={() => {}}
-              />
+          <div className="create-item-form mb-3">
+            <div className="create-item-icon">
+              <Folder size={16} />
             </div>
             <input
               type="text"
               value={newRootFolderName}
               onChange={(e) => setNewRootFolderName(e.target.value)}
-              className="bg-bg-secondary border border-border-secondary rounded px-2 py-1 text-sm flex-grow text-text-primary focus:outline-none focus:ring-1 focus:ring-accent-primary"
+              className="explorer-input flex-grow"
               placeholder="New Root Folder"
               autoFocus
             />
-            <button
-              onClick={createNewRootFolder}
-              className="ml-1 text-accent-primary hover:text-accent-hover"
-            >
-              <PlusCircle size={14} />
-            </button>
+            <div className="create-item-actions">
+              <button
+                onClick={createNewRootFolder}
+                className="explorer-action-btn text-accent-success hover:text-accent-success"
+                title="Create Folder"
+              >
+                <Save size={16} />
+              </button>
+              <button
+                onClick={cancelNewRootFolder}
+                className="explorer-action-btn text-accent-destructive hover:text-accent-destructive"
+                title="Cancel"
+              >
+                <X size={16} />
+              </button>
+            </div>
           </div>
         )}
         
@@ -480,22 +454,25 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
       </div>
       
       {savingNote && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-4 rounded-md shadow-lg w-80">
-            <h3 className="text-lg font-semibold mb-2">Save Note</h3>
-            <p className="mb-4">
-              Save the current note to folder: <strong>{fileSystem.rootFolder.folders.find(f => f.id === targetFolderId)?.name || 'Root'}</strong>
+        <div className="explorer-modal">
+          <div className="explorer-modal-content">
+            <h3 className="explorer-modal-title">Save Note</h3>
+            <p className="text-foreground-primary mb-4">
+              Save the current note to folder: 
+              <strong className="ml-1 text-accent-primary">
+                {fileSystem.rootFolder.folders.find(f => f.id === targetFolderId)?.name || 'Root'}
+              </strong>
             </p>
-            <div className="flex justify-end space-x-2">
+            <div className="explorer-modal-footer">
               <button
                 onClick={cancelSaveNote}
-                className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300"
+                className="px-4 py-2 bg-background-tertiary text-foreground-primary rounded-md hover:bg-background-tertiary/80 transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={saveNoteToFolder}
-                className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
+                className="px-4 py-2 bg-accent-primary text-white rounded-md hover:bg-accent-hover transition-colors"
               >
                 Save
               </button>

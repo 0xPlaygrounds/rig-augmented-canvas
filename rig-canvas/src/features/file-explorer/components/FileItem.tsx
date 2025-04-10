@@ -56,60 +56,62 @@ export const FileItem: React.FC<FileItemProps> = ({
   return (
     <div
       key={file.id}
-      className="file-item ml-4 group"
+      className="file-item group"
       onClick={() => onFileClick(file)}
       draggable
       onDragStart={(e) => onDragStart(e, file, folderId)}
     >
       <div className="file-item-icon">{renderFileIcon(file.type)}</div>
       
-      <div className="flex-grow">
-        {isEditing ? (
-          <div className="flex items-center">
-            <input
-              type="text"
-              value={editName}
-              onChange={(e) => onEditChange(e.target.value)}
-              onClick={(e) => e.stopPropagation()}
-              className="explorer-input flex-grow text-sm"
-              autoFocus
-            />
+      {isEditing ? (
+        <div className="flex items-center flex-grow">
+          <input
+            type="text"
+            value={editName}
+            onChange={(e) => onEditChange(e.target.value)}
+            onClick={(e) => e.stopPropagation()}
+            className="explorer-input flex-grow"
+            autoFocus
+          />
+          <div className="flex ml-2">
             <button
               onClick={(e) => { e.stopPropagation(); onSaveEdit(); }}
-              className="ml-2 explorer-action-btn text-accent-primary hover:text-accent-hover"
+              className="explorer-action-btn text-accent-success hover:text-accent-success"
+              title="Save"
             >
-              <Save size={15} />
+              <Save size={16} />
             </button>
             <button
               onClick={(e) => { e.stopPropagation(); onCancelEdit(); }}
-              className="ml-1 explorer-action-btn text-text-tertiary hover:text-red-500"
+              className="explorer-action-btn text-accent-destructive hover:text-accent-destructive"
+              title="Cancel"
             >
-              <X size={15} />
+              <X size={16} />
             </button>
           </div>
-        ) : (
-          <span className="text-text-primary font-medium">{file.name}</span>
-        )}
-      </div>
-      
-      {!isEditing && (
-        <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
-          <button
-            onClick={(e) => { e.stopPropagation(); onEditFile(file); }}
-            className="explorer-action-btn"
-            title="Rename File"
-          >
-            <Edit size={15} />
-          </button>
-          
-          <button
-            onClick={(e) => { e.stopPropagation(); onRemoveFile(file.id); }}
-            className="explorer-action-btn hover:text-red-500"
-            title="Delete File"
-          >
-            <Trash2 size={15} />
-          </button>
         </div>
+      ) : (
+        <>
+          <span className="flex-grow font-medium truncate">{file.name}</span>
+          
+          <div className="flex opacity-0 group-hover:opacity-100 transition-opacity">
+            <button
+              onClick={(e) => { e.stopPropagation(); onEditFile(file); }}
+              className="explorer-action-btn"
+              title="Rename File"
+            >
+              <Edit size={16} />
+            </button>
+            
+            <button
+              onClick={(e) => { e.stopPropagation(); onRemoveFile(file.id); }}
+              className="explorer-action-btn text-foreground-muted hover:text-accent-destructive"
+              title="Delete File"
+            >
+              <Trash2 size={16} />
+            </button>
+          </div>
+        </>
       )}
     </div>
   );

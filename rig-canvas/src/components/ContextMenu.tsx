@@ -254,15 +254,16 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
     if (edgeId && edgeLabelInput.trim()) {
       const edge = edges.find(e => e.id === edgeId);
       if (edge) {
-        const updatedEdge = { 
-          ...edge,
+        // Only update the data property, not the entire edge
+        // This matches what the updateEdge function expects
+        updateEdge(edgeId, { 
           data: {
             ...(edge.data || {}),
             label: edgeLabelInput.trim()
           }
-        };
+        });
         
-        updateEdge(edgeId, updatedEdge);
+        console.log(`Added label "${edgeLabelInput.trim()}" to edge ${edgeId}`);
       }
     }
     setShowLabelInput(false);

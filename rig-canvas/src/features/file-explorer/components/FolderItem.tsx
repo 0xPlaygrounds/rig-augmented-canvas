@@ -84,9 +84,9 @@ export const FolderItem: React.FC<FolderItemProps> = ({
   onFileUpload
 }) => {
   return (
-    <div key={folder.id} className="folder-item select-none mb-2">
+    <div key={folder.id} className="folder-item">
       <div 
-        className={`folder-item-header group ${level > 0 ? 'ml-4' : ''} ${isExpanded ? 'folder-item-active' : ''}`}
+        className={`folder-item-header group ${isExpanded ? 'folder-item-active' : ''}`}
         onClick={() => onToggle(folder.id)}
         onDragOver={onDragOver}
         onDrop={(e) => onDrop(e, folder.id)}
@@ -104,34 +104,38 @@ export const FolderItem: React.FC<FolderItemProps> = ({
               value={editName}
               onChange={(e) => onEditNameChange(e.target.value)}
               onClick={(e) => e.stopPropagation()}
-              className="explorer-input flex-grow text-sm"
+              className="explorer-input flex-grow"
               autoFocus
             />
-            <button
-              onClick={(e) => { e.stopPropagation(); onSaveEditedName(); }}
-              className="ml-1 text-accent-primary hover:text-accent-hover"
-            >
-              <Save size={14} />
-            </button>
-            <button
-              onClick={(e) => { e.stopPropagation(); onCancelEdit(); }}
-              className="ml-1 text-red-500 hover:text-red-700"
-            >
-              <X size={14} />
-            </button>
+            <div className="flex ml-2">
+              <button
+                onClick={(e) => { e.stopPropagation(); onSaveEditedName(); }}
+                className="explorer-action-btn text-accent-primary hover:text-accent-hover"
+                title="Save"
+              >
+                <Save size={16} />
+              </button>
+              <button
+                onClick={(e) => { e.stopPropagation(); onCancelEdit(); }}
+                className="explorer-action-btn text-accent-destructive hover:text-accent-destructive"
+                title="Cancel"
+              >
+                <X size={16} />
+              </button>
+            </div>
           </div>
         ) : (
-          <span className="flex-grow">{folder.name}</span>
+          <span className="flex-grow font-medium truncate">{folder.name}</span>
         )}
         
         {!isEditing && (
-          <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="flex opacity-0 group-hover:opacity-100 transition-opacity">
             <button
               onClick={(e) => { e.stopPropagation(); onNewFolder(folder.id); }}
               className="explorer-action-btn"
               title="New Folder"
             >
-              <FolderPlus size={15} />
+              <FolderPlus size={16} />
             </button>
             
             <button
@@ -139,7 +143,7 @@ export const FolderItem: React.FC<FolderItemProps> = ({
               className="explorer-action-btn"
               title="New Note"
             >
-              <FilePlus size={15} />
+              <FilePlus size={16} />
             </button>
             
             <label className="explorer-action-btn cursor-pointer" title="Upload File">
@@ -150,7 +154,7 @@ export const FolderItem: React.FC<FolderItemProps> = ({
                 onChange={(e) => onFileUpload(e, folder.id)}
                 onClick={(e) => e.stopPropagation()}
               />
-              <Upload size={15} />
+              <Upload size={16} />
             </label>
             
             <button
@@ -158,85 +162,93 @@ export const FolderItem: React.FC<FolderItemProps> = ({
               className="explorer-action-btn"
               title="Rename Folder"
             >
-              <Edit size={15} />
+              <Edit size={16} />
             </button>
             
             {folder.id !== 'root' && (
               <button
                 onClick={(e) => { e.stopPropagation(); onRemoveFolder(folder.id); }}
-                className="explorer-action-btn hover:text-red-500"
+                className="explorer-action-btn text-foreground-muted hover:text-accent-destructive"
                 title="Delete Folder"
               >
-                <Trash2 size={15} />
+                <Trash2 size={16} />
               </button>
             )}
             
             <button
               onClick={(e) => { e.stopPropagation(); onSaveNote(folder.id); }}
-              className="explorer-action-btn hover:text-accent-primary"
+              className="explorer-action-btn text-foreground-muted hover:text-accent-success"
               title="Save Note Here"
             >
-              <Save size={15} />
+              <Save size={16} />
             </button>
           </div>
         )}
       </div>
       
       {isExpanded && (
-        <div>
+        <div className="folder-content">
           {isCreatingNote && (
-            <div className="flex items-center py-1 px-2 ml-4">
-              <div className="mr-2 text-blue-500">
+            <div className="create-item-form">
+              <div className="create-item-icon">
                 <FilePlus size={16} />
               </div>
               <input
                 type="text"
                 value={newNoteName}
                 onChange={(e) => onNewNoteNameChange(e.target.value)}
-                className="explorer-input flex-grow text-sm"
+                className="explorer-input flex-grow"
                 placeholder="New Note.md"
                 autoFocus
               />
-              <button
-                onClick={onCreateNewNote}
-                className="ml-1 text-accent-primary hover:text-accent-hover"
-              >
-                <Save size={14} />
-              </button>
-              <button
-                onClick={onCancelNewNote}
-                className="ml-1 text-red-500 hover:text-red-700"
-              >
-                <X size={14} />
-              </button>
+              <div className="create-item-actions">
+                <button
+                  onClick={onCreateNewNote}
+                  className="explorer-action-btn text-accent-success hover:text-accent-success"
+                  title="Create Note"
+                >
+                  <Save size={16} />
+                </button>
+                <button
+                  onClick={onCancelNewNote}
+                  className="explorer-action-btn text-accent-destructive hover:text-accent-destructive"
+                  title="Cancel"
+                >
+                  <X size={16} />
+                </button>
+              </div>
             </div>
           )}
           
           {isCreatingFolder && (
-            <div className="flex items-center py-1 px-2 ml-4">
-              <div className="mr-2 text-accent-primary">
+            <div className="create-item-form">
+              <div className="create-item-icon">
                 <Folder size={16} />
               </div>
               <input
                 type="text"
                 value={newFolderName}
                 onChange={(e) => onNewFolderNameChange(e.target.value)}
-                className="explorer-input flex-grow text-sm"
+                className="explorer-input flex-grow"
                 placeholder="New Folder"
                 autoFocus
               />
-              <button
-                onClick={onCreateNewFolder}
-                className="ml-2 explorer-action-btn text-accent-primary hover:text-accent-hover"
-              >
-                <Save size={15} />
-              </button>
-              <button
-                onClick={onCancelNewFolder}
-                className="ml-1 explorer-action-btn text-text-tertiary hover:text-red-500"
-              >
-                <X size={15} />
-              </button>
+              <div className="create-item-actions">
+                <button
+                  onClick={onCreateNewFolder}
+                  className="explorer-action-btn text-accent-success hover:text-accent-success"
+                  title="Create Folder"
+                >
+                  <Save size={16} />
+                </button>
+                <button
+                  onClick={onCancelNewFolder}
+                  className="explorer-action-btn text-accent-destructive hover:text-accent-destructive"
+                  title="Cancel"
+                >
+                  <X size={16} />
+                </button>
+              </div>
             </div>
           )}
           

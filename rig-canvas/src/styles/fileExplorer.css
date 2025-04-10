@@ -1,130 +1,263 @@
-/* FileExplorer styles that match canvas nodes */
+/* FileExplorer styles based on the Rig Canvas Design System */
 
-/* Folder styling */
-.folder-item {
-  transition: all 0.2s ease;
-  border-radius: 0.375rem;
+/* File Explorer Container */
+.file-explorer {
+  height: 100%;
+  overflow-y: auto;
+  background-color: var(--background-secondary);
+  color: var(--foreground-primary);
+  user-select: none;
+  font-family: var(--font-sans);
 }
 
-.folder-item:hover {
-  background-color: var(--bg-tertiary);
+/* File Explorer Header */
+.explorer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-3) var(--spacing-4);
+  background-color: var(--background-secondary);
+  border-bottom: 1px solid var(--border-primary);
+  position: sticky;
+  top: 0;
+  z-index: var(--z-above);
+}
+
+.explorer-header span {
+  font-weight: var(--font-weight-medium);
+  font-size: var(--font-size-sm);
+  color: var(--foreground-primary);
+}
+
+/* Content Container */
+.explorer-content {
+  padding: var(--spacing-3);
+}
+
+/* Folder Styling */
+.folder-item {
+  margin-bottom: var(--spacing-2);
+  border-radius: var(--radius-lg);
+  transition: background-color var(--transition-fast);
 }
 
 .folder-item-header {
-  padding: 0.5rem 0.75rem;
-  border-radius: 0.375rem;
   display: flex;
   align-items: center;
+  padding: var(--spacing-2) var(--spacing-3);
+  border-radius: var(--radius-md);
   cursor: pointer;
+  border: 1px solid transparent;
+  transition: all var(--transition-fast);
+  min-height: 38px;
+}
+
+.folder-item-header:hover {
+  background-color: var(--background-tertiary);
 }
 
 .folder-item-active {
-  background-color: var(--bg-secondary);
+  background-color: var(--background-tertiary);
   border: 1px solid var(--accent-primary);
 }
 
 .folder-item-icon {
   color: var(--accent-primary);
-  margin-right: 0.5rem;
+  margin-right: var(--spacing-2);
+  flex-shrink: 0;
 }
 
 .folder-chevron {
-  color: var(--text-tertiary);
-  margin-right: 0.25rem;
-  transition: transform 0.2s ease;
+  color: var(--foreground-muted);
+  margin-right: var(--spacing-1);
+  transition: transform var(--transition-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
 }
 
 .folder-chevron-expanded {
   transform: rotate(90deg);
 }
 
-/* File styling */
+/* File Styling */
 .file-item {
-  padding: 0.5rem 0.75rem;
-  margin: 0.5rem 0;
-  border-radius: 0.375rem;
-  transition: all 0.2s ease;
-  cursor: pointer;
   display: flex;
   align-items: center;
-  background-color: var(--bg-secondary);
-  border: 1px solid var(--node-border);
+  padding: var(--spacing-2) var(--spacing-3);
+  margin: var(--spacing-1) 0;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  background-color: var(--background-secondary);
+  border: 1px solid var(--border-primary);
+  transition: all var(--transition-fast);
+  min-height: 38px;
 }
 
 .file-item:hover {
-  border-color: var(--node-border-selected);
-  background-color: var(--bg-tertiary);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border-color: var(--border-secondary);
+  background-color: var(--background-tertiary);
+  box-shadow: var(--shadow-sm);
 }
 
 .file-item-active {
   border-color: var(--accent-primary);
-  background-color: var(--bg-tertiary);
+  background-color: var(--background-tertiary);
 }
 
 .file-item-icon {
-  color: var(--accent-primary);
-  margin-right: 0.5rem;
+  margin-right: var(--spacing-2);
+  flex-shrink: 0;
 }
 
-/* Button styling */
+/* Action Buttons */
 .explorer-action-btn {
-  padding: 0.375rem;
-  border-radius: 0.375rem;
-  color: var(--text-tertiary);
-  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-1);
+  border-radius: var(--radius-md);
+  color: var(--foreground-muted);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  height: 24px;
+  width: 24px;
 }
 
 .explorer-action-btn:hover {
-  color: var(--accent-primary);
-  background-color: var(--bg-tertiary);
-  transform: scale(1.05);
+  color: var(--foreground-primary);
+  background-color: var(--background-tertiary);
+}
+
+.explorer-action-btn:focus {
+  outline: none;
+  box-shadow: var(--shadow-outline);
 }
 
 .explorer-add-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   color: var(--accent-primary);
-  padding: 0.375rem;
-  border-radius: 0.375rem;
-  transition: all 0.2s ease;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  border-radius: var(--radius-md);
+  transition: all var(--transition-fast);
+  height: 28px;
+  width: 28px;
 }
 
 .explorer-add-btn:hover {
-  background-color: var(--bg-tertiary);
-  transform: scale(1.05);
+  background-color: var(--background-tertiary);
+  color: var(--accent-hover);
 }
 
-/* Input fields */
-.explorer-input {
-  background-color: var(--bg-tertiary);
-  border: 1px solid var(--node-border);
-  border-radius: 0.375rem;
-  padding: 0.375rem 0.75rem;
-  color: var(--text-primary);
+.explorer-add-btn:focus {
   outline: none;
-  transition: all 0.2s ease;
+  box-shadow: var(--shadow-outline);
+}
+
+/* Input Fields */
+.explorer-input {
+  background-color: var(--background-tertiary);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-1) var(--spacing-2);
+  color: var(--foreground-primary);
+  font-size: var(--font-size-sm);
+  width: 100%;
+  outline: none;
+  transition: all var(--transition-fast);
 }
 
 .explorer-input:focus {
   border-color: var(--accent-primary);
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+  box-shadow: var(--shadow-outline);
 }
 
-/* File explorer header */
-.explorer-header {
+.explorer-input::placeholder {
+  color: var(--foreground-muted);
+}
+
+/* Creation Forms */
+.create-item-form {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 0.75rem;
-  background-color: var(--bg-secondary);
-  border-bottom: 1px solid var(--node-border);
+  margin-left: var(--spacing-4);
+  padding: var(--spacing-1) var(--spacing-2);
+  margin-top: var(--spacing-1);
+  margin-bottom: var(--spacing-1);
+  border-radius: var(--radius-md);
+  background-color: var(--background-tertiary);
+  border: 1px solid var(--border-primary);
 }
 
-/* Content containers */
-.explorer-content {
-  padding: 0.75rem;
+.create-item-icon {
+  margin-right: var(--spacing-2);
+  color: var(--accent-primary);
+  flex-shrink: 0;
 }
 
-/* Transition for all elements */
-.file-explorer * {
-  transition: all 0.2s ease;
+.create-item-actions {
+  display: flex;
+  align-items: center;
+  margin-left: var(--spacing-1);
+}
+
+/* Hierarchical Structure */
+.folder-content {
+  margin-left: var(--spacing-4);
+  position: relative;
+}
+
+/* Add vertical line for hierarchy visualization */
+.folder-content:before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: calc(var(--spacing-2) * -1);
+  height: 100%;
+  width: 1px;
+  background-color: var(--border-primary);
+  transform: translateX(1px);
+}
+
+/* Modal Styling */
+.explorer-modal {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: var(--z-modal);
+}
+
+.explorer-modal-content {
+  background-color: var(--background-secondary);
+  padding: var(--spacing-4);
+  border-radius: var(--radius-lg);
+  width: 90%;
+  max-width: 320px;
+  box-shadow: var(--shadow-lg);
+}
+
+.explorer-modal-title {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  margin-bottom: var(--spacing-2);
+  color: var(--foreground-primary);
+}
+
+.explorer-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-2);
+  margin-top: var(--spacing-4);
 }
