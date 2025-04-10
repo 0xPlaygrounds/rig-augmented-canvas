@@ -18,6 +18,10 @@ export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   padding?: 'none' | 'sm' | 'md' | 'lg';
   /** Card is selected */
   isSelected?: boolean;
+  /** Card shadow */
+  shadow?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
+  /** Card is interactive */
+  interactive?: boolean;
 }
 
 /**
@@ -30,25 +34,36 @@ export const Card: React.FC<CardProps> = ({
   hover = false,
   padding = 'md',
   isSelected = false,
+  shadow = 'none',
+  interactive = false,
   children,
   ...props
 }) => {
   return (
     <div
       className={cn(
-        'rounded-md',
+        'rounded-lg transition-all duration-150',
         // Background variants
-        variant === 'default' && 'bg-bg-secondary',
-        variant === 'secondary' && 'bg-bg-tertiary',
+        variant === 'default' && 'bg-background-secondary',
+        variant === 'secondary' && 'bg-background-tertiary',
         variant === 'ghost' && 'bg-transparent',
         // Border
         border && 'border',
         border && isSelected ? 'border-accent-primary' : 'border-border-primary',
+        // Shadows
+        shadow === 'sm' && 'shadow-sm',
+        shadow === 'md' && 'shadow-md',
+        shadow === 'lg' && 'shadow-lg',
+        shadow === 'xl' && 'shadow-xl',
+        // Interactive states
+        interactive && 'cursor-pointer',
         // Hover effects
-        hover && 'transition-colors duration-200',
-        hover && variant === 'default' && 'hover:bg-bg-tertiary',
-        hover && variant === 'secondary' && 'hover:bg-bg-secondary',
-        hover && variant === 'ghost' && 'hover:bg-bg-tertiary',
+        hover && interactive && variant === 'default' && 'hover:bg-background-tertiary hover:border-border-secondary',
+        hover && interactive && variant === 'secondary' && 'hover:bg-background-secondary',
+        hover && interactive && variant === 'ghost' && 'hover:bg-background-tertiary',
+        hover && interactive && 'hover:shadow-md',
+        // Selected state
+        isSelected && '!border-accent-primary !shadow-md',
         // Padding
         padding === 'none' && 'p-0',
         padding === 'sm' && 'p-2',

@@ -272,18 +272,20 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
   
   return (
     <div
-      className="absolute bg-bg-secondary rounded-lg shadow-md border border-border-primary py-1 z-50"
+      className="absolute bg-background-secondary rounded-lg shadow-md border border-border-primary py-1 z-50 context-menu"
       style={{ top: y, left: x }}
       onClick={(e) => e.stopPropagation()}
+      role="menu"
+      aria-orientation="vertical"
     >
       <ul className="min-w-[180px]">
         {!nodeId && !edgeId && (
-          <li>
+          <li role="menuitem">
             <button
-              className="w-full text-left px-4 py-2 hover:bg-bg-tertiary text-text-primary flex items-center gap-2 transition-colors"
+              className="w-full text-left px-4 py-2 hover:bg-background-tertiary text-foreground-primary flex items-center gap-2 transition-colors context-menu-option"
               onClick={handleAddNote}
             >
-              <Plus size={16} className="text-accent-primary" />
+              <Plus size={16} className="text-primary" />
               <span>Add Note</span>
             </button>
           </li>
@@ -291,12 +293,12 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
 
         {nodeId && (
           <>
-            <li>
+            <li role="menuitem">
               <button
-                className="w-full text-left px-4 py-2 hover:bg-bg-tertiary text-text-primary flex items-center gap-2 transition-colors"
+                className="w-full text-left px-4 py-2 hover:bg-background-tertiary text-foreground-primary flex items-center gap-2 transition-colors context-menu-option"
                 onClick={handleDeleteNode}
               >
-                <Trash2 size={16} className="text-red-500" />
+                <Trash2 size={16} className="text-destructive" />
                 <span>Delete Note</span>
               </button>
             </li>
@@ -305,84 +307,84 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
 
         {edgeId && !showEdgeTypeMenu && !showEdgeStyleMenu && !showEdgeColorMenu && !showEdgeThicknessMenu && !showLabelInput && (
           <>
-            <li>
+            <li role="menuitem">
               <button
-                className="w-full text-left px-4 py-2 hover:bg-bg-tertiary text-text-primary flex items-center gap-2 transition-colors"
+                className="w-full text-left px-4 py-2 hover:bg-background-tertiary text-foreground-primary flex items-center gap-2 transition-colors context-menu-option"
                 onClick={() => handleChangeEdgeDirection('forward')}
               >
-                <ArrowRight size={16} className="text-accent-primary" />
+                <ArrowRight size={16} className="text-primary" />
                 <span>Forward Direction</span>
               </button>
             </li>
-            <li>
+            <li role="menuitem">
               <button
-                className="w-full text-left px-4 py-2 hover:bg-bg-tertiary text-text-primary flex items-center gap-2 transition-colors"
+                className="w-full text-left px-4 py-2 hover:bg-background-tertiary text-foreground-primary flex items-center gap-2 transition-colors context-menu-option"
                 onClick={() => handleChangeEdgeDirection('backward')}
               >
-                <ArrowLeft size={16} className="text-accent-primary" />
+                <ArrowLeft size={16} className="text-primary" />
                 <span>Backward Direction</span>
               </button>
             </li>
-            <li>
+            <li role="menuitem">
               <button
-                className="w-full text-left px-4 py-2 hover:bg-bg-tertiary text-text-primary flex items-center gap-2 transition-colors"
+                className="w-full text-left px-4 py-2 hover:bg-background-tertiary text-foreground-primary flex items-center gap-2 transition-colors context-menu-option"
                 onClick={() => handleChangeEdgeDirection('bidirectional')}
               >
-                <ArrowLeftRight size={16} className="text-accent-primary" />
+                <ArrowLeftRight size={16} className="text-primary" />
                 <span>Bidirectional</span>
               </button>
             </li>
-            <li className="border-t border-border-primary mt-1 pt-1">
+            <li role="menuitem" className="border-t border-border-primary mt-1 pt-1">
               <button
-                className="w-full text-left px-4 py-2 hover:bg-bg-tertiary text-text-primary flex items-center gap-2 transition-colors"
+                className="w-full text-left px-4 py-2 hover:bg-background-tertiary text-foreground-primary flex items-center gap-2 transition-colors context-menu-option"
                 onClick={() => setShowEdgeTypeMenu(true)}
               >
-                <PenTool size={16} className="text-accent-primary" />
+                <PenTool size={16} className="text-primary" />
                 <span>Change Edge Type</span>
               </button>
             </li>
-            <li>
+            <li role="menuitem">
               <button
-                className="w-full text-left px-4 py-2 hover:bg-bg-tertiary text-text-primary flex items-center gap-2 transition-colors"
+                className="w-full text-left px-4 py-2 hover:bg-background-tertiary text-foreground-primary flex items-center gap-2 transition-colors context-menu-option"
                 onClick={() => setShowEdgeStyleMenu(true)}
               >
-                <LineChart size={16} className="text-accent-primary" />
+                <LineChart size={16} className="text-primary" />
                 <span>Edge Style</span>
               </button>
             </li>
-            <li>
+            <li role="menuitem">
               <button
-                className="w-full text-left px-4 py-2 hover:bg-bg-tertiary text-text-primary flex items-center gap-2 transition-colors"
+                className="w-full text-left px-4 py-2 hover:bg-background-tertiary text-foreground-primary flex items-center gap-2 transition-colors context-menu-option"
                 onClick={() => setShowEdgeColorMenu(true)}
               >
-                <Palette size={16} className="text-accent-primary" />
+                <Palette size={16} className="text-primary" />
                 <span>Edge Color</span>
               </button>
             </li>
-            <li>
+            <li role="menuitem">
               <button
-                className="w-full text-left px-4 py-2 hover:bg-bg-tertiary text-text-primary flex items-center gap-2 transition-colors"
+                className="w-full text-left px-4 py-2 hover:bg-background-tertiary text-foreground-primary flex items-center gap-2 transition-colors context-menu-option"
                 onClick={() => setShowEdgeThicknessMenu(true)}
               >
-                <StretchHorizontal size={16} className="text-accent-primary" />
+                <StretchHorizontal size={16} className="text-primary" />
                 <span>Edge Thickness</span>
               </button>
             </li>
-            <li>
+            <li role="menuitem">
               <button
-                className="w-full text-left px-4 py-2 hover:bg-bg-tertiary text-text-primary flex items-center gap-2 transition-colors"
+                className="w-full text-left px-4 py-2 hover:bg-background-tertiary text-foreground-primary flex items-center gap-2 transition-colors context-menu-option"
                 onClick={() => setShowLabelInput(true)}
               >
-                <Type size={16} className="text-accent-primary" />
+                <Type size={16} className="text-primary" />
                 <span>Add Label</span>
               </button>
             </li>
-            <li className="border-t border-border-primary mt-1 pt-1">
+            <li role="menuitem" className="border-t border-border-primary mt-1 pt-1">
               <button
-                className="w-full text-left px-4 py-2 hover:bg-bg-tertiary text-text-primary flex items-center gap-2 transition-colors"
+                className="w-full text-left px-4 py-2 hover:bg-background-tertiary text-foreground-primary flex items-center gap-2 transition-colors context-menu-option"
                 onClick={handleDeleteEdge}
               >
-                <Unlink size={16} className="text-red-500" />
+                <Unlink size={16} className="text-destructive" />
                 <span>Delete Connection</span>
               </button>
             </li>
@@ -392,51 +394,51 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
         {/* Edge Type Submenu */}
         {edgeId && showEdgeTypeMenu && (
           <>
-            <li className="px-4 py-2 text-text-secondary text-sm font-medium">
+            <li className="px-4 py-2 text-foreground-secondary text-sm font-medium context-menu-header">
               Edge Type
             </li>
-            <li>
+            <li role="menuitem">
               <button
-                className="w-full text-left px-4 py-2 hover:bg-bg-tertiary text-text-primary flex items-center gap-2 transition-colors"
+                className="w-full text-left px-4 py-2 hover:bg-background-tertiary text-foreground-primary flex items-center gap-2 transition-colors context-menu-option"
                 onClick={() => handleChangeEdgeType('bezier')}
               >
-                <PenTool size={16} className="text-accent-primary" />
+                <PenTool size={16} className="text-primary" />
                 <span>Bezier Curve</span>
               </button>
             </li>
-            <li>
+            <li role="menuitem">
               <button
-                className="w-full text-left px-4 py-2 hover:bg-bg-tertiary text-text-primary flex items-center gap-2 transition-colors"
+                className="w-full text-left px-4 py-2 hover:bg-background-tertiary text-foreground-primary flex items-center gap-2 transition-colors context-menu-option"
                 onClick={() => handleChangeEdgeType('straight')}
               >
-                <Minus size={16} className="text-accent-primary" />
+                <Minus size={16} className="text-primary" />
                 <span>Straight Line</span>
               </button>
             </li>
-            <li>
+            <li role="menuitem">
               <button
-                className="w-full text-left px-4 py-2 hover:bg-bg-tertiary text-text-primary flex items-center gap-2 transition-colors"
+                className="w-full text-left px-4 py-2 hover:bg-background-tertiary text-foreground-primary flex items-center gap-2 transition-colors context-menu-option"
                 onClick={() => handleChangeEdgeType('smoothstep')}
               >
-                <LineChart size={16} className="text-accent-primary" />
+                <LineChart size={16} className="text-primary" />
                 <span>Smooth Step</span>
               </button>
             </li>
-            <li>
+            <li role="menuitem">
               <button
-                className="w-full text-left px-4 py-2 hover:bg-bg-tertiary text-text-primary flex items-center gap-2 transition-colors"
+                className="w-full text-left px-4 py-2 hover:bg-background-tertiary text-foreground-primary flex items-center gap-2 transition-colors context-menu-option"
                 onClick={() => handleChangeEdgeType('simplebezier')}
               >
-                <LineChart size={16} className="text-accent-primary" />
+                <LineChart size={16} className="text-primary" />
                 <span>Simple Bezier</span>
               </button>
             </li>
-            <li className="border-t border-border-primary mt-1 pt-1">
+            <li role="menuitem" className="border-t border-border-primary mt-1 pt-1">
               <button
-                className="w-full text-left px-4 py-2 hover:bg-bg-tertiary text-text-primary flex items-center gap-2 transition-colors"
+                className="w-full text-left px-4 py-2 hover:bg-background-tertiary text-foreground-primary flex items-center gap-2 transition-colors context-menu-option"
                 onClick={() => setShowEdgeTypeMenu(false)}
               >
-                <ArrowLeft size={16} className="text-accent-primary" />
+                <ArrowLeft size={16} className="text-primary" />
                 <span>Back</span>
               </button>
             </li>
@@ -446,33 +448,33 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
         {/* Edge Style Submenu */}
         {edgeId && showEdgeStyleMenu && (
           <>
-            <li className="px-4 py-2 text-text-secondary text-sm font-medium">
+            <li className="px-4 py-2 text-foreground-secondary text-sm font-medium context-menu-header">
               Edge Style
             </li>
-            <li>
+            <li role="menuitem">
               <button
-                className="w-full text-left px-4 py-2 hover:bg-bg-tertiary text-text-primary flex items-center gap-2 transition-colors"
+                className="w-full text-left px-4 py-2 hover:bg-background-tertiary text-foreground-primary flex items-center gap-2 transition-colors context-menu-option"
                 onClick={() => handleChangeEdgeStyle({ animated: false })}
               >
-                <Minus size={16} className="text-accent-primary" />
+                <Minus size={16} className="text-primary" />
                 <span>Solid Line</span>
               </button>
             </li>
-            <li>
+            <li role="menuitem">
               <button
-                className="w-full text-left px-4 py-2 hover:bg-bg-tertiary text-text-primary flex items-center gap-2 transition-colors"
+                className="w-full text-left px-4 py-2 hover:bg-background-tertiary text-foreground-primary flex items-center gap-2 transition-colors context-menu-option"
                 onClick={() => handleChangeEdgeStyle({ animated: true })}
               >
-                <Zap size={16} className="text-accent-primary" />
+                <Zap size={16} className="text-primary" />
                 <span>Dashed Line</span>
               </button>
             </li>
-            <li className="border-t border-border-primary mt-1 pt-1">
+            <li role="menuitem" className="border-t border-border-primary mt-1 pt-1">
               <button
-                className="w-full text-left px-4 py-2 hover:bg-bg-tertiary text-text-primary flex items-center gap-2 transition-colors"
+                className="w-full text-left px-4 py-2 hover:bg-background-tertiary text-foreground-primary flex items-center gap-2 transition-colors context-menu-option"
                 onClick={() => setShowEdgeStyleMenu(false)}
               >
-                <ArrowLeft size={16} className="text-accent-primary" />
+                <ArrowLeft size={16} className="text-primary" />
                 <span>Back</span>
               </button>
             </li>
@@ -482,69 +484,69 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
         {/* Edge Color Submenu */}
         {edgeId && showEdgeColorMenu && (
           <>
-            <li className="px-4 py-2 text-text-secondary text-sm font-medium">
+            <li className="px-4 py-2 text-foreground-secondary text-sm font-medium context-menu-header">
               Edge Color
             </li>
-            <li>
+            <li role="menuitem">
               <button
-                className="w-full text-left px-4 py-2 hover:bg-bg-tertiary text-text-primary flex items-center gap-2 transition-colors"
+                className="w-full text-left px-4 py-2 hover:bg-background-tertiary text-foreground-primary flex items-center gap-2 transition-colors context-menu-option"
                 onClick={() => handleChangeEdgeColor('#555')}
               >
                 <div className="w-4 h-4 rounded-full bg-gray-600"></div>
                 <span>Gray</span>
               </button>
             </li>
-            <li>
+            <li role="menuitem">
               <button
-                className="w-full text-left px-4 py-2 hover:bg-bg-tertiary text-text-primary flex items-center gap-2 transition-colors"
+                className="w-full text-left px-4 py-2 hover:bg-background-tertiary text-foreground-primary flex items-center gap-2 transition-colors context-menu-option"
                 onClick={() => handleChangeEdgeColor('#3b82f6')}
               >
                 <div className="w-4 h-4 rounded-full bg-blue-500"></div>
                 <span>Blue</span>
               </button>
             </li>
-            <li>
+            <li role="menuitem">
               <button
-                className="w-full text-left px-4 py-2 hover:bg-bg-tertiary text-text-primary flex items-center gap-2 transition-colors"
+                className="w-full text-left px-4 py-2 hover:bg-background-tertiary text-foreground-primary flex items-center gap-2 transition-colors context-menu-option"
                 onClick={() => handleChangeEdgeColor('#10b981')}
               >
                 <div className="w-4 h-4 rounded-full bg-green-500"></div>
                 <span>Green</span>
               </button>
             </li>
-            <li>
+            <li role="menuitem">
               <button
-                className="w-full text-left px-4 py-2 hover:bg-bg-tertiary text-text-primary flex items-center gap-2 transition-colors"
+                className="w-full text-left px-4 py-2 hover:bg-background-tertiary text-foreground-primary flex items-center gap-2 transition-colors context-menu-option"
                 onClick={() => handleChangeEdgeColor('#ef4444')}
               >
                 <div className="w-4 h-4 rounded-full bg-red-500"></div>
                 <span>Red</span>
               </button>
             </li>
-            <li>
+            <li role="menuitem">
               <button
-                className="w-full text-left px-4 py-2 hover:bg-bg-tertiary text-text-primary flex items-center gap-2 transition-colors"
+                className="w-full text-left px-4 py-2 hover:bg-background-tertiary text-foreground-primary flex items-center gap-2 transition-colors context-menu-option"
                 onClick={() => handleChangeEdgeColor('#f59e0b')}
               >
                 <div className="w-4 h-4 rounded-full bg-yellow-500"></div>
                 <span>Yellow</span>
               </button>
             </li>
-            <li>
+            <li role="menuitem">
               <button
-                className="w-full text-left px-4 py-2 hover:bg-bg-tertiary text-text-primary flex items-center gap-2 transition-colors"
+                className="w-full text-left px-4 py-2 hover:bg-background-tertiary text-foreground-primary flex items-center gap-2 transition-colors context-menu-option"
                 onClick={() => handleChangeEdgeColor('#8b5cf6')}
               >
                 <div className="w-4 h-4 rounded-full bg-purple-500"></div>
                 <span>Purple</span>
               </button>
             </li>
-            <li className="border-t border-border-primary mt-1 pt-1">
+            <li role="menuitem" className="border-t border-border-primary mt-1 pt-1">
               <button
-                className="w-full text-left px-4 py-2 hover:bg-bg-tertiary text-text-primary flex items-center gap-2 transition-colors"
+                className="w-full text-left px-4 py-2 hover:bg-background-tertiary text-foreground-primary flex items-center gap-2 transition-colors context-menu-option"
                 onClick={() => setShowEdgeColorMenu(false)}
               >
-                <ArrowLeft size={16} className="text-accent-primary" />
+                <ArrowLeft size={16} className="text-primary" />
                 <span>Back</span>
               </button>
             </li>
@@ -554,51 +556,51 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
         {/* Edge Thickness Submenu */}
         {edgeId && showEdgeThicknessMenu && (
           <>
-            <li className="px-4 py-2 text-text-secondary text-sm font-medium">
+            <li className="px-4 py-2 text-foreground-secondary text-sm font-medium context-menu-header">
               Edge Thickness
             </li>
-            <li>
+            <li role="menuitem">
               <button
-                className="w-full text-left px-4 py-2 hover:bg-bg-tertiary text-text-primary flex items-center gap-2 transition-colors"
+                className="w-full text-left px-4 py-2 hover:bg-background-tertiary text-foreground-primary flex items-center gap-2 transition-colors context-menu-option"
                 onClick={() => handleChangeEdgeThickness(1)}
               >
-                <div className="w-12 h-1 bg-gray-600 rounded"></div>
+                <div className="w-12 h-1 bg-foreground-muted rounded"></div>
                 <span>Thin</span>
               </button>
             </li>
-            <li>
+            <li role="menuitem">
               <button
-                className="w-full text-left px-4 py-2 hover:bg-bg-tertiary text-text-primary flex items-center gap-2 transition-colors"
+                className="w-full text-left px-4 py-2 hover:bg-background-tertiary text-foreground-primary flex items-center gap-2 transition-colors context-menu-option"
                 onClick={() => handleChangeEdgeThickness(2)}
               >
-                <div className="w-12 h-2 bg-gray-600 rounded"></div>
+                <div className="w-12 h-2 bg-foreground-muted rounded"></div>
                 <span>Medium</span>
               </button>
             </li>
-            <li>
+            <li role="menuitem">
               <button
-                className="w-full text-left px-4 py-2 hover:bg-bg-tertiary text-text-primary flex items-center gap-2 transition-colors"
+                className="w-full text-left px-4 py-2 hover:bg-background-tertiary text-foreground-primary flex items-center gap-2 transition-colors context-menu-option"
                 onClick={() => handleChangeEdgeThickness(3)}
               >
-                <div className="w-12 h-3 bg-gray-600 rounded"></div>
+                <div className="w-12 h-3 bg-foreground-muted rounded"></div>
                 <span>Thick</span>
               </button>
             </li>
-            <li>
+            <li role="menuitem">
               <button
-                className="w-full text-left px-4 py-2 hover:bg-bg-tertiary text-text-primary flex items-center gap-2 transition-colors"
+                className="w-full text-left px-4 py-2 hover:bg-background-tertiary text-foreground-primary flex items-center gap-2 transition-colors context-menu-option"
                 onClick={() => handleChangeEdgeThickness(4)}
               >
-                <div className="w-12 h-4 bg-gray-600 rounded"></div>
+                <div className="w-12 h-4 bg-foreground-muted rounded"></div>
                 <span>Very Thick</span>
               </button>
             </li>
-            <li className="border-t border-border-primary mt-1 pt-1">
+            <li role="menuitem" className="border-t border-border-primary mt-1 pt-1">
               <button
-                className="w-full text-left px-4 py-2 hover:bg-bg-tertiary text-text-primary flex items-center gap-2 transition-colors"
+                className="w-full text-left px-4 py-2 hover:bg-background-tertiary text-foreground-primary flex items-center gap-2 transition-colors context-menu-option"
                 onClick={() => setShowEdgeThicknessMenu(false)}
               >
-                <ArrowLeft size={16} className="text-accent-primary" />
+                <ArrowLeft size={16} className="text-primary" />
                 <span>Back</span>
               </button>
             </li>
@@ -608,7 +610,7 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
         {/* Edge Label Input */}
         {edgeId && showLabelInput && (
           <>
-            <li className="px-4 py-2 text-text-secondary text-sm font-medium">
+            <li className="px-4 py-2 text-foreground-secondary text-sm font-medium context-menu-header">
               Add Label
             </li>
             <li className="px-4 py-2">
@@ -617,25 +619,31 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
                 value={edgeLabelInput}
                 onChange={(e) => setEdgeLabelInput(e.target.value)}
                 placeholder="Enter label text"
-                className="w-full px-2 py-1 bg-bg-primary border border-border-primary rounded text-text-primary"
+                className="w-full px-3 py-2 bg-background-secondary border border-border-primary rounded-md text-foreground-primary focus:outline-none focus:border-accent-primary focus:shadow-outline"
                 autoFocus
+                aria-label="Edge label text"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    handleSetEdgeLabel();
+                  }
+                }}
               />
             </li>
-            <li>
+            <li role="menuitem">
               <button
-                className="w-full text-left px-4 py-2 hover:bg-bg-tertiary text-text-primary flex items-center gap-2 transition-colors"
+                className="w-full text-left px-4 py-2 hover:bg-background-tertiary text-foreground-primary flex items-center gap-2 transition-colors context-menu-option"
                 onClick={handleSetEdgeLabel}
               >
                 <Type size={16} className="text-accent-primary" />
                 <span>Set Label</span>
               </button>
             </li>
-            <li className="border-t border-border-primary mt-1 pt-1">
+            <li role="menuitem" className="border-t border-border-primary mt-1 pt-1">
               <button
-                className="w-full text-left px-4 py-2 hover:bg-bg-tertiary text-text-primary flex items-center gap-2 transition-colors"
+                className="w-full text-left px-4 py-2 hover:bg-background-tertiary text-foreground-primary flex items-center gap-2 transition-colors context-menu-option"
                 onClick={() => setShowLabelInput(false)}
               >
-                <ArrowLeft size={16} className="text-accent-primary" />
+                <ArrowLeft size={16} className="text-primary" />
                 <span>Back</span>
               </button>
             </li>

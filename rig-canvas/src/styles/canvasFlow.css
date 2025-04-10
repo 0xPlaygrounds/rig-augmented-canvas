@@ -1,101 +1,13 @@
+/* App-specific variables derived from CSS variables defined in index.css */
 :root {
-  /* Base colors */
-  --background: hsl(0 0% 100%);
-  --foreground: hsl(222.2 47.4% 11.2%);
+  /* We're using variables from index.css, so we don't need to redefine most of them */
   
-  /* Muted backgrounds */
-  --muted: hsl(210 40% 96.1%);
-  --muted-foreground: hsl(215.4 16.3% 46.9%);
-  
-  /* Card backgrounds */
-  --card: hsl(0 0% 100%);
-  --card-foreground: hsl(222.2 47.4% 11.2%);
-  
-  /* Popover backgrounds */
-  --popover: hsl(0 0% 100%);
-  --popover-foreground: hsl(222.2 47.4% 11.2%);
-  
-  /* Borders */
-  --border: hsl(214.3 31.8% 91.4%);
-  
-  /* Input elements */
-  --input: hsl(214.3 31.8% 91.4%);
-  
-  /* Primary action colors */
-  --primary: hsl(222.2 47.4% 11.2%);
-  --primary-foreground: hsl(210 40% 98%);
-  
-  /* Secondary action colors */
-  --secondary: hsl(210 40% 96.1%);
-  --secondary-foreground: hsl(222.2 47.4% 11.2%);
-  
-  /* Accents */
-  --accent: hsl(210 40% 96.1%);
-  --accent-foreground: hsl(222.2 47.4% 11.2%);
-  
-  /* Destructive actions */
-  --destructive: hsl(0 100% 50%);
-  --destructive-foreground: hsl(210 40% 98%);
-  
-  /* Ring focus */
-  --ring: hsl(215 20.2% 65.1%);
-  
-  /* Border radius */
-  --radius: 0.5rem;
-  
-  /* Shadows */
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
-}
-
-/* Dark mode variables */
-.dark {
-  --background: hsl(224 71% 4%);
-  --foreground: hsl(213 31% 91%);
-  
-  --muted: hsl(223 47% 11%);
-  --muted-foreground: hsl(215.4 16.3% 56.9%);
-  
-  --card: hsl(224 71% 4%);
-  --card-foreground: hsl(213 31% 91%);
-  
-  --popover: hsl(224 71% 4%);
-  --popover-foreground: hsl(215 20.2% 65.1%);
-  
-  --border: hsl(216 34% 17%);
-  --input: hsl(216 34% 17%);
-  
-  --primary: hsl(210 40% 98%);
-  --primary-foreground: hsl(222.2 47.4% 1.2%);
-  
-  --secondary: hsl(222.2 47.4% 11.2%);
-  --secondary-foreground: hsl(210 40% 98%);
-  
-  --accent: hsl(216 34% 17%);
-  --accent-foreground: hsl(210 40% 98%);
-  
-  --destructive: hsl(0 63% 31%);
-  --destructive-foreground: hsl(210 40% 98%);
-  
-  --ring: hsl(216 34% 17%);
-}
-
-/* App-specific variables */
-:root {
   /* Canvas flow specific colors */
-  --handle-color: var(--primary);
-  --canvas-dots-color: var(--muted-foreground);
+  --handle-color: var(--accent-primary);
+  --canvas-dots-color: var(--foreground-muted);
 }
 
-/* Default body styling */
-body {
-  background-color: var(--background);
-  color: var(--foreground);
-  transition: background-color 0.3s ease, color 0.3s ease;
-}
+/* Default body styling is already defined in index.css */
 
 /* Theme toggle classes */
 html.light {
@@ -109,8 +21,8 @@ html.dark {
 .app {
   width: 100vw;
   height: 100vh;
-  background-color: var(--background);
-  color: var(--foreground);
+  background-color: var(--background-primary);
+  color: var(--foreground-primary);
 }
 
 .canvas-flow-wrapper {
@@ -120,51 +32,51 @@ html.dark {
 
 /* Fix for the node selection outline issue */
 .react-flow__node {
-  border-radius: var(--radius);
+  border-radius: var(--radius-md);
   box-shadow: none !important; /* Remove the default outline */
 }
 
 /* Only show outline when specifically selected */
 .react-flow__node.selected, 
 .react-flow__node-selected {
-  box-shadow: 0 0 0 1.5px var(--primary) !important;
-  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 2px var(--node-selected) !important;
+  border-color: var(--node-selected) !important;
 }
 
 /* Ensure node handles are in front of resize controls */
 .react-flow__handle {
-  z-index: 5 !important;
+  z-index: var(--z-above) !important;
 }
 
 /* Resize control styling */
 .react-flow__resize-control {
-  z-index: 4;
+  z-index: var(--z-normal);
 }
 
 /* Background styling */
 .react-flow__background {
-  background-color: var(--background);
+  background-color: var(--canvas-bg);
 }
 
 .react-flow__background-pattern {
-  color: var(--canvas-dots-color);
+  color: var(--grid-color);
 }
 
 /* Handle styling */
 .react-flow__handle {
   width: 8px;
   height: 8px;
-  background-color: var(--primary);
-  border: 1px solid var(--border);
+  background-color: var(--handle-color);
+  border: 1px solid var(--border-primary);
   opacity: 0.6;
-  transition: opacity 0.2s, transform 0.2s, background-color 0.2s;
-  border-radius: calc(var(--radius) / 2);
+  transition: opacity var(--transition-fast), transform var(--transition-fast), background-color var(--transition-fast);
+  border-radius: var(--radius-full);
 }
 
 .react-flow__handle:hover {
-  background-color: var(--accent);
+  background-color: var(--primary-hover);
   opacity: 1;
-  transform: scale(1.1);
+  transform: scale(1.2);
 }
 
 /* Make handles more visible for selected nodes */
@@ -191,23 +103,23 @@ html.dark {
 
 /* Controls styling */
 .react-flow__controls {
-  background-color: var(--card);
-  border-radius: var(--radius);
+  background-color: var(--background-secondary);
+  border-radius: var(--radius-md);
   overflow: hidden;
   box-shadow: var(--shadow-md);
-  border: 1px solid var(--border);
+  border: 1px solid var(--border-primary);
 }
 
 .react-flow__controls-button {
-  background-color: var(--card);
-  border-bottom: 1px solid var(--border);
-  color: var(--foreground);
-  transition: background-color 0.2s, color 0.2s;
+  background-color: var(--background-secondary);
+  border-bottom: 1px solid var(--border-primary);
+  color: var(--foreground-primary);
+  transition: background-color var(--transition-fast), color var(--transition-fast);
 }
 
 .react-flow__controls-button:hover {
-  background-color: var(--accent);
-  color: var(--accent-foreground);
+  background-color: var(--background-tertiary);
+  color: var(--primary);
 }
 
 .react-flow__controls-button:last-child {
@@ -215,19 +127,19 @@ html.dark {
 }
 
 .react-flow__controls-button svg {
-  fill: var(--foreground);
-  transition: fill 0.2s;
+  fill: var(--foreground-primary);
+  transition: fill var(--transition-fast);
 }
 
 .react-flow__controls-button:hover svg {
-  fill: var(--accent-foreground);
+  fill: var(--primary);
 }
 
 /* Note Node - using Card pattern */
 .note-node {
-  background: var(--card);
-  border-radius: var(--radius);
-  border: 1px solid var(--border);
+  background: var(--node-bg);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--node-border);
   padding: 0;
   box-shadow: var(--shadow-md);
   /* Ensure the node exactly matches its content size */
@@ -236,6 +148,7 @@ html.dark {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  transition: border-color var(--transition-normal), box-shadow var(--transition-normal);
 }
 
 /* Basic node styling */
@@ -244,32 +157,32 @@ html.dark {
 }
 
 .note-node.selected {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 1px var(--primary), var(--shadow-md);
+  border-color: var(--node-selected);
+  box-shadow: 0 0 0 2px var(--node-selected), var(--shadow-lg);
 }
 
 .note-node-header {
-  padding: 10px;
-  border-bottom: 1px solid var(--border);
-  background-color: var(--secondary);
+  padding: var(--spacing-2) var(--spacing-3);
+  border-bottom: 1px solid var(--node-border);
+  background-color: var(--background-tertiary);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-radius: calc(var(--radius) - 1px) calc(var(--radius) - 1px) 0 0;
+  border-radius: calc(var(--radius-md) - 1px) calc(var(--radius-md) - 1px) 0 0;
   position: relative;
 }
 
 .note-node-title {
-  font-weight: 600;
+  font-weight: var(--font-weight-medium);
   margin: 0;
-  color: var(--secondary-foreground);
-  font-size: 0.875rem;
-  line-height: 1.25rem;
+  color: var(--foreground-primary);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-sm);
 }
 
 .note-node-controls {
   display: flex;
-  gap: 5px;
+  gap: var(--spacing-1);
   align-items: center;
 }
 
@@ -277,22 +190,22 @@ html.dark {
   cursor: pointer;
   border: none;
   background: none;
-  color: var(--muted-foreground);
-  font-size: 16px;
+  color: var(--foreground-muted);
+  font-size: var(--font-size-base);
   line-height: 1;
-  border-radius: 9999px;
+  border-radius: var(--radius-full);
   width: 24px;
   height: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 0;
-  transition: background-color 0.2s ease, color 0.2s ease;
+  transition: background-color var(--transition-fast), color var(--transition-fast);
 }
 
 .note-node-delete:hover, .note-node-size:hover {
-  background-color: var(--accent);
-  color: var(--accent-foreground);
+  background-color: var(--background-tertiary);
+  color: var(--foreground-primary);
 }
 
 .note-node-delete:hover {
@@ -304,24 +217,24 @@ html.dark {
   position: absolute;
   left: 100%; /* Position at the right edge of the node */
   top: 0;
-  background-color: var(--popover);
-  border-radius: var(--radius);
-  border: 1px solid var(--border);
-  box-shadow: var(--shadow-md);
-  z-index: 100;
+  background-color: var(--background-secondary);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-primary);
+  box-shadow: var(--shadow-lg);
+  z-index: var(--z-modal);
   width: 180px;
   overflow: hidden;
-  margin-left: 8px; /* Small gap from the node */
-  animation: slideIn 150ms cubic-bezier(0.16, 1, 0.3, 1);
+  margin-left: var(--spacing-2); /* Small gap from the node */
+  animation: slideIn var(--transition-fast) cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .note-size-menu-header {
-  padding: 8px 12px;
-  font-weight: 600;
-  font-size: 0.75rem;
-  border-bottom: 1px solid var(--border);
-  color: var(--popover-foreground);
-  background-color: var(--popover);
+  padding: var(--spacing-2) var(--spacing-3);
+  font-weight: var(--font-weight-medium);
+  font-size: var(--font-size-xs);
+  border-bottom: 1px solid var(--border-primary);
+  color: var(--foreground-primary);
+  background-color: var(--background-tertiary);
 }
 
 .note-size-menu-options {
@@ -330,15 +243,15 @@ html.dark {
 }
 
 .note-size-menu-option {
-  padding: 8px 12px;
+  padding: var(--spacing-2) var(--spacing-3);
   text-align: left;
   background: none;
   border: none;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--border-primary);
   cursor: pointer;
-  color: var(--popover-foreground);
-  font-size: 0.75rem;
-  transition: background-color 0.2s, color 0.2s;
+  color: var(--foreground-primary);
+  font-size: var(--font-size-xs);
+  transition: background-color var(--transition-fast), color var(--transition-fast);
 }
 
 .note-size-menu-option:last-child {
@@ -346,12 +259,12 @@ html.dark {
 }
 
 .note-size-menu-option:hover {
-  background-color: var(--accent);
-  color: var(--accent-foreground);
+  background-color: var(--background-tertiary);
+  color: var(--foreground-primary);
 }
 
 .note-node-content {
-  padding: 10px;
+  padding: var(--spacing-2);
   height: calc(100% - 42px);
   flex: 1;
   display: flex;
@@ -362,21 +275,22 @@ html.dark {
   width: 100%;
   height: 100%;
   border: none;
-  border-radius: calc(var(--radius) / 2);
+  border-radius: var(--radius-sm);
   resize: none;
-  padding: 8px;
+  padding: var(--spacing-2);
   outline: none;
-  font-family: inherit;
-  background-color: var(--muted);
-  color: var(--foreground);
-  font-size: 0.875rem;
-  line-height: 1.5;
+  font-family: var(--font-sans);
+  background-color: var(--background-tertiary);
+  color: var(--foreground-primary);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-base);
   box-sizing: border-box;
+  transition: background-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .note-textarea:focus {
-  background-color: var(--accent);
-  box-shadow: 0 0 0 2px var(--ring);
+  background-color: var(--background-secondary);
+  box-shadow: 0 0 0 2px var(--primary);
 }
 
 /* Help icon styling */
@@ -630,11 +544,11 @@ html.dark {
 
 /* Context Menu - using Popover pattern */
 .context-menu {
-  background-color: var(--popover);
-  border-radius: var(--radius);
+  background-color: var(--background-secondary);
+  border-radius: var(--radius-md);
   box-shadow: var(--shadow-md);
   overflow: hidden;
-  border: 1px solid var(--border);
+  border: 1px solid var(--border-primary);
   min-width: 180px;
   animation: slideIn 150ms cubic-bezier(0.16, 1, 0.3, 1);
   z-index: 50;
@@ -652,25 +566,25 @@ html.dark {
 }
 
 .context-menu-option {
-  padding: 8px 12px;
+  padding: var(--spacing-2) var(--spacing-3);
   cursor: pointer;
-  transition: background-color 0.2s, color 0.2s;
-  color: var(--popover-foreground);
-  font-size: 0.875rem;
+  transition: background-color var(--transition-fast), color var(--transition-fast);
+  color: var(--foreground-primary);
+  font-size: var(--font-size-sm);
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--spacing-2);
   outline: none;
 }
 
 .context-menu-option:hover {
-  background-color: var(--accent);
-  color: var(--accent-foreground);
+  background-color: var(--background-tertiary);
+  color: var(--foreground-primary);
 }
 
 .context-menu-option:focus-visible {
-  background-color: var(--accent);
-  color: var(--accent-foreground);
+  background-color: var(--background-tertiary);
+  color: var(--foreground-primary);
 }
 
 .context-menu-option-danger {
@@ -683,17 +597,20 @@ html.dark {
 }
 
 .context-menu-header {
-  padding: 10px 16px;
-  font-weight: 600;
-  color: var(--popover-foreground);
-  background-color: var(--popover);
-  border-bottom: 1px solid var(--border);
-  font-size: 0.875rem;
+  padding: var(--spacing-2) var(--spacing-4);
+  font-weight: var(--font-weight-semibold);
+  color: var(--foreground-primary);
+  background-color: var(--background-tertiary);
+  border-bottom: 1px solid var(--border-primary);
+  font-size: var(--font-size-sm);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .context-menu-section {
-  padding: 6px 0;
-  border-bottom: 1px solid var(--border);
+  padding: var(--spacing-1) 0;
+  border-bottom: 1px solid var(--border-primary);
 }
 
 .context-menu-section:last-child {
@@ -701,16 +618,16 @@ html.dark {
 }
 
 .context-menu-section-title {
-  padding: 4px 12px;
-  font-size: 0.75rem;
-  color: var(--muted-foreground);
-  font-weight: 500;
+  padding: var(--spacing-1) var(--spacing-3);
+  font-size: var(--font-size-xs);
+  color: var(--foreground-secondary);
+  font-weight: var(--font-weight-medium);
 }
 
 .context-menu-color-options {
   display: flex;
-  padding: 6px 12px;
-  gap: 8px;
+  padding: var(--spacing-1) var(--spacing-3);
+  gap: var(--spacing-2);
   flex-wrap: wrap;
   justify-content: flex-start;
 }
@@ -722,10 +639,10 @@ html.dark {
 .context-menu-color-option {
   width: 24px;
   height: 24px;
-  border-radius: 9999px;
+  border-radius: var(--radius-full);
   cursor: pointer;
-  transition: transform 0.1s, box-shadow 0.2s;
-  border: 2px solid var(--border);
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+  border: 2px solid var(--border-primary);
   position: relative;
 }
 
@@ -740,18 +657,166 @@ html.dark {
 }
 
 .context-menu-color-option:focus-visible {
-  box-shadow: 0 0 0 2px var(--background), 0 0 0 4px var(--ring);
+  box-shadow: 0 0 0 2px var(--background-primary), 0 0 0 4px var(--accent-primary);
 }
 
-/* Edge context menu specific styling */
-.edge-context-menu {
+/* Edge context menu - Tabbed Interface */
+.edge-context-tabbed {
+  width: 280px;
   max-height: 400px;
-  overflow-y: auto;
+  box-shadow: var(--shadow-lg);
+}
+
+.context-menu-close {
+  background: none;
+  border: none;
+  color: var(--foreground-secondary);
+  cursor: pointer;
+  font-size: var(--font-size-lg);
+  line-height: 1;
+  padding: 0;
+  margin-left: auto;
+  transition: color var(--transition-fast);
+}
+
+.context-menu-close:hover {
+  color: var(--foreground-primary);
+}
+
+.edge-context-tabs {
+  display: flex;
+  background-color: var(--background-tertiary);
+  border-bottom: 1px solid var(--border-primary);
+}
+
+.edge-tab-button {
+  flex: 1;
+  background: none;
+  border: none;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--foreground-secondary);
+  padding: var(--spacing-2) var(--spacing-1);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  border-bottom: 2px solid transparent;
+}
+
+.edge-tab-button:hover {
+  color: var(--foreground-primary);
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.edge-tab-button.active {
+  color: var(--accent-primary);
+  border-bottom: 2px solid var(--accent-primary);
+}
+
+.edge-tab-content {
+  padding: var(--spacing-3);
+}
+
+.edge-tab-content.hidden {
+  display: none;
+}
+
+.edge-tab-divider {
+  margin: var(--spacing-3) 0;
+  border: none;
+  height: 1px;
+  background-color: var(--border-primary);
+}
+
+/* Grid layout for tab content */
+.context-menu-option-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--spacing-2);
+}
+
+.context-menu-grid-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--spacing-3);
+  background-color: var(--background-tertiary);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-md);
+  color: var(--foreground-primary);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.context-menu-grid-option:hover {
+  background-color: var(--background-primary);
+  border-color: var(--accent-primary);
+}
+
+.context-menu-grid-icon {
+  margin-bottom: var(--spacing-2);
+  color: var(--foreground-secondary);
+}
+
+.context-menu-grid-option:hover .context-menu-grid-icon {
+  color: var(--accent-primary);
+}
+
+/* Color grid styling */
+.context-menu-color-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--spacing-2);
+}
+
+.context-menu-color-grid-option {
+  width: 100%;
+  aspect-ratio: 1/1;
+  border-radius: var(--radius-md);
+  border: 2px solid var(--border-primary);
+  cursor: pointer;
+  transition: transform var(--transition-fast), border-color var(--transition-fast);
+}
+
+.context-menu-color-grid-option:hover {
+  transform: scale(1.1);
+  border-color: var(--accent-primary);
+  z-index: 1;
+}
+
+/* Action buttons in tab content */
+.edge-tab-actions-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+}
+
+.context-menu-icon {
+  margin-right: var(--spacing-2);
+}
+
+.context-menu-option-danger {
+  display: flex;
+  align-items: center;
+  padding: var(--spacing-2) var(--spacing-3);
+  color: var(--destructive);
+  background-color: var(--background-tertiary);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.context-menu-option-danger:hover {
+  background-color: var(--destructive);
+  color: white;
+  border-color: var(--destructive);
 }
 
 /* Edge styling */
 .react-flow__edge-path {
-  stroke: var(--primary);
+  stroke: var(--edge-color);
   stroke-width: 1.5;
   transition: stroke 0.2s, stroke-width 0.2s;
 }
@@ -759,7 +824,7 @@ html.dark {
 .react-flow__edge.selected .react-flow__edge-path,
 .react-flow__edge:focus .react-flow__edge-path,
 .react-flow__edge:focus-visible .react-flow__edge-path {
-  stroke: var(--primary);
+  stroke: var(--edge-selected);
   stroke-width: 2;
 }
 

@@ -137,18 +137,18 @@ const CustomEdge: React.FC<EdgeProps> = ({
   const endArrowId = `${id}-end-arrow`;
 
   // Use the edge's stroke color for the arrow markers
-  const strokeColor = style?.stroke || 'var(--accent-primary)';
+  const strokeColor = style?.stroke || 'var(--edge-color)';
   
   /**
    * Visual enhancement: dynamic stroke width
-   * - Default: base width
+   * - Default: base width (1.5px)
    * - Hovered: 125% of base width
    * - Selected: 150% of base width
    * This provides visual feedback when interacting with edges
    */
-  const baseStrokeWidth = typeof style.strokeWidth === 'number' ? style.strokeWidth : 2;
+  const baseStrokeWidth = typeof style.strokeWidth === 'number' ? style.strokeWidth : 1.5;
   const effectiveStrokeWidth = selected 
-    ? baseStrokeWidth * 1.5 
+    ? 2 // Selected edges are 2px wide
     : isHovered 
       ? baseStrokeWidth * 1.25 
       : baseStrokeWidth;
@@ -158,7 +158,7 @@ const CustomEdge: React.FC<EdgeProps> = ({
    * Used to represent special relationships like weak links or temporary connections
    */
   const isAnimated = data?.animated || false;
-  const dashArray = isAnimated ? '5 5' : undefined;
+  const dashArray = isAnimated ? '5, 5' : undefined;
   
   return (
     <>
@@ -231,7 +231,7 @@ const CustomEdge: React.FC<EdgeProps> = ({
               width={typeof edgeLabel === 'string' ? edgeLabel.length * 8 + labelBgPadding[0] * 2 : 100}
               height={20 + labelBgPadding[1] * 2}
               style={{
-                fill: '#ffffff',
+                fill: 'var(--background-secondary)',
                 stroke: 'none',
                 ...labelBgStyle,
               }}
@@ -241,10 +241,10 @@ const CustomEdge: React.FC<EdgeProps> = ({
           )}
           <text
             style={{
-              fontFamily: 'sans-serif',
+              fontFamily: 'var(--font-sans)',
               fontSize: 12,
               pointerEvents: 'all',
-              fill: '#222',
+              fill: 'var(--foreground-primary)',
               ...labelStyle,
             }}
             dominantBaseline="central"

@@ -19,6 +19,8 @@ export interface TooltipProps {
   delay?: number;
   /** Additional classes for tooltip container */
   className?: string;
+  /** Max width of tooltip */
+  maxWidth?: number;
 }
 
 /**
@@ -30,6 +32,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
   position = 'top',
   delay = 300,
   className,
+  maxWidth = 220,
 }) => {
   const [visible, setVisible] = useState(false);
   const [coords, setCoords] = useState({ x: 0, y: 0 });
@@ -102,6 +105,14 @@ export const Tooltip: React.FC<TooltipProps> = ({
       handleMouseLeave();
       if (children.props.onMouseLeave) children.props.onMouseLeave(e);
     },
+    onFocus: (e: React.FocusEvent) => {
+      handleMouseEnter();
+      if (children.props.onFocus) children.props.onFocus(e);
+    },
+    onBlur: (e: React.FocusEvent) => {
+      handleMouseLeave();
+      if (children.props.onBlur) children.props.onBlur(e);
+    },
   });
 
   return (
@@ -111,20 +122,24 @@ export const Tooltip: React.FC<TooltipProps> = ({
         createPortal(
           <div
             ref={tooltipRef}
+            role="tooltip"
+            aria-live="polite"
             className={cn(
-              'fixed z-50 px-2 py-1 text-xs font-medium text-white bg-gray-900 rounded shadow-sm',
-              'pointer-events-none opacity-90 transition-opacity',
+              'fixed z-tooltip px-3 py-1.5 text-sm font-medium bg-background-tertiary text-foreground-primary rounded-md shadow-md border border-border-primary',
+              'pointer-events-none opacity-0 transition-opacity duration-150',
+              visible && 'opacity-95',
               className
             )}
             style={{
               left: `${coords.x}px`,
               top: `${coords.y}px`,
+              maxWidth: `${maxWidth}px`,
             }}
           >
             {content}
             <div
               className={cn(
-                'absolute w-2 h-2 bg-gray-900 rotate-45',
+                'absolute w-2 h-2 bg-background-tertiary rotate-45',
                 position === 'top' && 'bottom-0 left-1/2 -translate-x-1/2 -translate-y-1/2',
                 position === 'bottom' && 'top-0 left-1/2 -translate-x-1/2 -translate-y-1/2',
                 position === 'left' && 'right-0 top-1/2 -translate-x-1/2 -translate-y-1/2',

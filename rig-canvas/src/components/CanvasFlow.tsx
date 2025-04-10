@@ -15,6 +15,18 @@ import {
   Node
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
+import { 
+  PenTool, 
+  Minus, 
+  LineChart, 
+  Zap, 
+  ArrowRight, 
+  ArrowLeft, 
+  ArrowLeftRight, 
+  Link,
+  Unlink,
+  Type
+} from 'lucide-react';
 
 import '../styles/canvasFlow.css';
 import NoteNode from './NoteNode';
@@ -175,7 +187,7 @@ const CanvasFlow: React.FC<CanvasFlowProps> = ({
         ...params,
         type: 'default',
         markerEnd: { type: MarkerType.Arrow },
-        style: { stroke: 'var(--primary)', strokeWidth: 1.5 }
+        style: { stroke: 'var(--edge-color)', strokeWidth: 1.5 }
       };
       return setEdges((eds) => addEdge(newEdge, eds));
     },
@@ -468,10 +480,10 @@ const CanvasFlow: React.FC<CanvasFlowProps> = ({
           </div>
         )}
         
-        {/* Edge context menu */}
+        {/* Edge context menu - Tabbed Interface */}
         {edgeContextMenu && (
           <div 
-            className="context-menu edge-context-menu"
+            className="context-menu edge-context-tabbed"
             style={{
               position: 'absolute',
               left: edgeContextMenu.x + 'px',
@@ -479,128 +491,218 @@ const CanvasFlow: React.FC<CanvasFlowProps> = ({
               zIndex: 1000,
             }}
           >
-            <div className="context-menu-header">Edge Options</div>
-            
-            {/* Edge Type Options */}
-            <div className="context-menu-section">
-              <div className="context-menu-section-title">Edge Type</div>
-              <div 
-                className="context-menu-option"
-                onClick={() => {
-                  updateEdge(edgeContextMenu.edge.id, { type: 'default' });
-                  setEdgeContextMenu(null);
-                }}
+            <div className="context-menu-header">
+              Edge Options
+              <button 
+                className="context-menu-close"
+                onClick={() => setEdgeContextMenu(null)}
+                aria-label="Close menu"
               >
-                Bezier (Default)
-              </div>
-              <div 
-                className="context-menu-option"
-                onClick={() => {
-                  updateEdge(edgeContextMenu.edge.id, { type: 'straight' });
-                  setEdgeContextMenu(null);
-                }}
-              >
-                Straight
-              </div>
-              <div 
-                className="context-menu-option"
-                onClick={() => {
-                  updateEdge(edgeContextMenu.edge.id, { type: 'step' });
-                  setEdgeContextMenu(null);
-                }}
-              >
-                Step
-              </div>
-              <div 
-                className="context-menu-option"
-                onClick={() => {
-                  updateEdge(edgeContextMenu.edge.id, { type: 'smoothstep' });
-                  setEdgeContextMenu(null);
-                }}
-              >
-                Smooth Step
-              </div>
+                ✕
+              </button>
             </div>
             
-            {/* Marker Options */}
-            <div className="context-menu-section">
-              <div className="context-menu-section-title">Markers</div>
-              <div 
-                className="context-menu-option"
-                onClick={() => {
-                  updateEdge(edgeContextMenu.edge.id, { 
-                    markerEnd: { type: MarkerType.Arrow }
-                  });
-                  setEdgeContextMenu(null);
+            <div className="edge-context-tabs">
+              <button 
+                className="edge-tab-button active" 
+                onClick={(e) => {
+                  document.querySelectorAll('.edge-tab-button').forEach(el => el.classList.remove('active'));
+                  e.currentTarget.classList.add('active');
+                  document.querySelectorAll('.edge-tab-content').forEach(el => el.classList.add('hidden'));
+                  const typeTab = document.getElementById('tab-type');
+                  if (typeTab) typeTab.classList.remove('hidden');
                 }}
               >
-                Arrow End
-              </div>
-              <div 
-                className="context-menu-option"
-                onClick={() => {
-                  updateEdge(edgeContextMenu.edge.id, { 
-                    markerStart: { type: MarkerType.Arrow }
-                  });
-                  setEdgeContextMenu(null);
+                Type
+              </button>
+              <button 
+                className="edge-tab-button" 
+                onClick={(e) => {
+                  document.querySelectorAll('.edge-tab-button').forEach(el => el.classList.remove('active'));
+                  e.currentTarget.classList.add('active');
+                  document.querySelectorAll('.edge-tab-content').forEach(el => el.classList.add('hidden'));
+                  const directionTab = document.getElementById('tab-direction');
+                  if (directionTab) directionTab.classList.remove('hidden');
                 }}
               >
-                Arrow Start
-              </div>
-              <div 
-                className="context-menu-option"
-                onClick={() => {
-                  updateEdge(edgeContextMenu.edge.id, { 
-                    markerEnd: { type: MarkerType.ArrowClosed }
-                  });
-                  setEdgeContextMenu(null);
+                Direction
+              </button>
+              <button 
+                className="edge-tab-button" 
+                onClick={(e) => {
+                  document.querySelectorAll('.edge-tab-button').forEach(el => el.classList.remove('active'));
+                  e.currentTarget.classList.add('active');
+                  document.querySelectorAll('.edge-tab-content').forEach(el => el.classList.add('hidden'));
+                  const colorTab = document.getElementById('tab-color');
+                  if (colorTab) colorTab.classList.remove('hidden');
                 }}
               >
-                Closed Arrow End
-              </div>
-              <div 
-                className="context-menu-option"
-                onClick={() => {
-                  updateEdge(edgeContextMenu.edge.id, { 
-                    markerStart: { type: MarkerType.ArrowClosed }
-                  });
-                  setEdgeContextMenu(null);
+                Color
+              </button>
+              <button 
+                className="edge-tab-button" 
+                onClick={(e) => {
+                  document.querySelectorAll('.edge-tab-button').forEach(el => el.classList.remove('active'));
+                  e.currentTarget.classList.add('active');
+                  document.querySelectorAll('.edge-tab-content').forEach(el => el.classList.add('hidden'));
+                  const actionsTab = document.getElementById('tab-actions');
+                  if (actionsTab) actionsTab.classList.remove('hidden');
                 }}
               >
-                Closed Arrow Start
-              </div>
-              <div 
-                className="context-menu-option"
-                onClick={() => {
-                  updateEdge(edgeContextMenu.edge.id, { 
-                    markerStart: undefined,
-                    markerEnd: undefined
-                  });
-                  setEdgeContextMenu(null);
-                }}
-              >
-                No Markers
-              </div>
+                Actions
+              </button>
             </div>
             
-            {/* Enhanced Color Options */}
-            <div className="context-menu-section">
-              <div className="context-menu-section-title">Edge Color</div>
-              <div className="context-menu-color-options">
-                {/* Default colors */}
-                <div 
-                  className="context-menu-color-option"
-                  style={{ backgroundColor: "var(--primary)" }}
-                  title="Default"
+            <div className="edge-tab-content" id="tab-type">
+              <div className="context-menu-option-grid">
+                <button 
+                  className="context-menu-grid-option"
+                  onClick={() => {
+                    updateEdge(edgeContextMenu.edge.id, { type: 'default' });
+                    setEdgeContextMenu(null);
+                  }}
+                >
+                  <PenTool className="context-menu-grid-icon" size={20} />
+                  <span>Bezier</span>
+                </button>
+                <button 
+                  className="context-menu-grid-option"
+                  onClick={() => {
+                    updateEdge(edgeContextMenu.edge.id, { type: 'straight' });
+                    setEdgeContextMenu(null);
+                  }}
+                >
+                  <Minus className="context-menu-grid-icon" size={20} />
+                  <span>Straight</span>
+                </button>
+                <button 
+                  className="context-menu-grid-option"
+                  onClick={() => {
+                    updateEdge(edgeContextMenu.edge.id, { type: 'step' });
+                    setEdgeContextMenu(null);
+                  }}
+                >
+                  <LineChart className="context-menu-grid-icon" size={20} />
+                  <span>Step</span>
+                </button>
+                <button 
+                  className="context-menu-grid-option"
+                  onClick={() => {
+                    updateEdge(edgeContextMenu.edge.id, { type: 'smoothstep' });
+                    setEdgeContextMenu(null);
+                  }}
+                >
+                  <LineChart className="context-menu-grid-icon" size={20} />
+                  <span>Smooth</span>
+                </button>
+              </div>
+              
+              <hr className="edge-tab-divider" />
+              
+              <div className="context-menu-option-grid">
+                <button 
+                  className="context-menu-grid-option"
                   onClick={() => {
                     updateEdge(edgeContextMenu.edge.id, { 
-                      style: { stroke: "var(--primary)" }
+                      data: { animated: false }
                     });
                     setEdgeContextMenu(null);
                   }}
-                ></div>
-                <div 
-                  className="context-menu-color-option"
+                >
+                  <Minus className="context-menu-grid-icon" size={20} />
+                  <span>Solid</span>
+                </button>
+                <button 
+                  className="context-menu-grid-option"
+                  onClick={() => {
+                    updateEdge(edgeContextMenu.edge.id, { 
+                      data: { animated: true }
+                    });
+                    setEdgeContextMenu(null);
+                  }}
+                >
+                  <Zap className="context-menu-grid-icon" size={20} />
+                  <span>Dashed</span>
+                </button>
+              </div>
+            </div>
+            
+            <div className="edge-tab-content hidden" id="tab-direction">
+              <div className="context-menu-option-grid">
+                <button 
+                  className="context-menu-grid-option"
+                  onClick={() => {
+                    updateEdge(edgeContextMenu.edge.id, { 
+                      markerEnd: { type: MarkerType.Arrow },
+                      markerStart: undefined,
+                      data: { direction: 'forward' }
+                    });
+                    setEdgeContextMenu(null);
+                  }}
+                >
+                  <ArrowRight className="context-menu-grid-icon" size={20} />
+                  <span>Forward</span>
+                </button>
+                <button 
+                  className="context-menu-grid-option"
+                  onClick={() => {
+                    updateEdge(edgeContextMenu.edge.id, { 
+                      markerStart: { type: MarkerType.Arrow },
+                      markerEnd: undefined,
+                      data: { direction: 'backward' }
+                    });
+                    setEdgeContextMenu(null);
+                  }}
+                >
+                  <ArrowLeft className="context-menu-grid-icon" size={20} />
+                  <span>Backward</span>
+                </button>
+                <button 
+                  className="context-menu-grid-option"
+                  onClick={() => {
+                    updateEdge(edgeContextMenu.edge.id, { 
+                      markerEnd: { type: MarkerType.Arrow },
+                      markerStart: { type: MarkerType.Arrow },
+                      data: { direction: 'bidirectional' }
+                    });
+                    setEdgeContextMenu(null);
+                  }}
+                >
+                  <ArrowLeftRight className="context-menu-grid-icon" size={20} />
+                  <span>Both</span>
+                </button>
+                <button 
+                  className="context-menu-grid-option"
+                  onClick={() => {
+                    updateEdge(edgeContextMenu.edge.id, { 
+                      markerStart: undefined,
+                      markerEnd: undefined,
+                      data: { direction: 'none' }
+                    });
+                    setEdgeContextMenu(null);
+                  }}
+                >
+                  <Link className="context-menu-grid-icon" size={20} />
+                  <span>None</span>
+                </button>
+              </div>
+            </div>
+            
+            <div className="edge-tab-content hidden" id="tab-color">
+              <div className="context-menu-color-grid">
+                <button 
+                  className="context-menu-color-grid-option"
+                  style={{ backgroundColor: "var(--edge-color)" }}
+                  title="Default"
+                  onClick={() => {
+                    updateEdge(edgeContextMenu.edge.id, { 
+                      style: { stroke: "var(--edge-color)" }
+                    });
+                    setEdgeContextMenu(null);
+                  }}
+                ></button>
+                <button 
+                  className="context-menu-color-grid-option"
                   style={{ backgroundColor: "var(--destructive)" }}
                   title="Red"
                   onClick={() => {
@@ -609,12 +711,10 @@ const CanvasFlow: React.FC<CanvasFlowProps> = ({
                     });
                     setEdgeContextMenu(null);
                   }}
-                ></div>
-                
-                {/* New vibrant colors */}
-                <div 
-                  className="context-menu-color-option"
-                  style={{ backgroundColor: "#3498db" }} // Bright blue
+                ></button>
+                <button 
+                  className="context-menu-color-grid-option"
+                  style={{ backgroundColor: "#3498db" }}
                   title="Blue"
                   onClick={() => {
                     updateEdge(edgeContextMenu.edge.id, { 
@@ -622,10 +722,10 @@ const CanvasFlow: React.FC<CanvasFlowProps> = ({
                     });
                     setEdgeContextMenu(null);
                   }}
-                ></div>
-                <div 
-                  className="context-menu-color-option"
-                  style={{ backgroundColor: "#2ecc71" }} // Green
+                ></button>
+                <button 
+                  className="context-menu-color-grid-option"
+                  style={{ backgroundColor: "#2ecc71" }}
                   title="Green"
                   onClick={() => {
                     updateEdge(edgeContextMenu.edge.id, { 
@@ -633,10 +733,10 @@ const CanvasFlow: React.FC<CanvasFlowProps> = ({
                     });
                     setEdgeContextMenu(null);
                   }}
-                ></div>
-                <div 
-                  className="context-menu-color-option"
-                  style={{ backgroundColor: "#f1c40f" }} // Yellow
+                ></button>
+                <button 
+                  className="context-menu-color-grid-option"
+                  style={{ backgroundColor: "#f1c40f" }}
                   title="Yellow"
                   onClick={() => {
                     updateEdge(edgeContextMenu.edge.id, { 
@@ -644,14 +744,10 @@ const CanvasFlow: React.FC<CanvasFlowProps> = ({
                     });
                     setEdgeContextMenu(null);
                   }}
-                ></div>
-              </div>
-              
-              {/* Second row of colors */}
-              <div className="context-menu-color-options">
-                <div 
-                  className="context-menu-color-option"
-                  style={{ backgroundColor: "#9b59b6" }} // Purple
+                ></button>
+                <button 
+                  className="context-menu-color-grid-option"
+                  style={{ backgroundColor: "#9b59b6" }}
                   title="Purple"
                   onClick={() => {
                     updateEdge(edgeContextMenu.edge.id, { 
@@ -659,10 +755,10 @@ const CanvasFlow: React.FC<CanvasFlowProps> = ({
                     });
                     setEdgeContextMenu(null);
                   }}
-                ></div>
-                <div 
-                  className="context-menu-color-option"
-                  style={{ backgroundColor: "#e67e22" }} // Orange
+                ></button>
+                <button 
+                  className="context-menu-color-grid-option"
+                  style={{ backgroundColor: "#e67e22" }}
                   title="Orange"
                   onClick={() => {
                     updateEdge(edgeContextMenu.edge.id, { 
@@ -670,10 +766,10 @@ const CanvasFlow: React.FC<CanvasFlowProps> = ({
                     });
                     setEdgeContextMenu(null);
                   }}
-                ></div>
-                <div 
-                  className="context-menu-color-option"
-                  style={{ backgroundColor: "#1abc9c" }} // Teal
+                ></button>
+                <button 
+                  className="context-menu-color-grid-option"
+                  style={{ backgroundColor: "#1abc9c" }}
                   title="Teal"
                   onClick={() => {
                     updateEdge(edgeContextMenu.edge.id, { 
@@ -681,43 +777,32 @@ const CanvasFlow: React.FC<CanvasFlowProps> = ({
                     });
                     setEdgeContextMenu(null);
                   }}
-                ></div>
-                <div 
-                  className="context-menu-color-option"
-                  style={{ backgroundColor: "#ff6b81" }} // Pink
-                  title="Pink"
-                  onClick={() => {
-                    updateEdge(edgeContextMenu.edge.id, { 
-                      style: { stroke: "#ff6b81" }
-                    });
-                    setEdgeContextMenu(null);
-                  }}
-                ></div>
-                <div 
-                  className="context-menu-color-option"
-                  style={{ backgroundColor: "#dfe6e9" }} // Light Gray
-                  title="Light Gray"
-                  onClick={() => {
-                    updateEdge(edgeContextMenu.edge.id, { 
-                      style: { stroke: "#dfe6e9" }
-                    });
-                    setEdgeContextMenu(null);
-                  }}
-                ></div>
+                ></button>
               </div>
             </div>
             
-            {/* Actions */}
-            <div className="context-menu-section">
-              <div className="context-menu-section-title">Actions</div>
-              <div 
-                className="context-menu-option context-menu-option-danger"
-                onClick={() => {
-                  disconnectEdge(edgeContextMenu.edge.id);
-                  setEdgeContextMenu(null);
-                }}
-              >
-                Disconnect Edge
+            <div className="edge-tab-content hidden" id="tab-actions">
+              <div className="edge-tab-actions-container">
+                <button 
+                  className="context-menu-option-danger"
+                  onClick={() => {
+                    disconnectEdge(edgeContextMenu.edge.id);
+                    setEdgeContextMenu(null);
+                  }}
+                >
+                  <Unlink className="context-menu-icon" size={16} />
+                  <span>Disconnect Edge</span>
+                </button>
+                
+                <button 
+                  className="context-menu-option"
+                  onClick={() => {
+                    setEdgeContextMenu(null);
+                  }}
+                >
+                  <Type className="context-menu-icon" size={16} />
+                  <span>Add Label</span>
+                </button>
               </div>
             </div>
           </div>

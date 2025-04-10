@@ -120,8 +120,7 @@ const NoteNode = ({
       nodeData.onChange(text);
     }
     
-    // Completely different approach - no direct DOM manipulation
-    // Instead, dispatch a specialized resize event with exact dimensions
+    // Dispatch a resize event with exact dimensions
     const event = new CustomEvent('node-resize-preset', {
       detail: {
         id,
@@ -142,8 +141,8 @@ const NoteNode = ({
         minWidth={100}
         minHeight={50}
         isVisible={selected}
-        lineClassName="border-accent-primary node-resizer-line"
-        handleClassName="bg-accent-primary border-2 border-white hover:scale-110 node-resizer-handle"
+        lineClassName="node-resizer-line"
+        handleClassName="node-resizer-handle"
       />
       
       {/* Connection handles */}
@@ -163,6 +162,7 @@ const NoteNode = ({
               className="note-node-size"
               onClick={handleSizeMenuToggle}
               title="Resize"
+              aria-label="Open resize menu"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M15 3h6v6"></path>
@@ -175,6 +175,7 @@ const NoteNode = ({
               className="note-node-delete"
               onClick={handleDelete}
               title="Delete"
+              aria-label="Delete node"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M3 6h18"></path>
@@ -195,19 +196,17 @@ const NoteNode = ({
               onChange={handleTextChange}
               onClick={(e) => e.stopPropagation()}
               onDoubleClick={(e) => e.stopPropagation()}
+              aria-label="Note content"
             />
           ) : (
             <div 
               className="note-textarea" 
-              style={{ 
-                overflow: 'auto', 
-                cursor: 'pointer',
-                whiteSpace: 'pre-wrap',
-                backgroundColor: 'var(--muted)',
-              }}
               onClick={toggleEditMode}
+              role="button"
+              tabIndex={0}
+              aria-label="Click to edit note"
             >
-              {text || 'Double-click to edit'}
+              {text || 'Click to edit'}
             </div>
           )}
         </div>
@@ -222,7 +221,7 @@ const NoteNode = ({
       
       {/* Size menu - absolutely positioned to the right edge of the node */}
       {showSizeMenu && (
-        <div className="note-size-menu">
+        <div className="note-size-menu" role="dialog" aria-label="Node size options">
           <div className="note-size-menu-header">
             Note Size
           </div>

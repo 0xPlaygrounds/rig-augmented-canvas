@@ -10,18 +10,22 @@ function cn(...inputs: (string | boolean | undefined | null | { [key: string]: a
 
 // Define button style variants
 const buttonVariants = cva(
-  "inline-flex items-center justify-center rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-primary disabled:opacity-50",
+  "inline-flex items-center justify-center rounded-md font-medium transition-all duration-150 focus-visible:outline-none focus-visible:ring-0 focus-visible:shadow-outline disabled:opacity-50 disabled:cursor-not-allowed select-none",
   {
     variants: {
       variant: {
-        primary: "bg-accent-primary hover:bg-accent-hover text-white",
-        secondary: "bg-bg-secondary hover:bg-bg-tertiary text-text-primary border border-border-primary",
-        ghost: "hover:bg-bg-tertiary text-text-tertiary hover:text-text-primary",
+        primary: "bg-accent-primary hover:bg-accent-hover text-white shadow-sm",
+        secondary: "bg-background-secondary hover:bg-background-tertiary text-foreground-primary border border-border-primary",
+        ghost: "bg-transparent hover:bg-background-secondary text-foreground-secondary hover:text-foreground-primary",
+        destructive: "bg-destructive hover:bg-destructive/90 text-white",
+        outline: "border border-border-primary bg-transparent hover:bg-background-secondary text-foreground-secondary hover:text-foreground-primary",
+        link: "text-accent-primary underline-offset-4 hover:underline p-0 h-auto",
       },
       size: {
-        sm: "h-8 px-3 text-xs",
-        md: "h-10 px-4 text-sm",
-        lg: "h-12 px-6 text-base",
+        sm: "h-8 px-3 text-xs rounded-md font-medium",
+        md: "h-10 px-4 text-sm rounded-md font-medium",
+        lg: "h-12 px-6 text-base rounded-md font-semibold",
+        icon: "h-10 w-10 p-0 rounded-full",
       },
     },
     defaultVariants: {
@@ -51,9 +55,9 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         {isLoading && (
           <span className="mr-2 animate-spin">↻</span>
         )}
-        {leftIcon && <span className="mr-2">{leftIcon}</span>}
+        {leftIcon && <span className="mr-2 flex-shrink-0">{leftIcon}</span>}
         {children}
-        {rightIcon && <span className="ml-2">{rightIcon}</span>}
+        {rightIcon && <span className="ml-2 flex-shrink-0">{rightIcon}</span>}
       </button>
     );
   }

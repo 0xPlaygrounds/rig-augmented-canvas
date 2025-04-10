@@ -3,61 +3,168 @@
 @import './styles/controls.css';
 @import './styles/canvasFlow.css';
 @import './styles/fileExplorer.css';
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  /* Dark mode colors - default */
-  --bg-primary: #111827;
-  --bg-secondary: #1f2937;
-  --bg-tertiary: #374151;
+  /* Base colors - Dark theme (default) */
+  --background-primary: #030711;
+  --background-secondary: #0f1629;
+  --background-tertiary: #1a1f36;
+  --foreground-primary: #ffffff;
+  --foreground-secondary: #a1a1aa;
+  --foreground-muted: #71717a;
+  --border-primary: #27272a;
+  --border-secondary: #3f3f46;
+  
+  /* Accent colors */
   --accent-primary: #3b82f6;
   --accent-hover: #2563eb;
-  --text-primary: #f3f4f6;
-  --text-secondary: #d1d5db;
-  --text-tertiary: #9ca3af;
-  --border-primary: #374151;
-  --border-secondary: #4b5563;
-  --handle-color: #3b82f6;
-  --node-bg: #1f2937;
-  --node-border: #374151;
-  --node-border-selected: #3b82f6;
-  --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
-  --grid-color: rgba(75, 85, 99, 0.1);
+  --accent-success: #10b981;
+  --accent-warning: #f59e0b;
+  --accent-destructive: #ef4444;
+  --accent-info: #0ea5e9;
   
-  /* Canvas grid config */
+  /* Canvas specific colors */
+  --canvas-bg: var(--background-primary);
+  --grid-color: rgba(55, 65, 81, 0.15);
+  --node-bg: var(--background-secondary);
+  --node-border: var(--border-primary);
+  --node-selected: var(--accent-primary);
+  --handle-color: var(--accent-primary);
+  --edge-color: var(--foreground-primary); /* White in dark mode */
+  --edge-selected: var(--accent-primary);
+  
+  /* Typography */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Menlo', 'Monaco', 'Courier New', monospace;
+  
+  /* Font sizes */
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.875rem;
+  --font-size-base: 1rem;
+  --font-size-lg: 1.125rem;
+  --font-size-xl: 1.25rem;
+  --font-size-2xl: 1.5rem;
+  --font-size-3xl: 1.875rem;
+  --font-size-4xl: 2.25rem;
+  
+  /* Line heights */
+  --line-height-xs: 1rem;
+  --line-height-sm: 1.25rem;
+  --line-height-base: 1.5rem;
+  --line-height-lg: 1.75rem;
+  --line-height-xl: 1.75rem;
+  --line-height-2xl: 2rem;
+  --line-height-3xl: 2.25rem;
+  --line-height-4xl: 2.5rem;
+  
+  /* Font weights */
+  --font-weight-light: 300;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  
+  /* Spacing */
+  --spacing-0: 0;
+  --spacing-px: 1px;
+  --spacing-0-5: 0.125rem;
+  --spacing-1: 0.25rem;
+  --spacing-1-5: 0.375rem;
+  --spacing-2: 0.5rem;
+  --spacing-2-5: 0.625rem;
+  --spacing-3: 0.75rem;
+  --spacing-3-5: 0.875rem;
+  --spacing-4: 1rem;
+  --spacing-5: 1.25rem;
+  --spacing-6: 1.5rem;
+  --spacing-8: 2rem;
+  --spacing-10: 2.5rem;
+  --spacing-12: 3rem;
+  --spacing-16: 4rem;
+  --spacing-20: 5rem;
+  
+  /* Border radius */
+  --radius-none: 0;
+  --radius-sm: 0.125rem;
+  --radius-md: 0.25rem;
+  --radius-lg: 0.375rem;
+  --radius-xl: 0.5rem;
+  --radius-2xl: 0.75rem;
+  --radius-3xl: 1rem;
+  --radius-full: 9999px;
+  
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  --shadow-inner: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
+  --shadow-outline: 0 0 0 3px rgba(59, 130, 246, 0.45);
+  
+  /* Transitions */
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  
+  /* Z-index layers */
+  --z-below: -1;
+  --z-normal: 1;
+  --z-above: 10;
+  --z-modal: 100;
+  --z-tooltip: 1000;
+  
+  /* Grid size for canvas */
   --grid-size: 40px;
 }
 
 .light-mode {
-  /* Light mode colors */
-  --bg-primary: #f9fafb;
-  --bg-secondary: #ffffff;
-  --bg-tertiary: #f3f4f6;
+  /* Base colors - Light theme */
+  --background-primary: #ffffff;
+  --background-secondary: #f4f5f7;
+  --background-tertiary: #e9ecef;
+  --foreground-primary: #030711;
+  --foreground-secondary: #3f3f46;
+  --foreground-muted: #6b7280;
+  --border-primary: #e4e4e7;
+  --border-secondary: #d4d4d8;
+  
+  /* Accent colors - Light theme adjustments */
   --accent-primary: #2563eb;
   --accent-hover: #1d4ed8;
-  --text-primary: #111827;
-  --text-secondary: #374151;
-  --text-tertiary: #6b7280;
-  --border-primary: #e5e7eb;
-  --border-secondary: #d1d5db;
-  --handle-color: #3b82f6;
-  --node-bg: #ffffff;
-  --node-border: #e5e7eb;
-  --node-border-selected: #3b82f6;
-  --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  --accent-success: #059669;
+  --accent-warning: #d97706;
+  --accent-destructive: #dc2626;
+  --accent-info: #0284c7;
+  
+  /* Canvas colors - Light theme */
+  --canvas-bg: #f9fafb;
   --grid-color: rgba(229, 231, 235, 0.6);
+  --node-bg: #ffffff;
+  --node-border: var(--border-primary);
+  --node-selected: var(--accent-primary);
+  --handle-color: var(--accent-primary);
+  --edge-color: var(--foreground-primary); /* Black in light mode */
+  --edge-selected: var(--accent-primary);
+  
+  /* Shadow adjustments for light mode */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.03);
 }
 
 /* Global styles */
 body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  color: var(--text-primary);
-  background-color: var(--bg-primary);
+  font-family: var(--font-sans);
+  line-height: var(--line-height-base);
+  color: var(--foreground-primary);
+  background-color: var(--background-primary);
+  transition: color var(--transition-normal), background-color var(--transition-normal);
 }
 
 body.resizing * {
@@ -67,11 +174,13 @@ body.resizing * {
 
 /* Ensure resize handles are visible and have a good hit area */
 .resize-handle {
-  z-index: 20;
+  z-index: var(--z-above);
   touch-action: none;
 }
 
-/* Transitions */
+/* Transitions for interactive elements */
+.btn,
+.card,
 .sidebar,
 .note,
 .handle,
@@ -80,12 +189,12 @@ body.resizing * {
 .file,
 .folder-header,
 .control-button {
-  transition: all 0.3s ease;
+  transition: all var(--transition-normal);
 }
 
 /* Sidebar positioning and transition */
 .sidebar {
-  z-index: 100;
+  z-index: var(--z-modal);
   pointer-events: auto;
   will-change: transform;
 }
@@ -95,17 +204,30 @@ body.resizing * {
   width: 8px !important;
   height: 8px !important;
   background-color: var(--handle-color) !important;
-  border-radius: 50% !important;
+  border-radius: var(--radius-full) !important;
   opacity: 0.7 !important;
-  transition: all 0.2s ease !important;
+  transition: all var(--transition-fast) !important;
 }
 
 .react-flow__handle:hover {
   opacity: 1 !important;
-  transform: scale(1.5) !important;
+  transform: scale(1.2) !important;
 }
 
 /* Background grid */
 .react-flow__background {
   background-size: var(--grid-size) var(--grid-size) !important;
+  background-color: var(--canvas-bg) !important;
+}
+
+/* Canvas edges - removing duplicate styling handled in canvasFlow.css */
+/* These styles are now in canvasFlow.css using the more specific .react-flow__edge-path selector */
+
+/* Node styling */
+.react-flow__node {
+  transition: box-shadow var(--transition-fast);
+}
+
+.react-flow__node.selected {
+  box-shadow: var(--shadow-lg);
 }
