@@ -132,7 +132,12 @@ function App() {
           </button>
         )}
         
-        <div className="w-full h-screen relative">
+        <div 
+          className={`w-full h-screen relative transition-all duration-300 ${
+            sidebarState === 'expanded' ? 'pl-64' : 
+            sidebarState === 'collapsed' ? 'pl-12' : ''
+          }`}
+        >
           
           {isLoading ? (
             <div className="flex items-center justify-center h-full">

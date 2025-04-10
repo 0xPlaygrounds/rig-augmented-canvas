@@ -56,9 +56,13 @@ const Sidebar: React.FC<SidebarProps> = ({
   onToggle,
   isCollapsed = false
 }) => {
+  // Define sidebar widths that match the padding in App.tsx
+  const EXPANDED_WIDTH = 256; // 16rem in Tailwind (pl-64)
+  const COLLAPSED_WIDTH = 48; // 3rem in Tailwind (pl-12)
+  
   // Use the provided isCollapsed prop
-  const [sidebarWidth, setSidebarWidth] = useState(256); // Default width: 256px
-  const minWidth = 200;
+  const [sidebarWidth, setSidebarWidth] = useState(EXPANDED_WIDTH); // Default width aligned with our constant
+  const minWidth = EXPANDED_WIDTH - 56; // Allow some flexibility but not too small
   const maxWidth = 500;
   const [activeTab, setActiveTab] = useState<'files' | 'canvases'>('files');
   const [isCreatingCanvas, setIsCreatingCanvas] = useState(false);
@@ -185,7 +189,7 @@ const Sidebar: React.FC<SidebarProps> = ({
 
   if (isCollapsed) {
     return (
-      <div className="h-full flex flex-col bg-background-secondary border-r border-border-primary w-12 transition-all duration-300 shadow-md">
+      <div className="h-full flex flex-col bg-background-secondary border-r border-border-primary w-12 transition-all duration-300 shadow-md" style={{ width: `${COLLAPSED_WIDTH}px` }}>
         <button
           onClick={toggleCollapse}
           className="p-3 hover:bg-background-tertiary hover:text-accent-primary text-foreground-secondary flex justify-center items-center transition-all rounded-md m-2"

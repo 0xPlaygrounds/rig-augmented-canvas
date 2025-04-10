@@ -268,19 +268,23 @@ export const FileViewer: React.FC<FileViewerProps> = ({ file, onClose }) => {
       
       <div className="flex flex-1 overflow-hidden">
         <div className="flex-1 overflow-auto bg-bg-primary">
-          <textarea
-            ref={textareaRef}
-            value={content}
-            onChange={handleContentChange}
-            onSelect={handleSelect}
-            className="w-full h-full p-4 bg-bg-primary text-text-primary border-none resize-none outline-none font-mono"
-            style={{ 
-              maxWidth: `${settings.typography.lineWidth * 0.6}rem`,
-              margin: '0 auto',
-              lineHeight: '1.6' 
-            }}
-            placeholder="Start writing here..."
-          />
+          <div className="w-full h-full flex justify-center" style={{ paddingLeft: '16px' }}>
+            <textarea
+              ref={textareaRef}
+              value={content}
+              onChange={handleContentChange}
+              onSelect={handleSelect}
+              className="w-full h-full p-4 bg-bg-primary text-text-primary border-none resize-none outline-none font-mono"
+              style={{ 
+                width: '100%',
+                maxWidth: `min(100%, ${settings.typography.lineWidth * 0.6}rem)`,
+                lineHeight: '1.6',
+                overflowWrap: 'break-word',
+                wordWrap: 'break-word'
+              }}
+              placeholder="Start writing here..."
+            />
+          </div>
         </div>
         
         {showCowriter && renderCowriterPanel()}
@@ -293,15 +297,21 @@ export const FileViewer: React.FC<FileViewerProps> = ({ file, onClose }) => {
     <div className="flex flex-1 overflow-hidden">
       <div className="flex-1 overflow-auto">
         <div className="p-4 h-full bg-bg-secondary">
-          <TypographyContainer 
-            content={content} 
-            id={`file-content-${file?.id}`}
-            className={`prose prose-invert ${isReadingMode ? 'reading-mode' : ''}`}
-          >
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>
-              {content}
-            </ReactMarkdown>
-          </TypographyContainer>
+          <div className="w-full" style={{ 
+            maxWidth: '100%', 
+            overflowWrap: 'break-word', 
+            paddingLeft: '16px' 
+          }}>
+            <TypographyContainer 
+              content={content} 
+              id={`file-content-${file?.id}`}
+              className={`prose prose-invert ${isReadingMode ? 'reading-mode' : ''}`}
+            >
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                {content}
+              </ReactMarkdown>
+            </TypographyContainer>
+          </div>
         </div>
       </div>
       
@@ -326,8 +336,8 @@ export const FileViewer: React.FC<FileViewerProps> = ({ file, onClose }) => {
         <div className="flex justify-between items-center p-3 border-b border-border-primary bg-bg-tertiary">
           {/* Title or writing mode selector */}
           {isEditing ? (
-            <div className="flex items-center">
-              <div className="mr-3">
+            <div className="flex items-center overflow-hidden flex-grow mr-4">
+              <div className="mr-3 flex-shrink-0">
                 <div style={{ 
                   display: 'flex', 
                   alignItems: 'center', 
@@ -362,7 +372,7 @@ export const FileViewer: React.FC<FileViewerProps> = ({ file, onClose }) => {
                   <ChevronDown size={14} style={{ position: 'absolute', right: '12px', color: '#9ca3af' }} />
                 </div>
               </div>
-              <div className="text-sm text-text-tertiary">
+              <div className="text-sm text-text-tertiary truncate">
                 {currentWritingMode === 'brainstorming' && 'Free-form idea generation without judgment'}
                 {currentWritingMode === 'drafting' && 'Focus on getting your thoughts down quickly'}
                 {currentWritingMode === 'editing' && 'Refine and improve your existing content'}
@@ -370,7 +380,7 @@ export const FileViewer: React.FC<FileViewerProps> = ({ file, onClose }) => {
               </div>
             </div>
           ) : (
-            <h2 className="text-lg font-medium truncate text-text-primary">{file.name}</h2>
+            <h2 className="text-lg font-medium text-text-primary overflow-hidden text-ellipsis whitespace-nowrap flex-grow mr-4">{file.name}</h2>
           )}
           
           {/* Toolbar buttons */}
